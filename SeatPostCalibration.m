@@ -96,7 +96,7 @@ while (1)
         % multiply the average subtracted data by the sensitivty matrix 
         data2(i,:) = senMatrix*(data2(i,:) - avg)';
     end
-        for i = 1:5
+    for i = 1:5
         set(bridgeLines(i), 'YData', data(:,i))
     end
     for i = 1:3
