@@ -55,6 +55,23 @@ function BicycleDAQ_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for BicycleDAQ
 handles.output = hObject;
 
+% load the VectorNav library
+addpath('VectorNavLib')
+% create a serial object for the VectorNav
+handles.s = VNserial('COM3');
+
+% create an analog input object for the USB-6218
+handles.ai = analoginput('nidaq','Dev1');
+
+% set the properties for data viewing
+handles.duration = 6000; % seconds
+set(handles.ai,'SampleRate',100)
+ActualRate = get(handles.ai,'SampleRate');
+set(handles.ai,'SamplesPerTrigger',duration*ActualRate);
+set(handles.ai,'TriggerType','Manual');
+set(handles.ai,'InputType','SingleEnded');
+handles.aichan = addchannel(ai,0:16);
+
 % Update handles structure
 guidata(hObject, handles);
 

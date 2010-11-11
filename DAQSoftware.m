@@ -5,6 +5,11 @@ end
 % clear up everything else
 close all; clear all; clc;
 
+% load the VectorNav library
+addpath('VectorNavLib')
+% serial object for the VectorNav
+s = VNserial('COM3');
+
 % connect to the daq box
 ai = analoginput('nidaq','Dev1');
 ao = analogoutput('nidaq','Dev1');
