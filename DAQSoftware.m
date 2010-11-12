@@ -41,7 +41,7 @@ labels = {'', '', '', '', ''};
 % update the plot while the data is being taken
 while (1)
     % return the latest 50 samples
-    data = peekdata(ai,50);
+    data = peekdata(ai,100);
     for i = 1:5
         set(lines(i), 'YData', data(:, i))
     end
