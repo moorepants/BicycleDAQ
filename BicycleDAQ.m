@@ -67,7 +67,7 @@ set(handles.ActionButtonGroup, 'SelectionChangeFcn', ...
     @ActionButtonGroup_SelectionChangeFcn);
 
 % load the VectorNav library
-addpath('VectorNavLib')
+addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
 % this is what is plugged into each analog input on the NI USB-6218
 handles.InputPairs = struct('SteerPotentiometer',  0, ...
@@ -234,9 +234,7 @@ switch get(hObject, 'Value')
         set(handles.FeetForceButton, 'String', 'Forces')
         set(handles.VnavMomentButton, 'String', 'Moments')
         set(handles.MagneticButton, 'Enable', 'on')
-
 end
-
 
 
 function NewRiderEditText_Callback(hObject, eventdata, handles)
@@ -259,7 +257,6 @@ function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function NewBicycleEditText_Callback(hObject, eventdata, handles)
@@ -286,18 +283,18 @@ end
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 handles = guidata(hObject);
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
-    case 'AngleButton'
+    case 'SteerAngleButton'
         display('angles')
-    case 'RateButton'
+    case 'RiderRateButton'
         display('angles')
-    case 'AccelerationButton'
+    case 'SeatpostAccelerationButton'
         display('accelerations')
+    case 'FeetForceButton'
+        display('forces')
+    case 'VnavMomentButton'
+        display('moments')
     case 'MagneticButton'
         display('magnetic')
-    case 'ForceButton'
-        display('forces')
-    case 'MomentButton'
-        display('moments')
     otherwise
         % Code for when there is no match.
 end
@@ -314,26 +311,28 @@ switch get(eventdata.NewValue, 'Tag')
         trigger(handles.ai)
         % find out what data is being plotted
 %         ButtonName = get(handles.GraphTypeButtonGroup.SelectedObject, 'Tag')
-        ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag')
-        class(ButtonName)
-        handles.pairs
-        % clear the graph for new data
+        ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
+        % set the plot axes to the graph
         axes(handles.Graph)
         % plot blank data
-        %keyword = get(handles.pairs, ButtonName);
-        keyword = 'angles'
-        data = zeros(50, length(eval(['handles.legends.' keyword])));
+        data = zeros(50, length(eval(['handles.RawLegends.' ButtonName])));
         lines = plot(data); % plot the raw data
+        ylim([-5 5])
         ylabel('Voltage')
-        leg = legend(eval(['handles.legends.' keyword]));
+        switch get(handles.ScaledRawButton, 'Value')
+            case 0.0
+                legtype = 'RawLegends';
+            case 1.0
+                legtype = 'ScaledLegends';
+        end
+        leg = legend(eval(['handles.' legtype '.' ButtonName]));
 %         labels = {'', '', '', '', ''};
-        
         % update the plot while the data is being taken
         while (1)
             % return the latest 100 samples
-            data = peekdata(handles.ai,50);
-            for i = 1:length(eval(['handles.legends.' keyword]))
-                set(lines(i), 'YData', data(1:length(eval(['handles.legends.' keyword])), i))
+            data = peekdata(handles.ai, 50);
+            for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
+                set(lines(i), 'YData', data(:, i))
             end
 %             meanData = mean(data);
 %             labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
