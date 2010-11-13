@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 11-Nov-2010 18:28:17
+% Last Modified by GUIDE v2.5 12-Nov-2010 17:09:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,65 +61,93 @@ if exist('handles.ai')
 end
 
 % these permanently set the functions for these callbacks in the gui
-set(handles.GraphTypeButtonGroup,'SelectionChangeFcn',@GraphTypeButtonGroup_SelectionChangeFcn);
-set(handles.ActionButtonGroup,'SelectionChangeFcn',@ActionButtonGroup_SelectionChangeFcn);
+set(handles.GraphTypeButtonGroup, 'SelectionChangeFcn', ...
+    @GraphTypeButtonGroup_SelectionChangeFcn);
+set(handles.ActionButtonGroup, 'SelectionChangeFcn', ...
+    @ActionButtonGroup_SelectionChangeFcn);
 
 % load the VectorNav library
 addpath('VectorNavLib')
-% create a serial object for the VectorNav
-handles.s = VNserial('COM3');
 
-% create an analog input object for the USB-6218
-handles.ai = analoginput('nidaq','Dev1');
-
-% set the properties for data viewing
-handles.duration = 600; % seconds
-set(handles.ai,'SampleRate',100)
-ActualRate = get(handles.ai,'SampleRate');
-set(handles.ai,'SamplesPerTrigger',handles.duration*ActualRate);
-set(handles.ai,'TriggerType','Manual');
-set(handles.ai,'InputType','SingleEnded');
-handles.aichan = addchannel(handles.ai,0:16);
-
-% button to keyword pairs
-handles.pairs = struct('AngleButton', 'angles', ...
-                       'RateButton', 'rates', ...
-                       'MomentButton', 'moments', ...
-                       'ForceButton', 'forces', ...
-                       'AccelerationButton', 'accelerations', ...
-                       'MagneticButton', 'magnetic');
+% this is what is plugged into each analog input on the NI USB-6218
+handles.InputPairs = struct('SteerPotentiometer',  0, ...
+                            'HipPotentiometer',    1, ...
+                            'LeanPotentionmeter',  2, ...
+                            'TwistPotentionmeter', 3, ...
+                            'SteerRateGyro',       4, ...
+                            'WheelSpeedMotor',     5, ...
+                            'SteerTorqueSensor',   6, ...
+                            'SeatpostBridge1',     7, ...
+                            'SeatpostBridge2',     8, ...
+                            'SeatpostBridge3',     9, ...
+                            'SeatpostBridge4',    10, ...
+                            'SeatpostBridge5',    11, ...
+                            'SeatpostBridge6',    12, ...
+                            'RightFootBridge1',   13, ...
+                            'RightFootBridge2',   14, ...
+                            'LeftFootBridge1',    15, ...
+                            'LeftFootBridge2',    16);
+                            
 % graph legends
-handles.legends = struct('angles', {{'Steer Angle'
-                                    'Roll Angle'
-                                    'Yaw Angle'
-                                    'Pitch Angle'
-                                    'Hip Pot'
-                                    'Lean Pot'
-                                    'Twist Pot'}}, ...
-                          'rates', {{'Steer Rate'
-                                    'Roll Rate'
-                                    'Yaw Rate'
-                                    'Pitch Rate'
-                                    'Wheel Rate'}}, ...
-                          'forces', {{'Seat Fx'
-                                     'Seat Fy'
-                                     'Seat Fz'
-                                     'Right Foot'
-                                     'Left Foot'}}, ...
-                          'moments', {{'Steer Torque'
-                                      'Seat Mx'
-                                      'Seat My'
-                                      'Seat Mz'
-                                      'Right Foot'
-                                      'Left Foot'}}, ...
-                          'accelerations', {{'X'
-                                            'Y'
-                                            'Z'}}, ...
-                          'magnetic', {{'X'
-                                       'Y'
-                                       'Z'}});
+% the struct command doesn't seem to like values of different length so I
+% had to put all the cells in double brackets
+handles.RawLegends = struct('SteerAngleButton', {{'SteerPotentiometer'
+                                                  'SteerRateGyro'
+                                                  'SteerTorqueSensor'
+                                                  'WheelSpeedMotor'}}, ...
+                            'RiderRateButton', {{'HipPotentiometer'
+                                                 'LeanPotentionmeter'
+                                                 'TwistPotentionmeter'}}, ...
+                            'SeatpostAccelerationButton', {{'SeatpostBridge1'
+                                                            'SeatpostBridge2'
+                                                            'SeatpostBridge3'
+                                                            'SeatpostBridge4'
+                                                            'SeatpostBridge5'
+                                                            'SeatpostBridge6'}}, ...
+                            'FeetForceButton', {{'RightFootBridge1'
+                                                 'RightFootBridge2'
+                                                 'LeftFootBridge1'
+                                                 'LeftFootBridge2'}}, ...
+                            'VnavMomentButton', {{'Voltage 1'
+                                                  'Voltage 2'
+                                                  'Voltage 3'
+                                                  'Voltage 4'
+                                                  'Voltage 5'
+                                                  'Voltage 6'
+                                                  'Voltage 7'
+                                                  'Voltage 8'
+                                                  'Voltage 9'
+                                                  'Voltage 10'}});
+handles.ScaledLegends = struct('SteerAngleButton', {{'Steer Angle'
+                                                     'Roll Angle'
+                                                     'Yaw Angle'
+                                                     'Pitch Angle'
+                                                     'Hip Angle'
+                                                     'Lean Angle'
+                                                     'Twist Angle'}}, ...
+                               'RiderRateButton', {{'Steer Rate'
+                                                    'Roll Rate'
+                                                    'Yaw Rate'
+                                                    'Pitch Rate'
+                                                    'Wheel Rate'}}, ...
+                               'SeatpostAccelerationButton', {{'X'
+                                                               'Y'
+                                                               'Z'}}, ...
+                               'FeetForceButton', {{'Seat Fx'
+                                                    'Seat Fy'
+                                                    'Seat Fz'
+                                                    'Right Foot'
+                                                    'Left Foot'}}, ...
+                               'VnavMomentButton', {{'Steer Torque'
+                                                     'Seat Mx'
+                                                     'Seat My'
+                                                     'Seat Mz'
+                                                     'Right Foot'
+                                                     'Left Foot'}}, ...
+                               'MagneticButton', {{'X'
+                                                   'Y'
+                                                   'Z'}});
                                
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -137,41 +165,92 @@ function varargout = BicycleDAQ_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on selection change in listbox1.
-function listbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+function NotesText_Callback(hObject, eventdata, handles)
+% hObject    handle to NotesText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns listbox1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox1
+% Hints: get(hObject,'String') returns contents of NotesText as text
+%        str2double(get(hObject,'String')) returns contents of NotesText as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function listbox1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+function NotesText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NotesText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: listbox controls usually have a white background on Windows.
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
 
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function NewSpeedEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewSpeedEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+% Hints: get(hObject,'String') returns contents of NewSpeedEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function NewSpeedEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewSpeedEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in ScaledRawButton.
+function ScaledRawButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ScaledRawButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ScaledRawButton
+
+switch get(hObject, 'Value')
+    case 0.0
+        set(hObject, 'String', 'Scaled Data')
+        set(handles.SteerAngleButton, 'String', 'Steer')
+        set(handles.RiderRateButton, 'String', 'Rider')
+        set(handles.SeatpostAccelerationButton, 'String', 'Seatpost')
+        set(handles.FeetForceButton, 'String', 'Feet')
+        set(handles.VnavMomentButton, 'String', 'VectorNav')
+        set(handles.MagneticButton, 'Enable', 'off')
+    case 1.0
+        set(hObject, 'String', 'Raw Data')
+        set(handles.SteerAngleButton, 'String', 'Angles')
+        set(handles.RiderRateButton, 'String', 'Rates')
+        set(handles.SeatpostAccelerationButton, 'String', 'Accelerations')
+        set(handles.FeetForceButton, 'String', 'Forces')
+        set(handles.VnavMomentButton, 'String', 'Moments')
+        set(handles.MagneticButton, 'Enable', 'on')
+
+end
+
+
+
+function NewRiderEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewRiderEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewRiderEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewRiderEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -183,96 +262,18 @@ end
 
 
 
-function edit3_Callback(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function NewBicycleEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewBicycleEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit3 as text
-%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+% Hints: get(hObject,'String') returns contents of NewBicycleEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit4_Callback(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit4 as text
-%        str2double(get(hObject,'String')) returns contents of edit4 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in RawButton.
-function RawButton_Callback(hObject, eventdata, handles)
-% hObject    handle to RawButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of RawButton
-
-
-
-function edit5_Callback(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit5 as text
-%        str2double(get(hObject,'String')) returns contents of edit5 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit5_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit5 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function edit6_Callback(hObject, eventdata, handles)
-% hObject    handle to edit6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit6 as text
-%        str2double(get(hObject,'String')) returns contents of edit6 as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit6_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit6 (see GCBO)
+function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewBicycleEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -321,7 +322,7 @@ switch get(eventdata.NewValue, 'Tag')
         % plot blank data
         %keyword = get(handles.pairs, ButtonName);
         keyword = 'angles'
-        data = zeros(100, length(eval(['handles.legends.' keyword])));
+        data = zeros(50, length(eval(['handles.legends.' keyword])));
         lines = plot(data); % plot the raw data
         ylabel('Voltage')
         leg = legend(eval(['handles.legends.' keyword]));
@@ -330,7 +331,7 @@ switch get(eventdata.NewValue, 'Tag')
         % update the plot while the data is being taken
         while (1)
             % return the latest 100 samples
-            data = peekdata(handles.ai,100);
+            data = peekdata(handles.ai,50);
             for i = 1:length(eval(['handles.legends.' keyword]))
                 set(lines(i), 'YData', data(1:length(eval(['handles.legends.' keyword])), i))
             end
@@ -345,29 +346,6 @@ switch get(eventdata.NewValue, 'Tag')
         end
     case 'RecordButton'
         % records data to file
-end
-
-
-% --- Executes on selection change in popupmenu1.
-function popupmenu1_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns popupmenu1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu1
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
 end
 
 
@@ -399,3 +377,178 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 delete(hObject);
+
+
+% --- Executes on button press in ConnectButton.
+function ConnectButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ConnectButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ConnectButton
+
+switch get(hObject, 'Value')
+    case 1.0 % connect
+        set(hObject, 'String', 'Disconnect')
+        set(hObject, 'BackgroundColor', 'Red')
+        % create a serial object for the VectorNav
+        handles.s = VNserial('COM3');
+        
+        % create an analog input object for the USB-6218
+        handles.ai = analoginput('nidaq','Dev1');
+        
+        % set the properties for data viewing
+        handles.duration = 600; % seconds
+        set(handles.ai,'SampleRate',100)
+        ActualRate = get(handles.ai,'SampleRate');
+        set(handles.ai,'SamplesPerTrigger',handles.duration*ActualRate);
+        set(handles.ai,'TriggerType','Manual');
+        set(handles.ai,'InputType','SingleEnded');
+        handles.aichan = addchannel(handles.ai,0:16);
+                
+    case 0.0 % disconnect
+        set(hObject, 'String', 'Connect')
+        set(hObject, 'BackgroundColor', 'Green')
+        %rmfield(handles, 'ai')
+        %delete(handles.ai)
+        daqreset
+
+end
+
+% Update handles structure
+guidata(hObject, handles);
+    
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over NewBicycleEditText.
+function NewBicycleEditText_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to NewBicycleEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+display('testing')
+set(hObject, 'Enable', 'on')
+
+% --- Executes on selection change in RiderPopupmenu.
+function RiderPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to RiderPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns RiderPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from RiderPopupmenu
+
+
+% --- Executes during object creation, after setting all properties.
+function RiderPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RiderPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in SpeedPopupmenu.
+function SpeedPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to SpeedPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns SpeedPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
+
+
+% --- Executes during object creation, after setting all properties.
+function SpeedPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SpeedPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over NewRiderEditText.
+function NewRiderEditText_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to NewRiderEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% --- Executes on selection change in ManeuverPopupmenu.
+function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
+
+
+% --- Executes during object creation, after setting all properties.
+function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function NewManeuverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NewManeuverEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edit3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
