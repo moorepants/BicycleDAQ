@@ -6,7 +6,7 @@ end
 close all; clear all; clc;
 
 % load the VectorNav library
-addpath('VectorNavLib')
+addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 % serial object for the VectorNav
 s = VNserial('COM3');
 

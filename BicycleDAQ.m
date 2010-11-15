@@ -86,7 +86,8 @@ handles.InputPairs = struct('SteerPotentiometer',  0, ...
                             'RightFootBridge1',   13, ...
                             'RightFootBridge2',   14, ...
                             'LeftFootBridge1',    15, ...
-                            'LeftFootBridge2',    16);
+                            'LeftFootBridge2',    16, ...
+                            'PushButton',         17);
                             
 % graph legends
 % the struct command doesn't seem to like values of different length so I
@@ -94,7 +95,8 @@ handles.InputPairs = struct('SteerPotentiometer',  0, ...
 handles.RawLegends = struct('SteerAngleButton', {{'SteerPotentiometer'
                                                   'SteerRateGyro'
                                                   'SteerTorqueSensor'
-                                                  'WheelSpeedMotor'}}, ...
+                                                  'WheelSpeedMotor'
+                                                  'PushButton'}}, ...
                             'RiderRateButton', {{'HipPotentiometer'
                                                  'LeanPotentionmeter'
                                                  'TwistPotentionmeter'}}, ...
@@ -309,30 +311,52 @@ switch get(eventdata.NewValue, 'Tag')
         % start collecting data from the DAQ
         start(handles.ai)
         trigger(handles.ai)
-        % find out what data is being plotted
-%         ButtonName = get(handles.GraphTypeButtonGroup.SelectedObject, 'Tag')
+        % find out what graph button is pressed
         ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
-        % set the plot axes to the graph
-        axes(handles.Graph)
-        % plot blank data
-        data = zeros(50, length(eval(['handles.RawLegends.' ButtonName])));
-        lines = plot(data); % plot the raw data
-        ylim([-5 5])
-        ylabel('Voltage')
+        % find out if the graph is raw or scaled data
         switch get(handles.ScaledRawButton, 'Value')
             case 0.0
                 legtype = 'RawLegends';
             case 1.0
                 legtype = 'ScaledLegends';
         end
+        % create a vector with the analog input numbers for this graph
+        datavals = zeros(1,length(eval(['handles.' legtype '.' ButtonName])));
+        for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
+            input = char(eval(['handles.' legtype '.' ButtonName '(i)']));
+            datavals(i) = eval(['handles.InputPairs.' input]);
+        end
+        % set the plot axes to the graph
+        axes(handles.Graph)
+        % plot blank data
+        data = zeros(50,length(eval(['handles.RawLegends.' ButtonName])));
+        lines = plot(data); % plot the raw data
+        ylim([-5 5])
+        ylabel('Voltage')
+        
         leg = legend(eval(['handles.' legtype '.' ButtonName]));
 %         labels = {'', '', '', '', ''};
+
+        daqdata = zeros(50, length(fieldnames(handles.InputPairs)));
+        vnavdata = zeros(50, 10);
         % update the plot while the data is being taken
-        while (1)
+        while handles.stopgraph == 0
+            display('another while')
+            for i = 1:50
+                tic
+                display('VNav')
+                vnavdata(i, :) = VNgetsamples(handles.s, 'RAW', 1);
+                toc
+                tic
+                display('DAQ')
+                daqdata(i, :) = peekdata(handles.ai, 1);
+                toc
+                %getsample(handles.ai);
+            end
             % return the latest 100 samples
-            data = peekdata(handles.ai, 50);
+%             data = peekdata(handles.ai, 50);
             for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
-                set(lines(i), 'YData', data(:, i))
+                set(lines(i), 'YData', daqdata(:, datavals(i)+1))
             end
 %             meanData = mean(data);
 %             labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
@@ -342,6 +366,7 @@ switch get(eventdata.NewValue, 'Tag')
 %             labels{5} = sprintf('Button = %1.2f V', meanData(5));
 %             set(leg, 'String', labels)
             drawnow
+            handles = guidata(handles.BicycleDAQ);
         end
     case 'RecordButton'
         % records data to file
@@ -403,14 +428,22 @@ switch get(hObject, 'Value')
         set(handles.ai,'SamplesPerTrigger',handles.duration*ActualRate);
         set(handles.ai,'TriggerType','Manual');
         set(handles.ai,'InputType','SingleEnded');
-        handles.aichan = addchannel(handles.ai,0:16);
+        handles.aichan = addchannel(handles.ai,0:17);
+        
+        % tells the graph loop to keep going
+        handles.stopgraph = 0;
                 
     case 0.0 % disconnect
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
+        % tells the graph loop to stop
+        handles.stopgraph = 1;
         %rmfield(handles, 'ai')
         %delete(handles.ai)
+        stop(handles.ai)
         daqreset
+        % close the VectorNav
+        VNclearports();
 
 end
 
