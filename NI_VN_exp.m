@@ -13,12 +13,9 @@ clear all;
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
-duration = 10; % the sample time in seconds
 samplerate = 100; % sample rate in hz
+duration = 5; % the sample time in seconds
 numsamples = duration*samplerate;
-
-% connect to the VectorNav
-s = VNserial('COM3')
 
 % connect to the NI USB-6218
 ai=analoginput('nidaq','Dev1');
@@ -31,23 +28,55 @@ set(ai,'SamplesPerTrigger',duration*ActualRate)
 set(ai,'TriggerType','Manual')
 % set(ai,'HwDigitalTriggerSource','PFI0')
 % set(ai,'TriggerCondition','PositiveEdge')
-set(ai,'TriggerDelay',0.185)
+set(ai,'TriggerDelay',0)
 set(ai,'InputType','SingleEnded')
 chan = addchannel(ai,[0]);
 get(ai)
+
+% connect to the VectorNav
+s = VNserial('COM3')
+%Set the data output rate
+VNwriteregister(s, 7, samplerate);
+% write to the 'YPR' register
+VNwriteregister(s, 6, 1);
+% initialize the data
+vndata = zeros(samplerate*duration, 3);
+%Create parse string
+ps = '%*6c';
+for i=1:size(vndata,2)
+    ps = [ps ',%g'];
+end
+a = 1:duration
+b = 1:samplerate
+
 % start up the DAQ
 start(ai)
 display('DAQ started')
 trigger(ai)
 
-tic
-vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
-toc
+%Record data
+%fprintf('Data recording started.\n');
+for i=a
+    for j=b
+        tic
+        vndata((i-1)*samplerate+j, :) = fscanf(s, ps);
+        toc
+    end
+    
+    %fprintf('%i  seconds remaining...\n', numSec-i);
+end
+display('VN data done')
+%Turn off ADOR
+VNprintf(s, 'VNWRG,6,0');
+pause(0.1);
+VNclearbuffer(s);
 
-tic
+% tic
+% vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
+% toc
+
 daqdata = getdata(ai);
 %daqdata = peekdata(ai, numsamples)
-toc
 
 events = ai.EventLog
 
