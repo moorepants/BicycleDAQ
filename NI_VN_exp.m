@@ -13,7 +13,7 @@ clear all;
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
-samplerate = 100; % sample rate in hz
+samplerate = 200; % sample rate in hz
 duration = 5; % the sample time in seconds
 numsamples = duration*samplerate;
 
@@ -28,26 +28,27 @@ set(ai,'SamplesPerTrigger',duration*ActualRate)
 set(ai,'TriggerType','Manual')
 % set(ai,'HwDigitalTriggerSource','PFI0')
 % set(ai,'TriggerCondition','PositiveEdge')
-set(ai,'TriggerDelay',0)
+set(ai,'TriggerDelay',0.0)
 set(ai,'InputType','SingleEnded')
 chan = addchannel(ai,[0]);
 get(ai)
 
 % connect to the VectorNav
 s = VNserial('COM3')
+%VNsetbaudrate(s, 115200);
 %Set the data output rate
 VNwriteregister(s, 7, samplerate);
-% write to the 'YPR' register
+% set the output type: 'YPR'
 VNwriteregister(s, 6, 1);
 % initialize the data
 vndata = zeros(samplerate*duration, 3);
 %Create parse string
 ps = '%*6c';
-for i=1:size(vndata,2)
+for i=1:size(vndata, 2)
     ps = [ps ',%g'];
 end
-a = 1:duration
-b = 1:samplerate
+
+vntime = zeros(numsamples,1);
 
 % start up the DAQ
 start(ai)
@@ -56,33 +57,43 @@ trigger(ai)
 
 %Record data
 %fprintf('Data recording started.\n');
-for i=a
-    for j=b
-        tic
-        vndata((i-1)*samplerate+j, :) = fscanf(s, ps);
-        toc
+tic
+for i=1:duration
+    for j=1:samplerate
+        tstart = tic;
+        a = fscanf(s, ps)
+        vndata((i-1)*samplerate+j, :) = a;
+        telapsed = toc(tstart);
+        if (i-1)*samplerate+j ~= numsamples
+            vntime((i-1)*samplerate+j+1) = vntime((i-1)*samplerate+j)+telapsed;
+        end
+        
+        %pause(remainder)
     end
     
     %fprintf('%i  seconds remaining...\n', numSec-i);
 end
+toc
 display('VN data done')
 %Turn off ADOR
 VNprintf(s, 'VNWRG,6,0');
 pause(0.1);
 VNclearbuffer(s);
 
-% tic
 % vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
-% toc
 
 daqdata = getdata(ai);
 %daqdata = peekdata(ai, numsamples)
 
-events = ai.EventLog
-
 stop(ai)
 delete(ai)
 
-% plot the angles together
+% plot versus sample
+figure(1)
 plot(1:numsamples,-(vndata(:,1)-vndata(1,1)),1:numsamples,21*(daqdata-daqdata(1)))
+figure(2)
+% plot versus time
+plot(vntime(:),-(vndata(:,1)-vndata(1,1)),0:1/samplerate:duration-1/samplerate,21*(daqdata-daqdata(1)))
 legend('vndata', 'daqdata')
+figure(3)
+plot(vntime)
