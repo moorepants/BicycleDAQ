@@ -27,16 +27,18 @@ ai=analoginput('nidaq','Dev1');
 set(ai,'SampleRate',samplerate)
 ActualRate = get(ai,'SampleRate')
 set(ai,'SamplesPerTrigger',duration*ActualRate)
-set(ai,'TriggerType','HwDigital')
-set(ai,'HwDigitalTriggerSource','PFI0')
-set(ai,'TriggerCondition','PositiveEdge')
+% set(ai,'TriggerType','HwDigital')
+set(ai,'TriggerType','Manual')
+% set(ai,'HwDigitalTriggerSource','PFI0')
+% set(ai,'TriggerCondition','PositiveEdge')
+set(ai,'TriggerDelay',0.185)
 set(ai,'InputType','SingleEnded')
 chan = addchannel(ai,[0]);
 get(ai)
 % start up the DAQ
 start(ai)
 display('DAQ started')
-%trigger(ai)
+trigger(ai)
 
 tic
 vndata = VNrecordADOR(s, 'YPR', samplerate, duration);

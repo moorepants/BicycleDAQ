@@ -23,6 +23,7 @@ set(ai,'SamplesPerTrigger',duration*ActualRate)
 set(ai,'TriggerType','HwDigital')
 set(ai,'HwDigitalTriggerSource','PFI0')
 set(ai,'TriggerCondition','PositiveEdge')
+set(ai,'TriggerDelay',0.185)
 set(ai,'InputType','SingleEnded')
 chan = addchannel(ai,[0]);
 get(ai)
@@ -35,4 +36,4 @@ daqdata = getdata(ai);
 events = ai.EventLog
 
 stop(ai)
-delete(ai)
+%delete(ai)
