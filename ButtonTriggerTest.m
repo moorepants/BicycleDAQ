@@ -17,7 +17,7 @@ numsamples = duration*samplerate;
 ai = analoginput('nidaq','Dev1');
 
 % add channels and lines
-chan = addchannel(ai, [0 17]); % button is in AI17
+chan = addchannel(ai, [0 17]); % pot in in AI0 and button is in AI17
 
 % configure the DAQ
 set(ai,'InputType','SingleEnded')
