@@ -1,3 +1,4 @@
+function ButtonTriggerTest
 % testing external triggering
 
 % you have to delete the ai object for things to restart correctly
@@ -26,10 +27,13 @@ set(ai,'SamplesPerTrigger',duration*get(ai,'SampleRate'))
 set(ai,'TriggerType','Software')
 set(ai,'TriggerChannel',chan(2))
 set(ai,'TriggerConditionValue',4.9) % trigger if button goes above 4.9 volts
-
+set(ai,'TriggerFcn',@TriggerCallback)
 % start up the DAQ
 start(ai)
 wait(ai, 5*duration)
 [nidata, time, abstime, events] = getdata(ai);
 
 stop(ai)
+
+function TriggerCallback(obj, event)
+    display('trigger ran')
