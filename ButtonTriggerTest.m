@@ -1,5 +1,5 @@
 function ButtonTriggerTest
-% testing external triggering
+% testing external triggering and trigger callback functions
 
 % you have to delete the ai object for things to restart correctly
 if exist('ai')
@@ -18,7 +18,7 @@ numsamples = duration*samplerate;
 ai = analoginput('nidaq','Dev1');
 
 % add channels and lines
-chan = addchannel(ai, [0 17]); % pot in in AI0 and button is in AI17
+chan = addchannel(ai, [0 17]); % pot is in AI0 and button is in AI17
 
 % configure the DAQ
 set(ai,'InputType','SingleEnded')
