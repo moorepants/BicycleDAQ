@@ -12,7 +12,7 @@ close all;
 clear all;
 
 % daq parameters
-samplerate = 100; % sample rate in hz
+samplerate = 200; % sample rate in hz
 duration = 5; % the sample time in seconds
 numsamples = duration*samplerate;
 
@@ -37,7 +37,7 @@ set(ai, 'TriggerDelay', 0.00)
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 % connect to the VectorNav
-s = VNserial('COM3');
+s = VNserial('COM3',460800);
 % set the data output rate
 VNwriteregister(s, 7, samplerate);
 % set the output type: 'YPR'
@@ -91,7 +91,6 @@ display('Trigger called')
 for i=1:duration
     for j=1:samplerate
         vndatatext{(i-1)*samplerate+j} = fgets(s);
-%         vndata((i-1)*samplerate+j, :) = fscanf(s, ps);
     end
     display('a sec')
 end
