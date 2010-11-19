@@ -40,10 +40,12 @@ addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLi
 s = VNserial('COM3',460800);
 % set the data output rate
 VNwriteregister(s, 7, samplerate);
-% set the output type: 'YPR'
-VNwriteregister(s, 6, 1);
+% set the output type
+% VNwriteregister(s, 6, 1); % 'YPR'
+VNwriteregister(s, 6, 14); % 'YMR'
 % initialize the VectorNav data
-vndata = zeros(samplerate*duration, 3);
+% vndata = zeros(samplerate*duration, 3); %YPR
+vndata = zeros(samplerate*duration, 12); % YMR
 vndatatext = cell(samplerate*duration, 1);
 %Create parse string
 ps = '%*6c';
