@@ -90,7 +90,7 @@ legend('VectoNav Data', 'NI Data')
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
 s.ReadAsyncMode = 'manual';
-VNclearbuffer(s);
+flushinput(s);
 s.BytesAvailable
 s.ReadAsyncMode = 'continuous';
 s.BytesAvailable
