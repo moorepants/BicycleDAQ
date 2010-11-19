@@ -1,4 +1,4 @@
-function [nidata, time, abstime, events, ai] = NI_VN_exp
+function [nidata, vndata, time, abstime, events, ai, s] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
@@ -12,7 +12,7 @@ close all;
 clear all;
 
 % daq parameters
-samplerate = 200; % sample rate in hz
+samplerate = 100; % sample rate in hz
 duration = 5; % the sample time in seconds
 numsamples = duration*samplerate;
 
@@ -25,6 +25,7 @@ chan = addchannel(ai, [0 17]); % pot is in AI0 and button is in AI17
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
 set(ai, 'SampleRate', samplerate)
+actualrate = get(ai,'SampleRate')
 set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
 % trigger details
@@ -39,9 +40,7 @@ addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLi
 s = VNserial('COM3');
 % set the data output rate
 VNwriteregister(s, 7, samplerate);
-% set the output type: 'YPR'
-VNwriteregister(s, 6, 1);
-% initialize the data
+% initialize the VectorNav data
 vndata = zeros(samplerate*duration, 3);
 vndatatext = cell(samplerate*duration, 1);
 %Create parse string
@@ -73,16 +72,22 @@ for i=1:numsamples
     end
 end
 
+% set zero angle to zero, normalize the data
+vnsteer = -(vndata(:, 1)-vndata(1, 1));
+vnsteer = vnsteer./max(abs(vnsteer));
+nisteer =  (nidata(:, 1)-nidata(1, 1));
+nisteer = nisteer./max(abs(nisteer));
+
 % plot versus sample
 figure(1)
-plot(1:numsamples,-(vndata(:,1)-vndata(1,1)),1:numsamples,21*(nidata-nidata(1)))
+plot(1:numsamples,vnsteer,1:numsamples,nisteer)
 legend('vndata', 'daqdata')
 
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
 % record data
-% vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
-
+% set the output type: 'YPR'
+VNwriteregister(s, 6, 1);
 for i=1:duration
     for j=1:samplerate
         vndatatext{(i-1)*samplerate+j} = fgets(s);
