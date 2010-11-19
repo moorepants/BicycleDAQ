@@ -1,4 +1,4 @@
-function [nidata, vndata, time, abstime, events, ai, s] = NI_VN_exp
+function [nidata, vndata, nisteer, vnsteer, time, abstime, events, ai, s] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
@@ -41,31 +41,29 @@ s = VNserial('COM3',460800);
 % set the data output rate
 VNwriteregister(s, 7, samplerate);
 % set the output type
-% VNwriteregister(s, 6, 1); % 'YPR'
 VNwriteregister(s, 6, 14); % 'YMR'
 % initialize the VectorNav data
-% vndata = zeros(samplerate*duration, 3); %YPR
 vndata = zeros(samplerate*duration, 12); % YMR
 vndatatext = cell(samplerate*duration, 1);
-%Create parse string
-ps = '%*6c';
-for i=1:size(vndata, 2)
-    ps = [ps ',%g'];
-end
 
-set(ai,'TriggerFcn',{@TriggerCallback,s,ps,duration,samplerate,numsamples,vndata,vndatatext})
+
+set(ai,'TriggerFcn',{@TriggerCallback, s, duration, samplerate, vndatatext})
 
 % start up the DAQ
 start(ai)
 display('DAQ started')
-wait(ai, 60)
+wait(ai, 60) % give the person some time to hit the button
 
 [nidata, time, abstime, events] = getdata(ai);
 %daqdata = peekdata(ai, numsamples)
 vndatatext = ai.UserData;
 stop(ai)
-% delete(ai)
 
+%Create parse string
+ps = '%*6c';
+for i=1:size(vndata, 2)
+    ps = [ps ',%g'];
+end
 % process the text data
 for i=1:numsamples
     try
@@ -87,13 +85,12 @@ figure(1)
 plot(1:numsamples,vnsteer,1:numsamples,nisteer)
 legend('VectoNav Data', 'NI Data')
 
-function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
+function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
 s.ReadAsyncMode = 'manual';
 flushinput(s);
-s.BytesAvailable
+serialbreak(s);
 s.ReadAsyncMode = 'continuous';
-s.BytesAvailable
 % record data
 for i=1:duration
     for j=1:samplerate
