@@ -77,9 +77,9 @@ for i=1:numsamples
 end
 
 % set zero angle to zero, normalize the data
-vnsteer = -(vndata(:, 1)-vndata(1, 1));
+vnsteer = -(vndata(:, 1)-vndata(4, 1));
 vnsteer = vnsteer./max(abs(vnsteer));
-nisteer =  (nidata(:, 1)-nidata(1, 1));
+nisteer =  (nidata(:, 1)-nidata(4, 1));
 nisteer = nisteer./max(abs(nisteer));
 
 % plot versus sample
@@ -89,8 +89,9 @@ legend('VectoNav Data', 'NI Data')
 
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
+VNclearbuffer(s);
+s.BytesAvailable
 % record data
-flushinput(s);
 for i=1:duration
     for j=1:samplerate
         vndatatext{(i-1)*samplerate+j} = fgets(s);
