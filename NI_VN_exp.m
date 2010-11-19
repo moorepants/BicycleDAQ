@@ -42,7 +42,7 @@ s = VNserial('COM3',460800);
 VNwriteregister(s, 7, samplerate);
 % set the output type
 % VNwriteregister(s, 6, 1); % 'YPR'
-% VNwriteregister(s, 6, 14); % 'YMR'
+VNwriteregister(s, 6, 14); % 'YMR'
 % initialize the VectorNav data
 % vndata = zeros(samplerate*duration, 3); %YPR
 vndata = zeros(samplerate*duration, 12); % YMR
@@ -90,7 +90,7 @@ legend('VectoNav Data', 'NI Data')
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
 % record data
-VNwriteregister(s, 6, 14); % 'YMR'
+flushinput(s);
 for i=1:duration
     for j=1:samplerate
         vndatatext{(i-1)*samplerate+j} = fgets(s);
