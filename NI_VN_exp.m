@@ -40,6 +40,8 @@ addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLi
 s = VNserial('COM3');
 % set the data output rate
 VNwriteregister(s, 7, samplerate);
+% set the output type: 'YPR'
+VNwriteregister(s, 6, 1);
 % initialize the VectorNav data
 vndata = zeros(samplerate*duration, 3);
 vndatatext = cell(samplerate*duration, 1);
@@ -86,8 +88,6 @@ legend('VectoNav Data', 'NI Data')
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
 % record data
-% set the output type: 'YPR'
-VNwriteregister(s, 6, 1);
 for i=1:duration
     for j=1:samplerate
         vndatatext{(i-1)*samplerate+j} = fgets(s);
