@@ -2,7 +2,7 @@ function [nidata, time, abstime, events, ai] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
-% you have to delete the ai object for things to restart correctly
+% you have to delete the ai object before reconnecting
 if exist('ai')
     delete(ai)
 end
