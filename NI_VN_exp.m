@@ -24,14 +24,14 @@ chan = addchannel(ai, [0 17]); % pot is in AI0 and button is in AI17
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
-set(ai,'SampleRate',samplerate)
-set(ai,'SamplesPerTrigger',duration*get(ai,'SampleRate'))
+set(ai, 'SampleRate', samplerate)
+set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
 % trigger details
-set(ai,'TriggerType','Software')
-set(ai,'TriggerChannel',chan(2))
-set(ai,'TriggerConditionValue',4.9) % trigger if button goes above 4.9 v
-set(ai,'TriggerDelay',0.09)
+set(ai, 'TriggerType', 'Software')
+set(ai, 'TriggerChannel', chan(2))
+set(ai, 'TriggerConditionValue', 4.9) % trigger if button goes above 4.9 v
+set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
@@ -56,8 +56,6 @@ start(ai)
 display('DAQ started')
 wait(ai, 5*duration)
 
-% vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
-
 [nidata, time, abstime, events] = getdata(ai);
 %daqdata = peekdata(ai, numsamples)
 vndata = ai.UserData;
@@ -72,16 +70,17 @@ legend('vndata', 'daqdata')
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata)
 display('Trigger called')
 % record data
-vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
-% for i=1:duration
-%     for j=1:samplerate
-%         vndata((i-1)*samplerate+j, :) = fscanf(s, ps);
-%     end
-%     display('a sec')
-% end
+% vndata = VNrecordADOR(s, 'YPR', samplerate, duration);
+pause(0.1)
+for i=1:duration
+    for j=1:samplerate
+        vndata((i-1)*samplerate+j, :) = fscanf(s, ps);
+    end
+    display('a sec')
+end
 obj.UserData = vndata;
-% display('VN data done')
-% %Turn off ADOR
-% VNprintf(s, 'VNWRG,6,0');
-% pause(0.1);
-% VNclearbuffer(s);
+display('VN data done')
+%Turn off ADOR
+VNprintf(s, 'VNWRG,6,0');
+pause(0.1);
+VNclearbuffer(s);
