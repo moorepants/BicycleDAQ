@@ -36,7 +36,10 @@ set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
-
+% connect to the VectorNav
+s = VNserial('COM3');
+% set the data output rate
+VNwriteregister(s, 7, samplerate);
 % initialize the VectorNav data
 vndata = zeros(samplerate*duration, 3);
 vndatatext = cell(samplerate*duration, 1);
@@ -45,7 +48,7 @@ ps = '%*6c';
 for i=1:size(vndata, 2)
     ps = [ps ',%g'];
 end
-s=1;
+
 set(ai,'TriggerFcn',{@TriggerCallback,s,ps,duration,samplerate,numsamples,vndata,vndatatext})
 
 % start up the DAQ
@@ -83,10 +86,6 @@ legend('VectoNav Data', 'NI Data')
 function TriggerCallback(obj, event, s, ps, duration, samplerate, numsamples, vndata, vndatatext)
 display('Trigger called')
 % record data
-% connect to the VectorNav
-s = VNserial('COM3');
-% set the data output rate
-VNwriteregister(s, 7, samplerate);
 % set the output type: 'YPR'
 VNwriteregister(s, 6, 1);
 for i=1:duration
