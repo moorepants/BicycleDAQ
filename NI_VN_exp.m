@@ -54,7 +54,7 @@ set(ai,'TriggerFcn',{@TriggerCallback,s,ps,duration,samplerate,numsamples,vndata
 % start up the DAQ
 start(ai)
 display('DAQ started')
-wait(ai, 5*duration)
+wait(ai, 60)
 
 [nidata, time, abstime, events] = getdata(ai);
 %daqdata = peekdata(ai, numsamples)
