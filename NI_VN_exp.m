@@ -12,7 +12,7 @@ close all;
 clear all;
 
 % daq parameters
-samplerate = 100; % sample rate in hz
+samplerate = 200; % sample rate in hz
 duration = 5; % the sample time in seconds
 numsamples = duration*samplerate;
 
@@ -69,6 +69,7 @@ for i=1:numsamples
         vndata(i, :) = sscanf(vndatatext{i}, ps);
     catch
         vndata(i) = NaN;
+        display(sprintf('A bad one: %s', vndatatext{i}))
     end
 end
 
