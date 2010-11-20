@@ -89,7 +89,7 @@ function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
 s.ReadAsyncMode = 'manual';
 flushinput(s);
-serialbreak(s);
+serialbreak(s, 250);
 s.ReadAsyncMode = 'continuous';
 % record data
 for i=1:duration
