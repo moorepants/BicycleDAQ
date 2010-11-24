@@ -20,7 +20,7 @@ numsamples = duration*samplerate;
 ai=analoginput('nidaq', 'Dev1');
 
 % add channels and lines
-chan = addchannel(ai, [0 17]); % pot is in AI0 and button is in AI17
+chan = addchannel(ai, [0 17 18 19 20]); % pot is in AI0 and button is in AI17
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
@@ -83,6 +83,16 @@ nisteer = nisteer./max(abs(nisteer));
 % plot versus sample
 figure(1)
 plot(1:numsamples,vnsteer,1:numsamples,nisteer)
+legend('VectoNav Data', 'NI Data')
+
+% plot the acceleration comparisons
+vnaccel = vndata(:, 7) - vndata(4, 1);
+vnaccel = vnaccel./max(abs(vnaccel));
+niaccel = nidata(:, 3) - nidata(4, 1);
+niaccel = niaccel./max(abs(niaccel));
+
+figure(2)
+plot(1:numsamples,vnaccel,1:numsamples,niaccel)
 legend('VectoNav Data', 'NI Data')
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
