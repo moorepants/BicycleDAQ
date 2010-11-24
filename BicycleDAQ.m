@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 12-Nov-2010 17:09:47
+% Last Modified by GUIDE v2.5 24-Nov-2010 12:01:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -197,6 +197,38 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewSpeedEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the items in the popmenu
+items = get(handles.SpeedPopupmenu, 'String');
+
+% if the popupmenu is not a cell then make it one
+if sum(class(items) == 'cell') ~= 4
+    items = {items};
+end
+
+% how many are already in the list
+number = length(items);
+
+% add the new item to the end of the list
+items{number + 1} = newitem;
+
+% sort the speeds
+[sorteditems, index] = sort(str2double(items));
+
+% convert the sorted speeds back to a strings and cells
+for i = 1:length(sorteditems)
+    items{i} = num2str(sorteditems(i));
+end
+
+% rewrite the popupmenu and set the value to the new item
+set(handles.SpeedPopupmenu, 'String', items)
+set(handles.SpeedPopupmenu, 'Value', index(number + 1))
+
+% put the old text back in the edit box
+set(hObject, 'String', 'Add a new speed')
+
 
 % --- Executes during object creation, after setting all properties.
 function NewSpeedEditText_CreateFcn(hObject, eventdata, handles)
@@ -247,6 +279,30 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewRiderEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
 
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the items in the popmenu
+items = get(handles.RiderPopupmenu, 'String');
+
+% if the popupmenu is not a cell then make it one
+if sum(class(items) == 'cell') ~= 4
+    items = {items};
+end
+
+% how many are already in the list
+number = length(items);
+
+% add the new item to the end of the list
+items{number + 1} = newitem;
+
+% rewrite the popupmenu and set the value to the new item
+set(handles.RiderPopupmenu, 'String', items)
+set(handles.RiderPopupmenu, 'Value', number + 1)
+
+% put the old text back in the edit box
+set(hObject, 'String', 'Add a new rider')
+
 
 % --- Executes during object creation, after setting all properties.
 function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
@@ -269,6 +325,29 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewBicycleEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the items in the popmenu
+items = get(handles.BicyclePopupmenu, 'String');
+
+% if the popupmenu is not a cell then make it one
+if sum(class(items) == 'cell') ~= 4
+    items = {items};
+end
+
+% how many are already in the list
+number = length(items);
+
+% add the new item to the end of the list
+items{number + 1} = newitem;
+
+% rewrite the popupmenu and set the value to the new item
+set(handles.BicyclePopupmenu, 'String', items)
+set(handles.BicyclePopupmenu, 'Value', number + 1)
+
+% put the old text back in the edit box
+set(hObject, 'String', 'Add a new bicycle')
 
 % --- Executes during object creation, after setting all properties.
 function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
@@ -514,55 +593,10 @@ function NewRiderEditText_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% --- Executes on selection change in ManeuverPopupmenu.
-function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
-% hObject    handle to ManeuverPopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
-
 
 % --- Executes during object creation, after setting all properties.
-function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ManeuverPopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function NewManeuverEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NewManeuverEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function NewManeuverEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewManeuverEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
+function BicyclePopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BicyclePopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -580,6 +614,76 @@ function edit3_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in BicyclePopupmenu.
+function BicyclePopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to BicyclePopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns BicyclePopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
+
+
+
+function NewManueverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManueverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewManueverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManueverEditText as a double
+
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the items in the popmenu
+items = get(handles.ManueverPopupmenu, 'String');
+
+% if the popupmenu is not a cell then make it one
+if sum(class(items) == 'cell') ~= 4
+    items = {items};
+end
+
+% how many are already in the list
+number = length(items);
+
+% add the new item to the end of the list
+items{number + 1} = newitem;
+
+% rewrite the popupmenu and set the value to the new item
+set(handles.ManueverPopupmenu, 'String', items)
+set(handles.ManueverPopupmenu, 'Value', number + 1)
+
+% put the old text back in the edit box
+set(hObject, 'String', 'Add a new manuever')
+
+
+% --- Executes during object creation, after setting all properties.
+function NewManueverEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewManueverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ManueverPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
