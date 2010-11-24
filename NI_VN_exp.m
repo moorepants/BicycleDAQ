@@ -11,10 +11,15 @@ clc
 close all;
 clear all;
 
-% daq parameters
-samplerate = 200; % sample rate in hz
 duration = 5; % the sample time in seconds
-numsamples = duration*samplerate;
+
+% daq parameters
+nisamplerate = 1000; % sample rate in hz
+ninumsamples = duration*nisamplerate;
+
+% vectornav parameters
+vnsamplerate = 200;
+vnnumsamples = duration*vnsamplerate;
 
 % connect to the NI USB-6218
 ai=analoginput('nidaq', 'Dev1');
@@ -24,7 +29,7 @@ chan = addchannel(ai, [0 17 18 19 20]); % pot is in AI0 and button is in AI17
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
-set(ai, 'SampleRate', samplerate)
+set(ai, 'SampleRate', nisamplerate)
 actualrate = get(ai,'SampleRate')
 set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
@@ -39,15 +44,14 @@ addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLi
 % connect to the VectorNav
 s = VNserial('COM3',460800);
 % set the data output rate
-VNwriteregister(s, 7, samplerate);
+VNwriteregister(s, 7, vnsamplerate);
 % set the output type
 VNwriteregister(s, 6, 14); % 'YMR'
 % initialize the VectorNav data
-vndata = zeros(samplerate*duration, 12); % YMR
-vndatatext = cell(samplerate*duration, 1);
+vndata = zeros(vnsamplerate*duration, 12); % YMR
+vndatatext = cell(vnsamplerate*duration, 1);
 
-
-set(ai,'TriggerFcn',{@TriggerCallback, s, duration, samplerate, vndatatext})
+set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
 
 % start up the DAQ
 start(ai)
@@ -65,7 +69,7 @@ for i=1:size(vndata, 2)
     ps = [ps ',%g'];
 end
 % process the text data
-for i=1:numsamples
+for i=1:vnnumsamples
     try
         vndata(i, :) = sscanf(vndatatext{i}, ps);
     catch
@@ -82,17 +86,17 @@ nisteer = nisteer./max(abs(nisteer));
 
 % plot versus sample
 figure(1)
-plot(1:numsamples,vnsteer,1:numsamples,nisteer)
+plot(1:vnnumsamples,vnsteer,1:ninumsamples,nisteer)
 legend('VectoNav Data', 'NI Data')
 
 % plot the acceleration comparisons
-vnaccel = vndata(:, 7) - vndata(4, 1);
+vnaccel = vndata(:, 7) - vndata(50, 7);
 vnaccel = vnaccel./max(abs(vnaccel));
-niaccel = nidata(:, 3) - nidata(4, 1);
+niaccel = nidata(:, 3) - nidata(50, 3);
 niaccel = niaccel./max(abs(niaccel));
 
 figure(2)
-plot(1:numsamples,vnaccel,1:numsamples,niaccel)
+plot(1:5:ninumsamples,vnaccel,1:ninumsamples,niaccel)
 legend('VectoNav Data', 'NI Data')
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
