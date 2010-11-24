@@ -90,10 +90,10 @@ plot(1:vnnumsamples,vnsteer,1:ninumsamples,nisteer)
 legend('VectoNav Data', 'NI Data')
 
 % plot the acceleration comparisons
-vnaccel = vndata(:, 7) - vndata(50, 7);
-vnaccel = vnaccel./max(abs(vnaccel));
-niaccel = nidata(:, 3) - nidata(50, 3);
-niaccel = niaccel./max(abs(niaccel));
+vnaccel = vndata(:, 7);% - vndata(50, 7);
+% vnaccel = vnaccel./max(abs(vnaccel));
+niaccel = 9.81*(2*nidata(:, 3)-3);% - nidata(50, 3);
+% niaccel = niaccel./max(abs(niaccel));
 
 figure(2)
 plot(1:5:ninumsamples,vnaccel,1:ninumsamples,niaccel)
