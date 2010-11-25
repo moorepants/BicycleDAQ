@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 24-Nov-2010 12:01:49
+% Last Modified by GUIDE v2.5 24-Nov-2010 16:02:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -688,3 +688,13 @@ function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on selection change in ManueverPopupmenu.
+function ManueverPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to ManueverPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns ManueverPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ManueverPopupmenu
