@@ -45,17 +45,43 @@ addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLi
 vnsamplerate = 200;
 vnnumsamples = duration*vnsamplerate;     
 
-% connect to the VectorNav
-s = VNserial('COM3', 460800);
+vncomport = 'COM3';
+
+%Check to see if COM port is already open, if so then close COM port.
+ports = instrfind;
+for i=1:length(ports)
+    if strcmp(ports(i).Port, vncomport) == 1
+        fclose(ports(i));
+    end
+end
+
+baudrate = 460800;
+% Create the serial port
+s = serial(vncomport);
+display('Serial port created')
+
+% Open the serial port
+fopen(s);
+display('Serial port opened')
+s.BytesAvailable
+
+% Turn off the VN async
+VNwriteregister(s, 6, 0);
+
 display('Connected to the VectorNav')
+
 % set the data output rate
 VNwriteregister(s, 7, vnsamplerate);
+
 % set the output type
 VNwriteregister(s, 6, 14); % 'YMR'
+
 % save the settings to VectorNav memory
 VNprintf(s, 'VNWNV');
+
 % turn the VNav async off
 VNwriteregister(s, 6, 0);
+
 s.ReadAsyncMode = 'manual';
 flushinput(s);
 %serialbreak(s, 250);
@@ -122,3 +148,5 @@ display('VN data done')
 VNprintf(s, 'VNWRG,6,0');
 pause(0.1);
 VNclearbuffer(s);
+% Restore the factory settings
+VNprintf(s, 'VNRFS');
