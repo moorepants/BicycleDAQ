@@ -14,7 +14,7 @@ clear all;
 duration = 5; % the sample time in seconds
 
 % daq parameters
-nisamplerate = 1000; % sample rate in hz
+nisamplerate = 200; % sample rate in hz
 ninumsamples = duration*nisamplerate;
 
 % connect to the NI USB-6218
@@ -39,16 +39,15 @@ set(ai, 'TriggerConditionValue', 0.5)
 set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
-addpath(['C:\Documents and Settings\Administrator\My Documents' 
-         '\MATLAB\VectorNavLib'])
+addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
 % vectornav parameters
 vnsamplerate = 200;
 vnnumsamples = duration*vnsamplerate;     
 
 % connect to the VectorNav
-s = VNserial('COM3',460800);
-
+s = VNserial('COM3', 460800);
+display('Connected to the VectorNav')
 % set the data output rate
 VNwriteregister(s, 7, vnsamplerate);
 % set the output type
@@ -59,8 +58,11 @@ VNprintf(s, 'VNWNV');
 VNwriteregister(s, 6, 0);
 s.ReadAsyncMode = 'manual';
 flushinput(s);
-serialbreak(s, 250);
+%serialbreak(s, 250);
+display('Bytes after the flushinput()')
+s.BytesAvailable
 s.ReadAsyncMode = 'continuous';
+display('Bytes after ReadAsyncMode = continuous')
 s.BytesAvailable
 
 % initialize the VectorNav data
@@ -107,7 +109,6 @@ legend('VectoNav Data', 'NI Data')
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
-
 % record data
 for i=1:duration
     for j=1:samplerate
