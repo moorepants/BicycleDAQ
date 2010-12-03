@@ -140,6 +140,10 @@ vndatatext = cell(vnsamplerate*duration, 1);
 
 set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
 
+% wait for me to depress and hold the reset button
+display('Depress the reset button and press any key')
+pause
+
 % start up the DAQ
 start(ai)
 display('DAQ started')
