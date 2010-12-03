@@ -1,6 +1,8 @@
 function UnderstandSerial
 
 clc
+clear all
+close all
 
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
@@ -115,6 +117,17 @@ display('-------------------------------------------------')
 display('VNav baud rate is now set to:')
 display(sprintf(response))
 display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
+
+% set the samplerate
+samplerate = 200;
+command = ['VNWRG,07,' num2str(samplerate)];
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav sample rate is now set to:')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after setting the sample rate', s.BytesAvailable))
 
 % set the async type and turn it on
 command = 'VNWRG,06,14';
