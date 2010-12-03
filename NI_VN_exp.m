@@ -4,6 +4,7 @@ function [nidata, vndata, nisteer, vnsteer, time, abstime, events, ai, s] = NI_V
 
 % you have to delete the ai object before reconnecting
 if exist('ai')
+    exist 'ai'
     delete(ai)
 end
 

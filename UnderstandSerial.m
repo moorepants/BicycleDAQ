@@ -6,7 +6,6 @@ clc
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
 comPort = 'COM3';
-baudrate = 9600;
 
 %Check to see if COM port is already open, if so then close COM port.
 display('-------------------------------------------------')
@@ -156,11 +155,12 @@ display(sprintf('%d bytes in input buffer after reseting to factory', s.BytesAva
 fclose(s)
 display('Serial port is closed')
 
-if exist('s')
+if exist('s', 'var')
     delete(s)
     clear s
+    display('Serial port is deleted')
 end
-display('Serial port is deleted')
+
 
 function BytesAvailCallback(obj, event)
     display('=========================================')
