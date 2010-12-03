@@ -62,7 +62,7 @@ display('-------------------------------------------------')
 display('Pin Status:')
 s.PinStatus
 
-p = 0.5;
+p = 1;
 pause(p)
 display('-------------------------------------------------')
 t = toc;
@@ -73,10 +73,11 @@ command = 'VNWRG,06,0';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 flushinput(s)
-s.BytesAvailable
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 display('-------------------------------------------------')
 display('The VectorNav async mode is off')
 
+% Output some of the VNav registers
 display('-------------------------------------------------')
 display('Model Number')
 command = 'VNRRG,01';
@@ -107,6 +108,52 @@ command = 'VNRRG,05';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 response = fgets(s);
+display(sprintf(response))
+
+
+baudrate = 460800;
+command = ['VNWRG,05,' num2str(baudrate)];
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+s.BaudRate = baudrate; % set the laptop baud rate to match
+display('-------------------------------------------------')
+display('VNav baud rate is now set to:')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
+
+command = 'VNWRG,06,14';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav async is now set to:')
+display(sprintf(response))
+
+% now save these settings to the non-volatile memory
+command = 'VNWNV';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+display('-------------------------------------------------')
+display('Saved the settings to non-volatile memory')
+display(sprintf(response))
+
+% Turn the async off on the VectorNav
+command = 'VNWRG,06,0';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+flushinput(s)
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+display('-------------------------------------------------')
+display('The VectorNav async mode is off')
+
+% reset to factory settings
+command = 'VNRFS';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('-------------------------------------------------')
+display('Reset to factory')
 display(sprintf(response))
 
 fclose(s)
