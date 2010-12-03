@@ -36,8 +36,8 @@ set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 % trigger details
 set(ai, 'TriggerType', 'Software')
 set(ai, 'TriggerChannel', chan(2))
-set(ai, 'TriggerCondition', 'Falling')
-set(ai, 'TriggerConditionValue', 0.5)
+set(ai, 'TriggerCondition', 'Rising')
+set(ai, 'TriggerConditionValue', 2.7)
 set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
