@@ -132,7 +132,6 @@ fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 display('-------------------------------------------------')
 display('Saved the settings to non-volatile memory')
-display(sprintf(response))
 
 % turn the async off on the VectorNav
 command = 'VNWRG,06,0';
