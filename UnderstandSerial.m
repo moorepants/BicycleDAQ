@@ -24,7 +24,7 @@ for i=1:length(ports)
     end
 end
 
-%Create the serial port
+% create the serial port
 s = serial(comPort);
 display('-------------------------------------------------')
 display('Serial port created, here are the initial properties:')
@@ -32,13 +32,8 @@ get(s)
 display('-------------------------------------------------')
 display('Pin Status:')
 s.PinStatus
-%s.BaudRate = baudrate; % sets the serial connection baud rate
-% if you set ReadAsyncMode to continous the sofware input buffer will fill
-% as soon as bytes are available to fill it, but if you set it to manual
-% then you have more control when you let bytes into the software input
-% buffer
-%s.ReadAsyncMode = 'manual';
 
+% set up some callback functions to see what they do
 s.BytesAvailableFcn = @BytesAvailCallback;
 s.BytesAvailableFcnMode = 'terminator';
 s.ErrorFcn = @ErrorCallback;
@@ -62,20 +57,20 @@ display('-------------------------------------------------')
 display('Pin Status:')
 s.PinStatus
 
-p = 1;
+p = 0.1;
 pause(p)
 display('-------------------------------------------------')
 t = toc;
-display(sprintf('%d bytes in the input buffer after %s seconds', s.BytesAvailable, num2str(t)))
+display(sprintf('%d bytes in the input buffer %s seconds after opening', s.BytesAvailable, num2str(t)))
 
 % Turn the async off on the VectorNav
 command = 'VNWRG,06,0';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 flushinput(s)
-display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 display('-------------------------------------------------')
 display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 
 % Output some of the VNav registers
 display('-------------------------------------------------')
@@ -110,7 +105,7 @@ pause(p)
 response = fgets(s);
 display(sprintf(response))
 
-
+% set the baudrate on the VNav and the laptop
 baudrate = 460800;
 command = ['VNWRG,05,' num2str(baudrate)];
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
@@ -122,6 +117,7 @@ display('VNav baud rate is now set to:')
 display(sprintf(response))
 display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
 
+% set the async type and turn it on
 command = 'VNWRG,06,14';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
@@ -138,23 +134,25 @@ display('-------------------------------------------------')
 display('Saved the settings to non-volatile memory')
 display(sprintf(response))
 
-% Turn the async off on the VectorNav
+% turn the async off on the VectorNav
 command = 'VNWRG,06,0';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 flushinput(s)
-display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 display('-------------------------------------------------')
 display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 
 % reset to factory settings
+display('-------------------------------------------------')
+display('Starting factory reset')
 command = 'VNRFS';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
 response = fgets(s);
-display('-------------------------------------------------')
 display('Reset to factory')
 display(sprintf(response))
+display(sprintf('%d bytes in input buffer after reseting to factory', s.BytesAvailable))
 
 fclose(s)
 display('Serial port is closed')
@@ -171,16 +169,26 @@ function BytesAvailCallback(obj, event)
     display('=========================================')
 
 function OutputEmptyCallback(obj, event)
+    display('=========================================')    
     display('Output is empty')
+    display('=========================================')
 
 function ErrorCallback(obj, event)
+    display('=========================================')
     display('Error occured')
+    event.Data.Message
+    display('=========================================')
     
 function TimerCallback(obj, event)
+    display('=========================================')
     display('Timer')
+    event.Data.AbsTime
+    display('=========================================')
     
 function BreakInterruptCallback(obj, event)
+    display('=========================================')
     display('BreakInterrupt')
+    display('=========================================')
 
 function PinStatusCallback(obj, event)
     display('Pins changed')
