@@ -186,14 +186,16 @@ for i=1:vnnumsamples
 end
 
 % set zero angle to zero, normalize the data
-vnsteer = -(vndata(:, 1)-vndata(4, 1));
+% vnsteer = vndata(:, 1);
+vnsteer = -(vndata(600:end, 1)-vndata(600, 1));
 vnsteer = vnsteer./max(abs(vnsteer));
-nisteer =  (nidata(:, 1)-nidata(4, 1));
+% nisteer =  nidata(:, 1);
+nisteer =  (nidata(600:end, 1)-nidata(600, 1));
 nisteer = nisteer./max(abs(nisteer));
 
 % plot versus sample
 figure(1)
-plot(1:vnnumsamples,vnsteer,1:ninumsamples,nisteer)
+plot(600:vnnumsamples,vnsteer,'.',600:ninumsamples,nisteer,'.')
 legend('VectoNav Data', 'NI Data')
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
