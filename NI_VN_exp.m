@@ -1,4 +1,4 @@
-function [nidata, vndata, nisteer, vnsteer, time, abstime, events, ai, s] = NI_VN_exp
+function [nidata, vndata, nisteer, vnsteer, time, abstime, events] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
@@ -6,7 +6,6 @@ function [nidata, vndata, nisteer, vnsteer, time, abstime, events, ai, s] = NI_V
 
 % you have to delete the ai object before reconnecting
 if exist('ai')
-    exist 'ai'
     delete(ai)
 end
 
@@ -14,7 +13,7 @@ clc
 close all;
 clear all;
 
-duration = 5; % the sample time in seconds
+duration = 10; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -134,8 +133,6 @@ flushinput(s)
 display('-------------------------------------------------')
 display('The VectorNav async mode is off')
 display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
-
-
 
 % initialize the VectorNav data
 vndata = zeros(vnsamplerate*duration, 12); % YMR
