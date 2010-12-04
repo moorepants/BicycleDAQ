@@ -1,4 +1,4 @@
-function [nidata, vndata, nisteer, vnsteer, time, abstime, events] = NI_VN_exp
+function [nidata, vndata, time, abstime, events] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
@@ -13,7 +13,7 @@ clc
 close all;
 clear all;
 
-duration = 10; % the sample time in seconds
+duration = 60; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -24,8 +24,11 @@ ai = analoginput('nidaq', 'Dev1');
 
 % add channels and lines
 % 0: steer angle pot
-% 17: button
-chan = addchannel(ai, [0 17]);
+% 4: rate gyro (attached to the VNav box)
+% 17: VNav reset button
+% 18, 19, 20: accelerometer (x, y ,z)
+
+chan = addchannel(ai, [0 4 17 18 19 20]);
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
@@ -35,7 +38,7 @@ set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
 % trigger details
 set(ai, 'TriggerType', 'Software')
-set(ai, 'TriggerChannel', chan(2))
+set(ai, 'TriggerChannel', chan(3))
 set(ai, 'TriggerCondition', 'Rising')
 set(ai, 'TriggerConditionValue', 2.7)
 set(ai, 'TriggerDelay', 0.00)
@@ -185,18 +188,13 @@ for i=1:vnnumsamples
     end
 end
 
-% set zero angle to zero, normalize the data
-% vnsteer = vndata(:, 1);
-vnsteer = -(vndata(600:end, 1)-vndata(600, 1));
-vnsteer = vnsteer./max(abs(vnsteer));
-% nisteer =  nidata(:, 1);
-nisteer =  (nidata(600:end, 1)-nidata(600, 1));
-nisteer = nisteer./max(abs(nisteer));
-
-% plot versus sample
 figure(1)
-plot(600:vnnumsamples,vnsteer,'.',600:ninumsamples,nisteer,'.')
-legend('VectoNav Data', 'NI Data')
+plot(nidata)
+legend({'steer pot' 'rate gyro' 'button' 'ax' 'ay' 'az'})
+
+figure(2)
+plot(vndata)
+legend({'yaw' 'pitch' 'roll' 'magx' 'magy' 'magz' 'ax' 'ay' 'az' 'wx' 'wy' 'wz'})
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
