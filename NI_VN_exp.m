@@ -2,8 +2,6 @@ function [nidata, vndata, nisteer, vnsteer, time, abstime, events] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
-
-
 % you have to delete the ai object before reconnecting
 if exist('ai')
     delete(ai)
@@ -150,7 +148,6 @@ display('DAQ started')
 wait(ai, 60) % give the person some time to hit the button
 
 [nidata, time, abstime, events] = getdata(ai);
-%daqdata = peekdata(ai, numsamples)
 vndatatext = ai.UserData;
 stop(ai)
 
