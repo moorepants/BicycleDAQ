@@ -1,6 +1,8 @@
-function [nidata, vndata, nisteer, vnsteer, time, abstime, events, ai, s] = NI_VN_exp
+function [nidata, vndata, time, abstime, events] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
+
+
 
 % you have to delete the ai object before reconnecting
 if exist('ai')
@@ -11,43 +13,135 @@ clc
 close all;
 clear all;
 
+duration = 60; % the sample time in seconds
+
 % daq parameters
-samplerate = 200; % sample rate in hz
-duration = 5; % the sample time in seconds
-numsamples = duration*samplerate;
+nisamplerate = 200; % sample rate in hz
+ninumsamples = duration*nisamplerate;
 
 % connect to the NI USB-6218
-ai=analoginput('nidaq', 'Dev1');
+ai = analoginput('nidaq', 'Dev1');
 
 % add channels and lines
-chan = addchannel(ai, [0 17]); % pot is in AI0 and button is in AI17
+% 0: steer angle pot
+% 4: rate gyro (attached to the VNav box)
+% 17: VNav reset button
+% 18, 19, 20: accelerometer (x, y ,z)
+
+chan = addchannel(ai, [0 4 17 18 19 20]);
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
-set(ai, 'SampleRate', samplerate)
+set(ai, 'SampleRate', nisamplerate)
 actualrate = get(ai,'SampleRate')
 set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
 % trigger details
 set(ai, 'TriggerType', 'Software')
-set(ai, 'TriggerChannel', chan(2))
-set(ai, 'TriggerConditionValue', 4.9) % trigger if button goes above 4.9 v
+set(ai, 'TriggerChannel', chan(3))
+set(ai, 'TriggerCondition', 'Rising')
+set(ai, 'TriggerConditionValue', 2.7)
 set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
-% connect to the VectorNav
-s = VNserial('COM3',460800);
-% set the data output rate
-VNwriteregister(s, 7, samplerate);
-% set the output type
-VNwriteregister(s, 6, 14); % 'YMR'
+
+% vectornav parameters
+vnsamplerate = 200;
+vnnumsamples = duration*vnsamplerate;     
+
+comPort = 'COM3';
+
+%Check to see if COM port is already open, if so then close COM port.
+display('-------------------------------------------------')
+ports = instrfind;
+if length(ports) == 0
+        display('No ports exist')
+end
+for i=1:length(ports)
+    if strcmp(ports(i).Port, comPort) == 1
+        fclose(ports(i));
+        delete(ports(i));
+        display(['Closed and deleted ' comPort])
+    else
+        display([comPort ' was not open'])
+    end
+end
+
+% create the serial port
+s = serial(comPort);
+display('-------------------------------------------------')
+display('Serial port created, here are the initial properties:')
+get(s)
+
+% open the serial port
+fopen(s);
+display('-------------------------------------------------')
+display('Serial port is open')
+
+p = 0.1;
+
+% Turn the async off on the VectorNav
+command = 'VNWRG,06,0';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+flushinput(s)
+display('-------------------------------------------------')
+display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+
+% set the baudrate on the VNav and the laptop
+baudrate = 460800;
+command = ['VNWRG,05,' num2str(baudrate)];
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+s.BaudRate = baudrate; % set the laptop baud rate to match
+display('-------------------------------------------------')
+display('VNav baud rate is now set to:')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
+
+% set the samplerate
+command = ['VNWRG,07,' num2str(vnsamplerate)];
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav sample rate is now set to:')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after setting the sample rate', s.BytesAvailable))
+
+% set the async type and turn it on
+command = 'VNWRG,06,14';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav async is now set to:')
+display(sprintf(response))
+
+% now save these settings to the non-volatile memory
+command = 'VNWNV';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+display('-------------------------------------------------')
+display('Saved the settings to non-volatile memory')
+
+% turn the async off on the VectorNav
+command = 'VNWRG,06,0';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+flushinput(s)
+display('-------------------------------------------------')
+display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+
 % initialize the VectorNav data
-vndata = zeros(samplerate*duration, 12); % YMR
-vndatatext = cell(samplerate*duration, 1);
+vndata = zeros(vnsamplerate*duration, 12); % YMR
+vndatatext = cell(vnsamplerate*duration, 1);
 
-
-set(ai,'TriggerFcn',{@TriggerCallback, s, duration, samplerate, vndatatext})
+set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
 
 % start up the DAQ
 start(ai)
@@ -59,13 +153,33 @@ wait(ai, 60) % give the person some time to hit the button
 vndatatext = ai.UserData;
 stop(ai)
 
+% reset to factory settings
+display('-------------------------------------------------')
+display('Starting factory reset')
+command = 'VNRFS';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('Reset to factory')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after reseting to factory', s.BytesAvailable))
+
+fclose(s)
+display('Serial port is closed')
+
+if exist('s', 'var')
+    delete(s)
+    clear s
+    display('Serial port is deleted')
+end
+
 %Create parse string
 ps = '%*6c';
 for i=1:size(vndata, 2)
     ps = [ps ',%g'];
 end
 % process the text data
-for i=1:numsamples
+for i=1:vnnumsamples
     try
         vndata(i, :) = sscanf(vndatatext{i}, ps);
     catch
@@ -74,23 +188,16 @@ for i=1:numsamples
     end
 end
 
-% set zero angle to zero, normalize the data
-vnsteer = -(vndata(:, 1)-vndata(4, 1));
-vnsteer = vnsteer./max(abs(vnsteer));
-nisteer =  (nidata(:, 1)-nidata(4, 1));
-nisteer = nisteer./max(abs(nisteer));
-
-% plot versus sample
 figure(1)
-plot(1:numsamples,vnsteer,1:numsamples,nisteer)
-legend('VectoNav Data', 'NI Data')
+plot(nidata)
+legend({'steer pot' 'rate gyro' 'button' 'ax' 'ay' 'az'})
+
+figure(2)
+plot(vndata)
+legend({'yaw' 'pitch' 'roll' 'magx' 'magy' 'magz' 'ax' 'ay' 'az' 'wx' 'wy' 'wz'})
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
-s.ReadAsyncMode = 'manual';
-flushinput(s);
-serialbreak(s, 250);
-s.ReadAsyncMode = 'continuous';
 % record data
 for i=1:duration
     for j=1:samplerate
@@ -100,7 +207,3 @@ for i=1:duration
 end
 obj.UserData = vndatatext;
 display('VN data done')
-%Turn off ADOR
-VNprintf(s, 'VNWRG,6,0');
-pause(0.1);
-VNclearbuffer(s);
