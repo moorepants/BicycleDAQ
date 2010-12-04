@@ -2,6 +2,8 @@ function [nidata, vndata, nisteer, vnsteer, time, abstime, events] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
 
+
+
 % you have to delete the ai object before reconnecting
 if exist('ai')
     delete(ai)
@@ -35,7 +37,7 @@ set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 set(ai, 'TriggerType', 'Software')
 set(ai, 'TriggerChannel', chan(2))
 set(ai, 'TriggerCondition', 'Rising')
-set(ai, 'TriggerConditionValue', 2.8)
+set(ai, 'TriggerConditionValue', 2.7)
 set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
@@ -138,16 +140,13 @@ vndatatext = cell(vnsamplerate*duration, 1);
 
 set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
 
-% wait for me to depress and hold the reset button
-display('Depress the reset button and press any key')
-pause
-
 % start up the DAQ
 start(ai)
 display('DAQ started')
 wait(ai, 60) % give the person some time to hit the button
 
 [nidata, time, abstime, events] = getdata(ai);
+%daqdata = peekdata(ai, numsamples)
 vndatatext = ai.UserData;
 stop(ai)
 
