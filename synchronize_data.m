@@ -1,13 +1,18 @@
 function err = synchronize_data
-format compact; clear all; clf; load HammertestData
+format compact; clear all; clf; load HammerTestData
 %  nidata = raw pot measurement in volts from the NI board
 %  vndata = raw angle data from the VectorNav
 %  nisteer = normalized ni data
 %  vnsteer = normalized vectornav data
+
+% get the size of each data set
 [mvn,nvn]=size(vnsteer)
 [mni,nni]=size(nisteer)
+
 n=1:1:mni; dt=0.01; tt=dt*n;
+
 ni=nisteer(241:330); vn=vnsteer(241:330); t=tt(241:330);
+
  plot(t,ni,'.',t,vn,'.'); legend('ni','vn')
  pause; nivn=[ni vn];
  % since ni data is cleaner use it to shift and interpolate
