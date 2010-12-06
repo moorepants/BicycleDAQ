@@ -5,11 +5,17 @@ function err = synchronize_data(tsh)
 close all
 
 % load the test data set
-load HammerTestData
+%load HammerTestData
+
 %  nidata = raw pot measurement in volts from the NI board
 %  vndata = raw angle data from the VectorNav
 %  nisteer = normalized ni data
 %  vnsteer = normalized vectornav data
+
+
+load('bumptests/test1.mat')
+nisteer = nidata(:, 5)*76;
+vnsteer = -vndata(:, 8);
 
 % get the size of each data set
 [mvn,nvn]=size(vnsteer);
@@ -21,12 +27,15 @@ dt = 0.01; % sample time
 tt = dt*n; % time vector, tt[0] = 0.01
 
 % grab data only around the step (both data sets), discard rest
-ni=nisteer(241:330); vn=vnsteer(241:330); t=tt(241:330);
+ni = nisteer(5400:5600)-mean(nisteer(5400:5600));
+%(5400:5600)
+vn = vnsteer(5400:5600)-mean(vnsteer(5400:5600));
+t = tt(5400:5600);
 
 % plot the two data sets
 figure(1)
 subplot(2, 1, 1)
-plot(t,ni,'.',t,vn,'.'); legend('ni','vn')
+plot(t, ni, '.', t, vn, '.'); legend('ni','vn')
 
 nivn=[ni vn];
 
@@ -51,6 +60,7 @@ vn_trunc = vn(find(tvn<=t_int(end)))';
 % plot the interpolated and truncated data
 hold on
 plot(t_int, ni_int,'r.', t_int, vn_trunc, 'k.')
-legend('ni','vn','ni_int', 'vn_int')
+legend('ni','vn','ni int', 'vn trunc')
 
+% calculate the error
 err = norm(ni_int-vn_trunc);
