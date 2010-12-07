@@ -1,8 +1,6 @@
-function [nidata, vndata, time, abstime, events] = NI_VN_exp
+function [nidata, vndata, vndatatext] = NI_VN_exp
 % test code to see if the NI Daq card and the vectornav play well
 % together
-
-
 
 % you have to delete the ai object before reconnecting
 if exist('ai')
@@ -13,7 +11,7 @@ clc
 close all;
 clear all;
 
-duration = 60; % the sample time in seconds
+duration = 20; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -72,6 +70,7 @@ end
 s = serial(comPort);
 display('-------------------------------------------------')
 display('Serial port created, here are the initial properties:')
+s.InputBufferSize = 512*6;
 get(s)
 
 % open the serial port
@@ -79,7 +78,7 @@ fopen(s);
 display('-------------------------------------------------')
 display('Serial port is open')
 
-p = 0.1;
+p = 0.1; % pause value in seconds
 
 % Turn the async off on the VectorNav
 command = 'VNWRG,06,0';
@@ -91,7 +90,7 @@ display('The VectorNav async mode is off')
 display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
 
 % set the baudrate on the VNav and the laptop
-baudrate = 460800;
+baudrate = 921600;
 command = ['VNWRG,05,' num2str(baudrate)];
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(p)
@@ -183,8 +182,8 @@ for i=1:vnnumsamples
     try
         vndata(i, :) = sscanf(vndatatext{i}, ps);
     catch
-        vndata(i) = NaN;
-        display(sprintf('A bad one: %s', vndatatext{i}))
+        vndata(i, :) = NaN*ones(size(vndata(i, :)));
+        display(sprintf('%d is a bad one: %s', i, vndatatext{i}))
     end
 end
 
