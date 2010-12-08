@@ -15,7 +15,12 @@ plot(x.*m2in, y.*m2in)
 axis('equal')
 ylim([0, max(y.*m2in)+0.5*max(y.*m2in)])
 xlim([min(x.*m2in), max(x.*m2in)])
-title(sprintf('Velocity = %0.2f m/s (%0.2f mph)\nMax Accel = %0.2f g, Min Accel = %0.2f g', v, v*mps2mph, max(yddot./9.81), min(yddot./9.81)))
+l1 = 'Velocity = %0.2f m/s (%0.2f mph)\n';
+l2 = 'Bump height = %0.2f in and length = %0.2f in\n';
+l3 = 'Max Accel = %0.2f g, Min Accel = %0.2f g';
+title(sprintf([l1 l2 l3], v, v*mps2mph, ...
+                          h*m2in, L*m2in, ...
+                          max(yddot./9.81), min(yddot./9.81)))
 xlabel('Length [in]')
 ylabel('Height [in]')
 
