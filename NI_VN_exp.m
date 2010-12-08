@@ -23,10 +23,10 @@ ai = analoginput('nidaq', 'Dev1');
 % add channels and lines
 % 0: steer angle pot
 % 4: rate gyro (attached to the VNav box)
-% 17: VNav reset button
 % 18, 19, 20: accelerometer (x, y ,z)
+% 23: 5V push button
 
-chan = addchannel(ai, [0 4 17 18 19 20]);
+chan = addchannel(ai, [0 4 23 18 19 20]);
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded')
@@ -38,7 +38,7 @@ set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 set(ai, 'TriggerType', 'Software')
 set(ai, 'TriggerChannel', chan(3))
 set(ai, 'TriggerCondition', 'Rising')
-set(ai, 'TriggerConditionValue', 2.7)
+set(ai, 'TriggerConditionValue', 4.9)
 set(ai, 'TriggerDelay', 0.00)
 
 % load the VectorNav library
@@ -140,6 +140,8 @@ display(sprintf('%d bytes in input buffer after turning async off and flushing',
 vndata = zeros(vnsamplerate*duration, 12); % YMR
 vndatatext = cell(vnsamplerate*duration, 1);
 
+% this function takes longer than the duration to run, which is good for
+% getdata(ai)
 set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
 
 % start up the DAQ
@@ -147,9 +149,10 @@ start(ai)
 display('DAQ started')
 wait(ai, 60) % give the person some time to hit the button
 
+% get the data from both devices
 [nidata, time, abstime, events] = getdata(ai);
-%daqdata = peekdata(ai, numsamples)
 vndatatext = ai.UserData;
+
 stop(ai)
 
 % reset to factory settings
@@ -196,7 +199,19 @@ plot(vndata)
 legend({'yaw' 'pitch' 'roll' 'magx' 'magy' 'magz' 'ax' 'ay' 'az' 'wx' 'wy' 'wz'})
 
 function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
+
 display('Trigger called')
+s.BytesAvailable
+
+% set the async type and turn it on
+command = 'VNWRG,06,14';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(0.01)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav async is now set to:')
+display(sprintf(response))
+
 % record data
 for i=1:duration
     for j=1:samplerate
@@ -204,5 +219,6 @@ for i=1:duration
     end
     display('a sec')
 end
+
 obj.UserData = vndatatext;
 display('VN data done')

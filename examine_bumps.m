@@ -9,14 +9,14 @@ load(file)
 
 % plot the pitch gyro signals
 vnpitch = -vndata(:, 12);
-vnpitch = vnpitch - vnpitch(end);
 vnpitch = rad2deg(vnpitch); % put it in deg/sec
 nipitch = nidata(:, 2);
 
-m = 200/2.5; % deg/sec to voltage ratio
-b = -200; % 2.5 volts equals 0 deg/sec
+m = 400/4.911; % deg/sec to voltage ratio
+b = -200;
 nipitch = m.*nipitch + b;
 nipitch = nipitch - nipitch(end);
+nipitch = 1.2.*nipitch; % scaling fudge factor
 
 plot(1:length(vnpitch), vnpitch, ...
      1:length(nipitch)-shift, nipitch(1+shift:end))
@@ -25,19 +25,19 @@ xlabel('Sample Number')
 ylabel('Rate [deg/sec]')
 
 % plot the accelerations
-vna = vndata(:, 7:9);
+vna = vndata(:, 7:9)./9.8; % put in geeees
 nia = nidata(:, 4:6);
 
-%m = 3/0.8;
-%b = -3;
-%nia = (m.*nia + b).*9.8;
+m = 6/(3.2982); % volt range = 3.2982v, accel range = 6g 
+b = -3;
+nia = (m.*nia + b);
+nia = nia.*1.51; % scaling fudge factor
 
 % set the nominal value to zero for each accel
 for i = 1:length(nia(end, :))
-    vna(:, i) = vna(:, i) - vna(1, i);
-    nia(:, i) = nia(:, i) - nia(1, i);
+    vna(:, i) = vna(:, i) - mean(vna(:, i));
+    nia(:, i) = nia(:, i) - mean(nia(:, i));
 end
-nia = nia.*76; % a guess of the scaling factor
 
 % plot the accelerations
 figure(2)
@@ -50,5 +50,4 @@ for i = 1:3
     plot(1:length(vna), neg(i).*vna(:, switchrows(i)), ...
          1:length(nia)-shift, nia(1+shift:end, i))
     legend({['VN' l{i}] ['NI' l{i}]})
-    ylim([-20 20])
 end
