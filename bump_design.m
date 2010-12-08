@@ -1,22 +1,23 @@
-function bump_design()
+function bump_design(L, v, h)
 
-L = 1; % meters
-v = 5; % meters per second
-h = 0.1; % meters
+% L = 1; % meters
+% v = 9; % meters per second
+% h = 0.03; % meters
 
-t = 0:0.01:L/v;
+[t, y, ydot, yddot] = y_deriv(L, v, h);
 x = v.*t;
-
-[y, ydot, yddot] = y_deriv(L, v, h);
 
 figure(1)
 subplot(4,1,1)
-plot(x, y)
+m2in = 39.3700787;
+mps2mph = 2.23693629;
+plot(x.*m2in, y.*m2in)
 axis('equal')
-ylim([0, max(y)+0.1])
-xlim([min(x), max(x)])
-xlabel('Distance in meters')
-ylabel('Height in meters')
+ylim([0, max(y.*m2in)+0.5*max(y.*m2in)])
+xlim([min(x.*m2in), max(x.*m2in)])
+title(sprintf('Velocity = %0.2f m/s (%0.2f mph)\nMax Accel = %0.2f g, Min Accel = %0.2f g', v, v*mps2mph, max(yddot./9.81), min(yddot./9.81)))
+xlabel('Length [in]')
+ylabel('Height [in]')
 
 subplot(4,1,2)
 plot(t, y)
@@ -29,25 +30,12 @@ xlabel('Time in seconds')
 ylabel('Vertical Velocity [m/s]')
 
 subplot(4,1,4)
-plot(t, yddot)
+plot(t, yddot/9.81)
 xlabel('Time in seconds')
-ylabel('Vertical Acceleration [m/s/s]')
+ylabel('Vertical Acceleration [g]')
 
-function [y, ydot, yddot] = y_deriv(L, v, h)
-    t = 0:0.01:L/v;
+function [t, y, ydot, yddot] = y_deriv(L, v, h)
+    t = 0:0.01*(L/v):L/v;
     y = h./2.*(1-cos(2.*pi.*v./L.*t));
     ydot = h.*pi.*v./L.*sin(2.*pi.*v./L.*t);
-    yddot = 2.*h.*(pi.*v./L).^2.*cos(2.*pi.*v./L.*t);
-    
-function h = bump_size(v, a, l)
-% returns bump hieght for a given speed, acceleration and bump length
-% v : speed (m/s)
-% a : acceleration (m/s^2)
-% l : length (m)
-% other compatiable units are fine too
-
-h = a./2.*(l./pi./v).^2;
-
-function a = bump_accel(v, h, l)
-
-a = 2.*h.*(0.2.*pi.*v./l).^2;
+    yddot = (2.*h.*(pi.*v./L).^2.*cos(2.*pi.*v./L.*t))+9.81;
