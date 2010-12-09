@@ -21,22 +21,40 @@ ninumsamples = duration*nisamplerate;
 ai = analoginput('nidaq', 'Dev1');
 
 % add channels and lines
-% 0: steer angle pot
-% 4: rate gyro (attached to the VNav box)
-% 18, 19, 20: accelerometer (x, y ,z)
-% 23: 5V push button
-
-chan = addchannel(ai, [0 4 23 18 19 20]);
+% 0 : PushButton
+% 1 : SteerPotentiometer
+% 2 : HipPotentiometer
+% 3 : LeanPotentionmeter
+% 4 : TwistPotentionmeter
+% 5 : SteerRateGyro
+% 6 : WheelSpeedMotor
+% 7 : FrameAccelX
+% 8 : FrameAccelY
+% 9 : FrameAccelZ
+% 10 : SteerTorqueSensor
+% 11 : SeatpostBridge1
+% 12 : SeatpostBridge2
+% 13 : SeatpostBridge3
+% 14 : SeatpostBridge4
+% 15 : SeatpostBridge5
+% 16 : SeatpostBridge6
+% 17 : RightFootBridge1
+% 18 : RightFootBridge2
+% 19 : LeftFootBridge1
+% 20 : LeftFootBridge2
+% 21 : PullForceBrigde
 
 % configure the DAQ
-set(ai, 'InputType', 'SingleEnded')
+set(ai, 'InputType', 'SingleEnded') % Differential is default
 set(ai, 'SampleRate', nisamplerate)
-actualrate = get(ai,'SampleRate')
+actualrate = get(ai,'SampleRate');
 set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
+
+chan = addchannel(ai, [0 1 5 6 7 8 9]); % important that this comes after set(InputType)
 
 % trigger details
 set(ai, 'TriggerType', 'Software')
-set(ai, 'TriggerChannel', chan(3))
+set(ai, 'TriggerChannel', chan(1))
 set(ai, 'TriggerCondition', 'Rising')
 set(ai, 'TriggerConditionValue', 4.9)
 set(ai, 'TriggerDelay', 0.00)
@@ -192,7 +210,7 @@ end
 
 figure(1)
 plot(nidata)
-legend({'steer pot' 'rate gyro' 'button' 'ax' 'ay' 'az'})
+legend({'button' 'steer pot' 'rate gyro' 'wheel speed' 'ax' 'ay' 'az'})
 
 figure(2)
 plot(vndata)
