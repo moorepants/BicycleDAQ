@@ -14,7 +14,8 @@ ActualRate = get(ai,'SampleRate');
 set(ai,'SamplesPerTrigger',duration*ActualRate);
 set(ai,'TriggerType','Manual');
 set(ai,'InputType','SingleEnded');
-chan = addchannel(ai,[21]);
+channels = [0 1 5 6 7 8 9 21];
+chan = addchannel(ai, channels);
 get(ai)
 ochan = addchannel(ao,0);
 
@@ -25,25 +26,32 @@ start(ao)
 start(ai)
 trigger(ai)
 
-data = zeros(50,5);
+numsamps = 100;
+
+data = zeros(numsamps, length(channels));
 
 % make the figure
 figure(1)
 lines = plot(data); % plot the raw data
-ylim([-13 13])
+ylim([-10 10])
 ylabel('Voltage')
-leg = legend('Pull Load Cell');
 labels = {''};
+for i = 2:length(channels)
+    labels{i} = '';
+end
+leg = legend(labels);
 
 % update the plot while the data is being taken
 while (1)
-    % return the latest 50 samples
-    data = peekdata(ai,100);
-    for i = 1:5
-        set(lines, 'YData', data)
+    % return the latest samples
+    data = peekdata(ai, numsamps);
+    for i = 1:length(channels)
+        set(lines(i), 'YData', data(:, i))
+        meanData = mean(data(:, i));
+        labels{i} = sprintf('Channel %s = %1.2f V', ...
+                            num2str(channels(i)), ...
+                            meanData);
     end
-    meanData = mean(data);
-    labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
     set(leg, 'String', labels)
     figure(1)
 end
