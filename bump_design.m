@@ -1,4 +1,4 @@
-function bump_design(L, v, h)
+function [x, y] = bump_design(L, v, h)
 
 % L = 1; % meters
 % v = 9; % meters per second

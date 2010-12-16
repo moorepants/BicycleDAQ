@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 24-Nov-2010 16:02:46
+% Last Modified by GUIDE v2.5 15-Dec-2010 17:43:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -503,25 +503,118 @@ function ConnectButton_Callback(hObject, eventdata, handles)
 
 switch get(hObject, 'Value')
     case 1.0 % connect
-        set(hObject, 'String', 'Disconnect')
-        set(hObject, 'BackgroundColor', 'Red')
-        % create a serial object for the VectorNav
-        handles.s = VNserial('COM3');
+        set(hObject, 'String', 'Connecting')
+        set(hObject, 'BackgroundColor', 'Yellow')
         
-        % create an analog input object for the USB-6218
-        handles.ai = analoginput('nidaq','Dev1');
+        duration = str2num(get(handles.DurationEditText, 'String'));
         
-        % set the properties for data viewing
-        handles.duration = 600; % seconds
-        set(handles.ai,'SampleRate',100)
-        ActualRate = get(handles.ai,'SampleRate');
-        set(handles.ai,'SamplesPerTrigger',handles.duration*ActualRate);
-        set(handles.ai,'TriggerType','Manual');
-        set(handles.ai,'InputType','SingleEnded');
-        handles.aichan = addchannel(handles.ai,0:17);
+        % vectornav parameters
+        vnsamplerate = str2num(get(handles.VNavSampleRateEditText, 'String'));
+        vnnumsamples = duration*vnsamplerate;     
+
+        comPort = get(handles.VNavComPortEditText, 'String');
+
+        %Check to see if COM port is already open, if so then close COM port.
+        display('-------------------------------------------------')
+        ports = instrfind;
+        if length(ports) == 0
+                display('No ports exist')
+        end
+        for i=1:length(ports)
+            if strcmp(ports(i).Port, comPort) == 1
+                fclose(ports(i));
+                delete(ports(i));
+                display(['Closed and deleted ' comPort])
+            else
+                display([comPort ' was not open'])
+            end
+        end
+
+        % create the serial port
+        s = serial(comPort);
+        display('-------------------------------------------------')
+        display('Serial port created, here are the initial properties:')
+        s.InputBufferSize = 512*6;
+        get(s)
+
+        % open the serial port
+        fopen(s);
+        display('-------------------------------------------------')
+        display('Serial port is open')
+
+        p = 0.1; % pause value in seconds
+
+        % Turn the async off on the VectorNav
+        command = 'VNWRG,06,0';
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        flushinput(s)
+        display('-------------------------------------------------')
+        display('The VectorNav async mode is off')
+        display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+
+        % set the baudrate on the VNav and the laptop
+        baudrate = 921600;
+        command = ['VNWRG,05,' num2str(baudrate)];
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        response = fgets(s);
+        s.BaudRate = baudrate; % set the laptop baud rate to match
+        display('-------------------------------------------------')
+        display('VNav baud rate is now set to:')
+        display(sprintf(response))
+        display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
+
+        % set the samplerate
+        command = ['VNWRG,07,' num2str(vnsamplerate)];
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        response = fgets(s);
+        display('-------------------------------------------------')
+        display('VNav sample rate is now set to:')
+        display(sprintf(response))
+        display(sprintf('%d bytes in input buffer after setting the sample rate', s.BytesAvailable))
+
+        % set the async type and turn it on
+        command = 'VNWRG,06,14';
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        response = fgets(s);
+        display('-------------------------------------------------')
+        display('VNav async is now set to:')
+        display(sprintf(response))
+
+        % now save these settings to the non-volatile memory
+        command = 'VNWNV';
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        display('-------------------------------------------------')
+        display('Saved the settings to non-volatile memory')
+
+        % turn the async off on the VectorNav
+        command = 'VNWRG,06,0';
+        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        pause(p)
+        flushinput(s)
+        display('-------------------------------------------------')
+        display('The VectorNav async mode is off')
+        display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+
+        % initialize the VectorNav data
+        vndata = zeros(vnsamplerate*duration, 12); % YMR
+        vndatatext = cell(vnsamplerate*duration, 1);
+
+        % this function takes longer than the duration to run, which is good for
+        % getdata(ai)
+        set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
         
         % tells the graph loop to keep going
         handles.stopgraph = 0;
+        
+        set(hObject, 'String', 'Connected')
+        set(hObject, 'BackgroundColor', 'Red')
+        set(handles.DisplayButton, 'Enable', 'On')
+        set(handles.RecordButton, 'Enable', 'On')
                 
     case 0.0 % disconnect
         set(hObject, 'String', 'Connect')
@@ -619,8 +712,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function RunIDEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RunIDEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -709,3 +802,105 @@ function ManueverPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns ManueverPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ManueverPopupmenu
+
+
+
+function RunIDEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to RunIDEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of RunIDEditText as text
+%        str2double(get(hObject,'String')) returns contents of RunIDEditText as a double
+
+
+
+function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to VNavSampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VNavSampleRateEditText as text
+%        str2double(get(hObject,'String')) returns contents of VNavSampleRateEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function VNavSampleRateEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VNavSampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function NISampleRateEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NISampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NISampleRateEditText as text
+%        str2double(get(hObject,'String')) returns contents of NISampleRateEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NISampleRateEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NISampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function DurationEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to DurationEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DurationEditText as text
+%        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function DurationEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DurationEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function VNavComPortEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to VNavComPortEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VNavComPortEditText as text
+%        str2double(get(hObject,'String')) returns contents of VNavComPortEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VNavComPortEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
