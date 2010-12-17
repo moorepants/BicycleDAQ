@@ -506,13 +506,13 @@ switch get(hObject, 'Value')
         set(hObject, 'String', 'Connecting')
         set(hObject, 'BackgroundColor', 'Yellow')
         
-        duration = str2num(get(handles.DurationEditText, 'String'));
+        handles.duration = str2num(get(handles.DurationEditText, 'String'));
         
         % vectornav parameters
-        vnsamplerate = str2num(get(handles.VNavSampleRateEditText, 'String'));
-        vnnumsamples = duration*vnsamplerate;     
+        handles.vnsamplerate = str2num(get(handles.VNavSampleRateEditText, 'String'));
+        handles.vnnumsamples = handles.duration*handles.vnsamplerate;     
 
-        comPort = get(handles.VNavComPortEditText, 'String');
+        handles.comPort = get(handles.VNavComPortEditText, 'String');
 
         %Check to see if COM port is already open, if so then close COM port.
         display('-------------------------------------------------')
@@ -521,97 +521,129 @@ switch get(hObject, 'Value')
                 display('No ports exist')
         end
         for i=1:length(ports)
-            if strcmp(ports(i).Port, comPort) == 1
+            if strcmp(ports(i).Port, handles.comPort) == 1
                 fclose(ports(i));
                 delete(ports(i));
-                display(['Closed and deleted ' comPort])
+                display(['Closed and deleted ' handles.comPort])
             else
-                display([comPort ' was not open'])
+                display([handles.comPort ' was not open'])
             end
         end
 
         % create the serial port
-        s = serial(comPort);
+        handles.s = serial(handles.comPort);
         display('-------------------------------------------------')
         display('Serial port created, here are the initial properties:')
-        s.InputBufferSize = 512*6;
-        get(s)
+        set(handles.s, 'InputBufferSize', 512*6)
+        get(handles.s)
 
         % open the serial port
-        fopen(s);
+        fopen(handles.s);
         display('-------------------------------------------------')
         display('Serial port is open')
 
-        p = 0.1; % pause value in seconds
+        p = 0.5; % pause value in seconds
+        pause(p)
 
         % Turn the async off on the VectorNav
         command = 'VNWRG,06,0';
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
-        flushinput(s)
+        while get(handles.s, 'BytesAvailable') > 0
+            display('Flushed')
+            flushinput(handles.s)
+        end
         display('-------------------------------------------------')
         display('The VectorNav async mode is off')
-        display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
 
         % set the baudrate on the VNav and the laptop
         baudrate = 921600;
         command = ['VNWRG,05,' num2str(baudrate)];
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
-        response = fgets(s);
-        s.BaudRate = baudrate; % set the laptop baud rate to match
+        response = fgets(handles.s);
+        set(handles.s, 'BaudRate', baudrate) % set the laptop baud rate to match
         display('-------------------------------------------------')
         display('VNav baud rate is now set to:')
         display(sprintf(response))
-        display(sprintf('%d bytes in input buffer after setting the baud rate', s.BytesAvailable))
+        display(sprintf('%d bytes in input buffer after setting the baud rate', get(handles.s, 'BytesAvailable')))
 
         % set the samplerate
-        command = ['VNWRG,07,' num2str(vnsamplerate)];
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        command = ['VNWRG,07,' num2str(handles.vnsamplerate)];
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
-        response = fgets(s);
+        response = fgets(handles.s);
         display('-------------------------------------------------')
         display('VNav sample rate is now set to:')
         display(sprintf(response))
-        display(sprintf('%d bytes in input buffer after setting the sample rate', s.BytesAvailable))
+        display(sprintf('%d bytes in input buffer after setting the sample rate', get(handles.s, 'BytesAvailable')))
 
         % set the async type and turn it on
         command = 'VNWRG,06,14';
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
-        response = fgets(s);
+        response = fgets(handles.s);
         display('-------------------------------------------------')
         display('VNav async is now set to:')
         display(sprintf(response))
 
         % now save these settings to the non-volatile memory
         command = 'VNWNV';
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
         display('-------------------------------------------------')
         display('Saved the settings to non-volatile memory')
 
         % turn the async off on the VectorNav
         command = 'VNWRG,06,0';
-        fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
         pause(p)
-        flushinput(s)
+        flushinput(handles.s)
         display('-------------------------------------------------')
         display('The VectorNav async mode is off')
-        display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
 
         % initialize the VectorNav data
-        vndata = zeros(vnsamplerate*duration, 12); % YMR
-        vndatatext = cell(vnsamplerate*duration, 1);
+        handles.vndata = zeros(handles.vnsamplerate*handles.duration, 12); % YMR
+        handles.vndatatext = cell(handles.vnsamplerate*handles.duration, 1);
+        
+        % daq parameters
+        handles.nisamplerate = str2num(get(handles.NISampleRateEditText, 'String')); % sample rate in hz
+        handles.ninumsamples = handles.duration*handles.nisamplerate;
 
+        % connect to the NI USB-6218
+        handles.ai = analoginput('nidaq', 'Dev1');
+
+        % configure the DAQ
+        set(handles.ai, 'InputType', 'SingleEnded') % Differential is default
+        set(handles.ai, 'SampleRate', handles.nisamplerate)
+        actualrate = get(handles.ai,'SampleRate');
+        set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
+
+        chan = addchannel(handles.ai, [0 1 5 6 7 8 9]); % important that this comes after set(InputType)
+
+        % trigger details
+        set(handles.ai, 'TriggerType', 'Software')
+        set(handles.ai, 'TriggerChannel', chan(1))
+        set(handles.ai, 'TriggerCondition', 'Rising')
+        set(handles.ai, 'TriggerConditionValue', 4.9)
+        set(handles.ai, 'TriggerDelay', 0.00)
+        
         % this function takes longer than the duration to run, which is good for
         % getdata(ai)
-        set(ai,'TriggerFcn',{@TriggerCallback, s, duration, vnsamplerate, vndatatext})
+        set(handles.ai, 'TriggerFcn', {@TriggerCallback, ...
+                                      handles.s, ...
+                                      handles.duration, ...
+                                      handles.vnsamplerate, ...
+                                      handles.vndatatext})
         
+        get(handles.ai)
+                                  
         % tells the graph loop to keep going
         handles.stopgraph = 0;
         
-        set(hObject, 'String', 'Connected')
+        set(hObject, 'String', sprintf('Connected\nPress to Disconnect'))
         set(hObject, 'BackgroundColor', 'Red')
         set(handles.DisplayButton, 'Enable', 'On')
         set(handles.RecordButton, 'Enable', 'On')
@@ -623,10 +655,21 @@ switch get(hObject, 'Value')
         handles.stopgraph = 1;
         %rmfield(handles, 'ai')
         %delete(handles.ai)
-        stop(handles.ai)
+        get(handles.ai, 'Running')
+        if strcmp(get(handles.ai, 'Running'), 'On')
+            stop(handles.ai)
+        end
         daqreset
-        % close the VectorNav
-        VNclearports();
+        
+        % close the VectorNav connection
+        fclose(handles.s)
+        display('Serial port is closed')
+
+        if exist('s', 'var')
+            delete(s)
+            clear s
+            display('Serial port is deleted')
+        end
 
 end
 
@@ -904,3 +947,28 @@ function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
+
+display('Trigger called')
+s.BytesAvailable
+
+% set the async type and turn it on
+command = 'VNWRG,06,14';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(0.01)
+response = fgets(s);
+display('-------------------------------------------------')
+display('VNav async is now set to:')
+display(sprintf(response))
+
+% record data
+for i=1:duration
+    for j=1:samplerate
+        vndatatext{(i-1)*samplerate+j} = fgets(s);
+    end
+    display('a sec')
+end
+
+obj.UserData = vndatatext;
+display('VN data done')

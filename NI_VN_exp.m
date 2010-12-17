@@ -11,7 +11,7 @@ clc
 close all;
 clear all;
 
-duration = 20; % the sample time in seconds
+duration = 3; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -96,7 +96,7 @@ fopen(s);
 display('-------------------------------------------------')
 display('Serial port is open')
 
-p = 0.1; % pause value in seconds
+p = 0.5; % pause value in seconds
 
 % Turn the async off on the VectorNav
 command = 'VNWRG,06,0';
