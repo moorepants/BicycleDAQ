@@ -11,7 +11,7 @@ clc
 close all;
 clear all;
 
-duration = 3; % the sample time in seconds
+duration = 5; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -43,6 +43,8 @@ ai = analoginput('nidaq', 'Dev1');
 % 19 : LeftFootBridge1
 % 20 : LeftFootBridge2
 % 21 : PullForceBrigde
+% 22 : 3.3v
+% 23 : 5v
 
 % configure the DAQ
 set(ai, 'InputType', 'SingleEnded') % Differential is default
@@ -50,7 +52,7 @@ set(ai, 'SampleRate', nisamplerate)
 actualrate = get(ai,'SampleRate');
 set(ai, 'SamplesPerTrigger', duration*get(ai,'SampleRate'))
 
-chan = addchannel(ai, [0 1 5 6 7 8 9]); % important that this comes after set(InputType)
+chan = addchannel(ai, [0 1 5 6 7 8 9 21 22 23]); % important that this comes after set(InputType)
 
 % trigger details
 set(ai, 'TriggerType', 'Software')
