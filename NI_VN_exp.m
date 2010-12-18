@@ -11,7 +11,7 @@ clc
 close all;
 clear all;
 
-duration = 5; % the sample time in seconds
+duration = 10; % the sample time in seconds
 
 % daq parameters
 nisamplerate = 200; % sample rate in hz
@@ -131,31 +131,6 @@ display('VNav sample rate is now set to:')
 display(sprintf(response))
 display(sprintf('%d bytes in input buffer after setting the sample rate', s.BytesAvailable))
 
-% set the async type and turn it on
-command = 'VNWRG,06,14';
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(p)
-response = fgets(s);
-display('-------------------------------------------------')
-display('VNav async is now set to:')
-display(sprintf(response))
-
-% now save these settings to the non-volatile memory
-command = 'VNWNV';
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(p)
-display('-------------------------------------------------')
-display('Saved the settings to non-volatile memory')
-
-% turn the async off on the VectorNav
-command = 'VNWRG,06,0';
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(p)
-flushinput(s)
-display('-------------------------------------------------')
-display('The VectorNav async mode is off')
-display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
-
 % initialize the VectorNav data
 vndata = zeros(vnsamplerate*duration, 12); % YMR
 vndatatext = cell(vnsamplerate*duration, 1);
@@ -174,17 +149,6 @@ wait(ai, 60) % give the person some time to hit the button
 vndatatext = ai.UserData;
 
 stop(ai)
-
-% reset to factory settings
-display('-------------------------------------------------')
-display('Starting factory reset')
-command = 'VNRFS';
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(p)
-response = fgets(s);
-display('Reset to factory')
-display(sprintf(response))
-display(sprintf('%d bytes in input buffer after reseting to factory', s.BytesAvailable))
 
 fclose(s)
 display('Serial port is closed')
@@ -212,7 +176,7 @@ end
 
 figure(1)
 plot(nidata)
-legend({'button' 'steer pot' 'rate gyro' 'wheel speed' 'ax' 'ay' 'az'})
+legend({'button' 'steer pot' 'rate gyro' 'wheel speed' 'ax' 'ay' 'az' 'pull force' '3.3v' '5v'})
 
 figure(2)
 plot(vndata)
@@ -223,10 +187,12 @@ function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
 display('Trigger called')
 s.BytesAvailable
 
+p = 0.01;
+
 % set the async type and turn it on
 command = 'VNWRG,06,14';
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(0.01)
+pause(p)
 response = fgets(s);
 display('-------------------------------------------------')
 display('VNav async is now set to:')
@@ -239,6 +205,26 @@ for i=1:duration
     end
     display('a sec')
 end
+
+% Turn the async off on the VectorNav
+command = 'VNWRG,06,0';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+flushinput(s)
+display('-------------------------------------------------')
+display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', s.BytesAvailable))
+
+% reset to factory settings
+display('-------------------------------------------------')
+display('Starting factory reset')
+command = 'VNRFS';
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(p)
+response = fgets(s);
+display('Reset to factory')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after reseting to factory', s.BytesAvailable))
 
 obj.UserData = vndatatext;
 display('VN data done')
