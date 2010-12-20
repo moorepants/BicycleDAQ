@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 15-Dec-2010 17:43:45
+% Last Modified by GUIDE v2.5 20-Dec-2010 13:27:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -508,11 +508,12 @@ switch get(hObject, 'Value')
         set(hObject, 'BackgroundColor', 'Yellow')
 
         % get general parameters
-        handles.duration = str2num(get(handles.DurationEditText, 'String'));
+        handles.duration = str2double(get(handles.DurationEditText, 'String'));
 
         % get VectorNav parameters
         handles.comport = get(handles.VNavComPortEditText, 'String');
-        handles.vnsamplerate = str2num(get(handles.VNavSampleRateEditText, 'String'));
+        handles.vnsamplerate = str2double(get(handles.VNavSampleRateEditText, 'String'));
+        % may need a way here to make sure the vn sample rate is a valid choice
         handles.vnnumsamples = handles.duration*handles.vnsamplerate;
 
         % see if the port is already open, close it if so
@@ -523,6 +524,7 @@ switch get(hObject, 'Value')
         display('-------------------------------------------------')
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
+        set(handles.s, 'TimerPeriod', 1)
         get(handles.s) % display the attributes of the port
 
         % open the serial port
@@ -530,16 +532,16 @@ switch get(hObject, 'Value')
         display('-------------------------------------------------')
         display('Serial port is open')
 
-        p = 0.5; % pause value in seconds
+        p = 0.1; % pause value in seconds
         pause(p)
 
         % determine the VNav baud rate and set the serial port baud rate to
         % match
-        baudrate = determine_vnav_baudrate(handles.s)
+        baudrate = determine_vnav_baud_rate(handles.s);
         set(handles.s, 'BaudRate', baudrate)
 
         % turn the async off on the VectorNav
-        send_command(handles.s, 'VNWRG,06,0')
+        send_command(handles.s, 'VNWRG,06,0');
         pause(p)
         flush_buffer(handles.s)
         display('-------------------------------------------------')
@@ -556,7 +558,7 @@ switch get(hObject, 'Value')
         display(sprintf('%d bytes in input buffer after setting the baud rate', get(handles.s, 'BytesAvailable')))
 
         % set the samplerate
-        response = send_command(s, ['VNWRG,07,' num2str(handles.vnsamplerate)]);
+        response = send_command(handles.s, ['VNWRG,07,' num2str(handles.vnsamplerate)]);
         display('-------------------------------------------------')
         display('VNav sample rate is now set to:')
         display(sprintf(response))
@@ -619,6 +621,13 @@ switch get(hObject, 'Value')
         end
         daqreset
         
+        % reset to factory settings
+        display('-------------------------------------------------')
+        display('Starting factory reset')
+        response = send_command(handles.s, 'VNRFS');
+        display('Reset to factory')
+        display(sprintf(response))
+        display(sprintf('%d bytes in input buffer after reseting to factory', get(handles.s, 'BytesAvailable')))
         % close the VectorNav connection
         fclose(handles.s)
         display('Serial port is closed')
@@ -928,14 +937,14 @@ function trigger_callback(obj, events, s, duration, samplerate, vndatatext)
     obj.UserData = vndatatext;
     display('VN data done')
 
-function VNavBaudRate = determine_vnav_baud_rate(s)
+function baudrate = determine_vnav_baud_rate(s)
     % Returns the baudrate that the VectorNav is set to or NaN if it can't be
     % determined.
     % s : serial port object for the VectorNav
 
     baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
 
-    VNavBaudRate = NaN;
+    baudrate = NaN;
 
     for i = 1:length(baudrates)
         % set the serial object baudrate
@@ -944,17 +953,21 @@ function VNavBaudRate = determine_vnav_baud_rate(s)
         send_command(s, 'VNWRG,06,0');
         pause(0.1)
         display('-------------------------------------------------')
+        display(sprintf('Checking the %d baudrate', baudrates(i)))
         display('The VectorNav async mode is off')
         % flush the buffer
         flush_buffer(s)
         display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
         display('-------------------------------------------------')
         % see if it will return the version number
-        response = send_command(s, 'VNRRG,01');
-        if strcmp(response, '$VNRRG,01,VN-100*5A')
+        response = send_command(s, 'VNRRG,01')
+        if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
             % then the baudrate is correct and we should save it
-            VNavBaudRate = baudrates(i)
+            baudrate = baudrates(i);
+            display(sprintf('The VNav baud rate is %d', baudrate))
+            break
         end
+    end
 
 function response = send_command(s, command)
     % Returns the latest response from the input buffer after the issued
@@ -965,7 +978,7 @@ function response = send_command(s, command)
 
     fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
     pause(0.1)
-    response = fgets(s)
+    response = fgets(s);
 
 function flush_buffer(s)
     % flushes the serial port input buffer
@@ -992,3 +1005,10 @@ function close_port(comport)
             end
         end
     end
+
+
+% --- Executes on button press in TareButton.
+function TareButton_Callback(hObject, eventdata, handles)
+% hObject    handle to TareButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
