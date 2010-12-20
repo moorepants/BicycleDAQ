@@ -503,39 +503,27 @@ function ConnectButton_Callback(hObject, eventdata, handles)
 
 switch get(hObject, 'Value')
     case 1.0 % connect
-        set(hObject, 'String', 'Connecting')
+        % button turns yellow and displays connecting
+        set(hObject, 'String', 'Connecting...')
         set(hObject, 'BackgroundColor', 'Yellow')
-        
+
+        % get general parameters
         handles.duration = str2num(get(handles.DurationEditText, 'String'));
-        
-        % vectornav parameters
+
+        % get VectorNav parameters
+        handles.comport = get(handles.VNavComPortEditText, 'String');
         handles.vnsamplerate = str2num(get(handles.VNavSampleRateEditText, 'String'));
-        handles.vnnumsamples = handles.duration*handles.vnsamplerate;     
+        handles.vnnumsamples = handles.duration*handles.vnsamplerate;
 
-        handles.comPort = get(handles.VNavComPortEditText, 'String');
-
-        %Check to see if COM port is already open, if so then close COM port.
-        display('-------------------------------------------------')
-        ports = instrfind;
-        if length(ports) == 0
-                display('No ports exist')
-        end
-        for i=1:length(ports)
-            if strcmp(ports(i).Port, handles.comPort) == 1
-                fclose(ports(i));
-                delete(ports(i));
-                display(['Closed and deleted ' handles.comPort])
-            else
-                display([handles.comPort ' was not open'])
-            end
-        end
+        % see if the port is already open, close it if so
+        close_port(handles.comport)
 
         % create the serial port
-        handles.s = serial(handles.comPort);
+        handles.s = serial(handles.comport);
         display('-------------------------------------------------')
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
-        get(handles.s)
+        get(handles.s) % display the attributes of the port
 
         % open the serial port
         fopen(handles.s);
@@ -545,24 +533,22 @@ switch get(hObject, 'Value')
         p = 0.5; % pause value in seconds
         pause(p)
 
-        % Turn the async off on the VectorNav
-        command = 'VNWRG,06,0';
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+        % determine the VNav baud rate and set the serial port baud rate to
+        % match
+        baudrate = determine_vnav_baudrate(handles.s)
+        set(handles.s, 'BaudRate', baudrate)
+
+        % turn the async off on the VectorNav
+        send_command(handles.s, 'VNWRG,06,0')
         pause(p)
-        while get(handles.s, 'BytesAvailable') > 0
-            display('Flushed')
-            flushinput(handles.s)
-        end
+        flush_buffer(handles.s)
         display('-------------------------------------------------')
         display('The VectorNav async mode is off')
         display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
 
         % set the baudrate on the VNav and the laptop
         baudrate = 921600;
-        command = ['VNWRG,05,' num2str(baudrate)];
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-        pause(p)
-        response = fgets(handles.s);
+        response = send_command(handles.s, ['VNWRG,05,' num2str(baudrate)]);
         set(handles.s, 'BaudRate', baudrate) % set the laptop baud rate to match
         display('-------------------------------------------------')
         display('VNav baud rate is now set to:')
@@ -570,44 +556,16 @@ switch get(hObject, 'Value')
         display(sprintf('%d bytes in input buffer after setting the baud rate', get(handles.s, 'BytesAvailable')))
 
         % set the samplerate
-        command = ['VNWRG,07,' num2str(handles.vnsamplerate)];
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-        pause(p)
-        response = fgets(handles.s);
+        response = send_command(s, ['VNWRG,07,' num2str(handles.vnsamplerate)]);
         display('-------------------------------------------------')
         display('VNav sample rate is now set to:')
         display(sprintf(response))
         display(sprintf('%d bytes in input buffer after setting the sample rate', get(handles.s, 'BytesAvailable')))
 
-        % set the async type and turn it on
-        command = 'VNWRG,06,14';
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-        pause(p)
-        response = fgets(handles.s);
-        display('-------------------------------------------------')
-        display('VNav async is now set to:')
-        display(sprintf(response))
-
-        % now save these settings to the non-volatile memory
-        command = 'VNWNV';
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-        pause(p)
-        display('-------------------------------------------------')
-        display('Saved the settings to non-volatile memory')
-
-        % turn the async off on the VectorNav
-        command = 'VNWRG,06,0';
-        fprintf(handles.s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-        pause(p)
-        flushinput(handles.s)
-        display('-------------------------------------------------')
-        display('The VectorNav async mode is off')
-        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
-
         % initialize the VectorNav data
         handles.vndata = zeros(handles.vnsamplerate*handles.duration, 12); % YMR
         handles.vndatatext = cell(handles.vnsamplerate*handles.duration, 1);
-        
+
         % daq parameters
         handles.nisamplerate = str2num(get(handles.NISampleRateEditText, 'String')); % sample rate in hz
         handles.ninumsamples = handles.duration*handles.nisamplerate;
@@ -629,25 +587,25 @@ switch get(hObject, 'Value')
         set(handles.ai, 'TriggerCondition', 'Rising')
         set(handles.ai, 'TriggerConditionValue', 4.9)
         set(handles.ai, 'TriggerDelay', 0.00)
-        
+
         % this function takes longer than the duration to run, which is good for
         % getdata(ai)
-        set(handles.ai, 'TriggerFcn', {@TriggerCallback, ...
+        set(handles.ai, 'TriggerFcn', {@trigger_callback, ...
                                       handles.s, ...
                                       handles.duration, ...
                                       handles.vnsamplerate, ...
                                       handles.vndatatext})
-        
+
         get(handles.ai)
-                                  
+
         % tells the graph loop to keep going
         handles.stopgraph = 0;
-        
+
         set(hObject, 'String', sprintf('Connected\nPress to Disconnect'))
         set(hObject, 'BackgroundColor', 'Red')
         set(handles.DisplayButton, 'Enable', 'On')
         set(handles.RecordButton, 'Enable', 'On')
-                
+
     case 0.0 % disconnect
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
@@ -948,27 +906,89 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function TriggerCallback(obj, events, s, duration, samplerate, vndatatext)
+function trigger_callback(obj, events, s, duration, samplerate, vndatatext)
 
-display('Trigger called')
-s.BytesAvailable
+    display('Trigger called')
+    s.BytesAvailable
 
-% set the async type and turn it on
-command = 'VNWRG,06,14';
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-pause(0.01)
-response = fgets(s);
-display('-------------------------------------------------')
-display('VNav async is now set to:')
-display(sprintf(response))
+    % set the async type and turn it on
+    response = send_command(s, 'VNWRG,06,14')
+    display('-------------------------------------------------')
+    display('VNav async is now set to:')
+    display(sprintf(response))
 
-% record data
-for i=1:duration
-    for j=1:samplerate
-        vndatatext{(i-1)*samplerate+j} = fgets(s);
+    % record data
+    for i=1:duration
+        for j=1:samplerate
+            vndatatext{(i-1)*samplerate+j} = fgets(s);
+        end
+        display('a sec')
     end
-    display('a sec')
-end
 
-obj.UserData = vndatatext;
-display('VN data done')
+    obj.UserData = vndatatext;
+    display('VN data done')
+
+function VNavBaudRate = determine_vnav_baud_rate(s)
+    % Returns the baudrate that the VectorNav is set to or NaN if it can't be
+    % determined.
+    % s : serial port object for the VectorNav
+
+    baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
+
+    VNavBaudRate = NaN;
+
+    for i = 1:length(baudrates)
+        % set the serial object baudrate
+        s.BaudRate = baudrates(i);
+        % first set the async to off
+        send_command(s, 'VNWRG,06,0');
+        pause(0.1)
+        display('-------------------------------------------------')
+        display('The VectorNav async mode is off')
+        % flush the buffer
+        flush_buffer(s)
+        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
+        display('-------------------------------------------------')
+        % see if it will return the version number
+        response = send_command(s, 'VNRRG,01');
+        if strcmp(response, '$VNRRG,01,VN-100*5A')
+            % then the baudrate is correct and we should save it
+            VNavBaudRate = baudrates(i)
+        end
+
+function response = send_command(s, command)
+    % Returns the latest response from the input buffer after the issued
+    % command. Response will only work correctly  when async is off.
+    % s : serial port object for the VectorNav
+    % command : string
+    % response : string
+
+    fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+    pause(0.1)
+    response = fgets(s)
+
+function flush_buffer(s)
+    % flushes the serial port input buffer
+
+    while get(s, 'BytesAvailable') > 0
+        flushinput(s)
+        display('Flushed the input buffer')
+    end
+
+function close_port(comport)
+    % check to see if COM port is already open, if so then close COM port.
+
+    ports = instrfind;
+    if length(ports) == 0
+        display('No ports exist')
+    else
+        for i = 1:length(ports)
+            if strcmp(ports(i).Port, comport) == 1
+                fclose(ports(i));
+                delete(ports(i));
+                display(['Closed and deleted ' comport])
+            else
+                display([comport ' was not open'])
+            end
+        end
+    end
