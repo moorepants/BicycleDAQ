@@ -524,7 +524,6 @@ switch get(hObject, 'Value')
         display('-------------------------------------------------')
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
-        set(handles.s, 'Timeout', 1)
         get(handles.s) % display the attributes of the port
 
         % open the serial port
@@ -941,78 +940,82 @@ display('-------------------------------------------------')
 display('The VectorNav async mode is off')
 display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
 
-
 obj.UserData = handles.vndatatext;
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
-    % Returns the baudrate that the VectorNav is set to or NaN if it can't be
-    % determined.
-    % s : serial port object for the VectorNav
+% Returns the baudrate that the VectorNav is set to or NaN if it can't be
+% determined.
+% s : serial port object for the VectorNav
 
-    baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
+baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
 
-    baudrate = NaN;
+baudrate = NaN;
 
-    for i = 1:length(baudrates)
-        % set the serial object baudrate
-        s.BaudRate = baudrates(i);
-        % first set the async to off
-        send_command(s, 'VNWRG,06,0');
-        pause(0.1)
-        display('-------------------------------------------------')
-        display(sprintf('Checking the %d baudrate', baudrates(i)))
-        display('The VectorNav async mode is off')
-        % flush the buffer
-        flush_buffer(s)
-        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
-        display('-------------------------------------------------')
-        % see if it will return the version number
-        response = send_command(s, 'VNRRG,01');
-        if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
-            % then the baudrate is correct and we should save it
-            baudrate = baudrates(i);
-            display(sprintf('The VNav baud rate is %d', baudrate))
-            break
-        end
+DefaultTimeout = get(s, 'Timeout');
+set(s, 'Timeout', 0.1)
+
+for i = 1:length(baudrates)
+    % set the serial object baudrate
+    s.BaudRate = baudrates(i);
+    % first set the async to off
+    send_command(s, 'VNWRG,06,0');
+    pause(0.1)
+    display('-------------------------------------------------')
+    display(sprintf('Checking the %d baudrate', baudrates(i)))
+    display('The VectorNav async mode is off')
+    % flush the buffer
+    flush_buffer(s)
+    display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
+    display('-------------------------------------------------')
+    % see if it will return the version number
+    response = send_command(s, 'VNRRG,01');
+    if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
+        % then the baudrate is correct and we should save it
+        baudrate = baudrates(i);
+        display(sprintf('The VNav baud rate is %d', baudrate))
+        break
     end
+end
+
+set(s, 'Timeout', DefaultTimeout)
 
 function response = send_command(s, command)
-    % Returns the latest response from the input buffer after the issued
-    % command. Response will only work correctly  when async is off.
-    % s : serial port object for the VectorNav
-    % command : string
-    % response : string
+% Returns the latest response from the input buffer after the issued
+% command. Response will only work correctly  when async is off.
+% s : serial port object for the VectorNav
+% command : string
+% response : string
 
-    fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
-    pause(0.1)
-    response = fgets(s);
+fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+pause(0.1)
+response = fgets(s);
 
 function flush_buffer(s)
-    % flushes the serial port input buffer
+% flushes the serial port input buffer
 
-    while get(s, 'BytesAvailable') > 0
-        flushinput(s)
-        display('Flushed the input buffer')
-    end
+while get(s, 'BytesAvailable') > 0
+    flushinput(s)
+    display('Flushed the input buffer')
+end
 
 function close_port(comport)
-    % check to see if COM port is already open, if so then close COM port.
+% check to see if COM port is already open, if so then close COM port.
 
-    ports = instrfind;
-    if length(ports) == 0
-        display('No ports exist')
-    else
-        for i = 1:length(ports)
-            if strcmp(ports(i).Port, comport) == 1
-                fclose(ports(i));
-                delete(ports(i));
-                display(['Closed and deleted ' comport])
-            else
-                display([comport ' was not open'])
-            end
+ports = instrfind;
+if length(ports) == 0
+    display('No ports exist')
+else
+    for i = 1:length(ports)
+        if strcmp(ports(i).Port, comport) == 1
+            fclose(ports(i));
+            delete(ports(i));
+            display(['Closed and deleted ' comport])
+        else
+            display([comport ' was not open'])
         end
     end
+end
 
 
 % --- Executes on button press in TareButton.
@@ -1045,7 +1048,15 @@ handles.vndatatext = get(handles.ai, 'UserData');
 
 stop(handles.ai)
 
+set(hObject, 'String', 'Record')
+set(hObject, 'Value', 0.0)
+set(handles.LoadButton, 'Enable', 'On')
+set(handles.DisplayButton, 'Enable', 'On')
+set(handles.TareButton, 'Enable', 'On')
 
+handles = parse_vnav_text_data(handles);
+handles.vndata
+%update_current_graph()
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
@@ -1066,4 +1077,22 @@ function WaitEditText_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+function handles = parse_vnav_text_data(handles)
+
+%Create parse string
+ps = '%*6c';
+for i=1:size(handles.vndata, 2)
+    ps = [ps ',%g'];
+end
+
+% process the text data
+for i=1:handles.vnnumsamples
+    try
+        handles.vndata(i, :) = sscanf(handles.vndatatext{i}, ps);
+    catch
+        handles.vndata(i, :) = NaN*ones(size(handles.vndata(i, :)));
+        display(sprintf('%d is a bad one: %s', i, handles.vndatatext{i}))
+    end
 end
