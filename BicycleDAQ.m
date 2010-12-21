@@ -69,6 +69,13 @@ set(handles.ActionButtonGroup, 'SelectionChangeFcn', ...
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
 
+% create a data directory if one doesn't already exist
+if exist('data/', 'dir') ~= 7
+    mkdir('data/')
+end
+
+set_run_id(handles)
+
 % this is what is plugged into each analog input on the NI USB-6218
 handles.InputPairs = struct('PushButton',          0, ...
                             'SteerPotentiometer',  1, ...
@@ -334,18 +341,6 @@ set(handles.BicyclePopupmenu, 'Value', number + 1)
 % put the old text back in the edit box
 set(hObject, 'String', 'Add a new bicycle')
 
-% --- Executes during object creation, after setting all properties.
-function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewBicycleEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 handles = guidata(hObject);
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
@@ -366,7 +361,10 @@ switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
 end
 
 function ActionButtonGroup_SelectionChangeFcn(hObject, eventdata)
+
+% get the latest handles
 handles = guidata(hObject);
+
 switch get(eventdata.NewValue, 'Tag')
     case 'LoadButton'
         % brings up a selection window for a file
@@ -432,8 +430,8 @@ switch get(eventdata.NewValue, 'Tag')
             drawnow
             handles = guidata(handles.BicycleDAQ);
         end
-    case 'RecordButton'
-        % records data to file
+    case 'RecordButton' % records data to file
+
         set(handles.LoadButton, 'Enable', 'Off')
         set(handles.DisplayButton, 'Enable', 'Off')
         set(handles.TareButton, 'Enable', 'Off')
@@ -450,7 +448,21 @@ switch get(eventdata.NewValue, 'Tag')
 
         stop(handles.ai)
 
+        % parse the text data and return numerical values
         handles = parse_vnav_text_data(handles);
+
+        % save the data to file
+        save(get(handles.RunIDEditText, 'String'), ...
+             handles.vndata, ...
+             handles.vndatatext, ...
+             handles.nidata, ...
+             get(handles.RunIDEditText, 'String'), ...
+             get(handles.NotesEditText, 'String'), ...
+             get(handles.DurationEditText, 'String'), ...
+             get(handles.NISampleRate, 'String'), ...
+             get(handles.VNSampleRate, 'String'), ...
+             get(handles.RiderPopupmenu, 'String'){get(handles.RiderPopupmenu,
+             'Value')})
 
         set(hObject, 'String', 'Record')
         set(hObject, 'Value', 0.0)
@@ -919,3 +931,27 @@ set(handles.NISampleRateEditText, 'Enable', state)
 set(handles.VNSampleRateEditText, 'Enable', state)
 set(handles.VNComPortEditText, 'Enable', state)
 set(handles.WaitTimeEditText, 'Enable', state)
+
+function plot_data(handles)
+% see what graphs buttons are pressed
+
+% set up the plot
+
+% plot the data
+
+function set_run_id(handles)
+
+dirinfo = what('data/')
+
+if length(MatFiles) == 0 % if there are no mat files
+    set(handles.RunIDEditText, 'String', '00000')
+else % make new sequential run id
+    lastfile = sort(dirinfo.mat){end}; % get the last file
+    lastnum = str2double(lastfile[:end-2]) % number of the last file
+    newnum = num2str(lastnum + 1);
+    % pad with zeros
+    for i = i:5-length(newnum)
+        newnum = ['0' newnum]
+    end
+    set(handles.RunIDEditText, 'String', newnum)
+end
