@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 20-Dec-2010 13:27:26
+% Last Modified by GUIDE v2.5 20-Dec-2010 16:41:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -524,7 +524,7 @@ switch get(hObject, 'Value')
         display('-------------------------------------------------')
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
-        set(handles.s, 'TimerPeriod', 1)
+        set(handles.s, 'Timeout', 1)
         get(handles.s) % display the attributes of the port
 
         % open the serial port
@@ -592,25 +592,25 @@ switch get(hObject, 'Value')
 
         % this function takes longer than the duration to run, which is good for
         % getdata(ai)
-        set(handles.ai, 'TriggerFcn', {@trigger_callback, ...
-                                      handles.s, ...
-                                      handles.duration, ...
-                                      handles.vnsamplerate, ...
-                                      handles.vndatatext})
+        set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
 
         get(handles.ai)
 
         % tells the graph loop to keep going
         handles.stopgraph = 0;
 
-        set(hObject, 'String', sprintf('Connected\nPress to Disconnect'))
+        set(hObject, 'String', sprintf('Disconnect'))
         set(hObject, 'BackgroundColor', 'Red')
         set(handles.DisplayButton, 'Enable', 'On')
         set(handles.RecordButton, 'Enable', 'On')
+        set(handles.TareButton, 'Enable', 'On')
 
     case 0.0 % disconnect
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
+        set(handles.DisplayButton, 'Enable', 'Off')
+        set(handles.RecordButton, 'Enable', 'Off')
+        set(handles.TareButton, 'Enable', 'Off')
         % tells the graph loop to stop
         handles.stopgraph = 1;
         %rmfield(handles, 'ai')
@@ -915,27 +915,35 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function trigger_callback(obj, events, s, duration, samplerate, vndatatext)
+function trigger_callback(obj, events, handles)
 
-    display('Trigger called')
-    s.BytesAvailable
+display('Trigger called')
 
-    % set the async type and turn it on
-    response = send_command(s, 'VNWRG,06,14')
-    display('-------------------------------------------------')
-    display('VNav async is now set to:')
-    display(sprintf(response))
+% set the async type and turn it on
+response = send_command(handles.s, 'VNWRG,06,14');
+display('-------------------------------------------------')
+display('VNav async is now set to:')
+display(sprintf(response))
 
-    % record data
-    for i=1:duration
-        for j=1:samplerate
-            vndatatext{(i-1)*samplerate+j} = fgets(s);
-        end
-        display('a sec')
+% record data
+for i=1:handles.duration
+    for j=1:handles.vnsamplerate
+        handles.vndatatext{(i-1)*handles.vnsamplerate+j} = fgets(handles.s);
     end
+    display(sprintf('Data taken for %d seconds', i))
+end
 
-    obj.UserData = vndatatext;
-    display('VN data done')
+% turn the async off on the VectorNav
+send_command(handles.s, 'VNWRG,06,0');
+pause(0.1)
+flush_buffer(handles.s)
+display('-------------------------------------------------')
+display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
+
+
+obj.UserData = handles.vndatatext;
+display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
     % Returns the baudrate that the VectorNav is set to or NaN if it can't be
@@ -960,7 +968,7 @@ function baudrate = determine_vnav_baud_rate(s)
         display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
         display('-------------------------------------------------')
         % see if it will return the version number
-        response = send_command(s, 'VNRRG,01')
+        response = send_command(s, 'VNRRG,01');
         if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
             % then the baudrate is correct and we should save it
             baudrate = baudrates(i);
@@ -1012,3 +1020,50 @@ function TareButton_Callback(hObject, eventdata, handles)
 % hObject    handle to TareButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in RecordButton.
+function RecordButton_Callback(hObject, eventdata, handles)
+% hObject    handle to RecordButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RecordButton
+set(handles.LoadButton, 'Enable', 'Off')
+set(handles.DisplayButton, 'Enable', 'Off')
+set(handles.TareButton, 'Enable', 'Off')
+
+% start up the DAQ
+start(handles.ai)
+display('DAQ started, waiting for trigger...')
+set(hObject, 'String', 'DAQ started, waiting for trigger...')
+wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
+
+% get the data from both devices
+[nidata, time, abstime, events] = getdata(handles.ai);
+handles.vndatatext = get(handles.ai, 'UserData');
+
+stop(handles.ai)
+
+
+
+function WaitEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to WaitEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of WaitEditText as text
+%        str2double(get(hObject,'String')) returns contents of WaitEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function WaitEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WaitEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
