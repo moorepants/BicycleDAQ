@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 20-Dec-2010 16:41:02
+% Last Modified by GUIDE v2.5 21-Dec-2010 11:57:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,8 +63,6 @@ end
 % these permanently set the functions for these callbacks in the gui
 set(handles.GraphTypeButtonGroup, 'SelectionChangeFcn', ...
     @GraphTypeButtonGroup_SelectionChangeFcn);
-set(handles.ActionButtonGroup, 'SelectionChangeFcn', ...
-    @ActionButtonGroup_SelectionChangeFcn);
 
 % load the VectorNav library
 addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
@@ -185,13 +183,13 @@ function varargout = BicycleDAQ_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-function NotesText_Callback(hObject, eventdata, handles)
-% hObject    handle to NotesText (see GCBO)
+function NotesEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NotesEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NotesText as text
-%        str2double(get(hObject,'String')) returns contents of NotesText as a double
+% Hints: get(hObject,'String') returns contents of NotesEditText as text
+%        str2double(get(hObject,'String')) returns contents of NotesEditText as a double
 
 
 function NewSpeedEditText_Callback(hObject, eventdata, handles)
@@ -364,7 +362,7 @@ function ActionButtonGroup_SelectionChangeFcn(hObject, eventdata)
 
 % get the latest handles
 handles = guidata(hObject);
-
+get(eventdata.NewValue, 'Tag')
 switch get(eventdata.NewValue, 'Tag')
     case 'LoadButton'
         % brings up a selection window for a file
@@ -432,43 +430,7 @@ switch get(eventdata.NewValue, 'Tag')
         end
     case 'RecordButton' % records data to file
 
-        set(handles.LoadButton, 'Enable', 'Off')
-        set(handles.DisplayButton, 'Enable', 'Off')
-        set(handles.TareButton, 'Enable', 'Off')
-
-        % start up the DAQ
-        start(handles.ai)
-        display('DAQ started, waiting for trigger...')
-        set(hObject, 'String', 'DAQ started, waiting for trigger...')
-        wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
-
-        % get the data from both devices
-        handles.nidata = getdata(handles.ai);
-        handles.vndatatext = get(handles.ai, 'UserData');
-
-        stop(handles.ai)
-
-        % parse the text data and return numerical values
-        handles = parse_vnav_text_data(handles);
-
-        % save the data to file
-        save(get(handles.RunIDEditText, 'String'), ...
-             handles.vndata, ...
-             handles.vndatatext, ...
-             handles.nidata, ...
-             get(handles.RunIDEditText, 'String'), ...
-             get(handles.NotesEditText, 'String'), ...
-             get(handles.DurationEditText, 'String'), ...
-             get(handles.NISampleRate, 'String'), ...
-             get(handles.VNSampleRate, 'String'), ...
-             get(handles.RiderPopupmenu, 'String'){get(handles.RiderPopupmenu,
-             'Value')})
-
-        set(hObject, 'String', 'Record')
-        set(hObject, 'Value', 0.0)
-        set(handles.LoadButton, 'Enable', 'On')
-        set(handles.DisplayButton, 'Enable', 'On')
-        set(handles.TareButton, 'Enable', 'On')
+        
 end
 
 
@@ -764,6 +726,8 @@ function trigger_callback(obj, events, handles)
 
 display('Trigger called')
 
+set(handles.RecordButton, 'String', 'Recording')
+
 % set the async type and turn it on
 response = send_command(handles.s, 'VNWRG,06,14');
 display('-------------------------------------------------')
@@ -879,7 +843,45 @@ function RecordButton_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of RecordButton
 
+set_run_id(handles);
 
+set(handles.LoadButton, 'Enable', 'Off')
+set(handles.DisplayButton, 'Enable', 'Off')
+set(handles.TareButton, 'Enable', 'Off')
+
+% start up the DAQ
+start(handles.ai)
+display('DAQ started, waiting for trigger...')
+set(hObject, 'String', 'DAQ started, waiting for trigger...')
+wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
+
+set(handles.RecordButton, 'String', 'Processing')
+% get the data from both devices
+handles.nidata = getdata(handles.ai);
+handles.vndatatext = get(handles.ai, 'UserData');
+
+stop(handles.ai)
+
+% parse the text data and return numerical values
+handles = parse_vnav_text_data(handles);
+
+% save the data to file
+
+
+save(['data\' get(handles.RunIDEditText, 'String') '.mat'])%, ...
+%      handles.vndata, ...
+%      handles.vndatatext, ...
+%      handles.nidata, ...
+%      get(handles.RunIDEditText, 'String'), ...
+%      get(handles.NotesEditText, 'String'), ...
+%      get(handles.DurationEditText, 'String'), ...
+%      get(handles.NISampleRateEditText, 'String'), ...
+%      get(handles.VNavSampleRateEditText, 'String'))
+
+set(hObject, 'String', 'Record')
+set(handles.LoadButton, 'Enable', 'On')
+set(handles.DisplayButton, 'Enable', 'On')
+set(handles.TareButton, 'Enable', 'On')
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
@@ -928,9 +930,9 @@ function enable_parameters(handles, state)
 
 set(handles.DurationEditText, 'Enable', state)
 set(handles.NISampleRateEditText, 'Enable', state)
-set(handles.VNSampleRateEditText, 'Enable', state)
-set(handles.VNComPortEditText, 'Enable', state)
-set(handles.WaitTimeEditText, 'Enable', state)
+set(handles.VNavSampleRateEditText, 'Enable', state)
+set(handles.VNavComPortEditText, 'Enable', state)
+set(handles.WaitEditText, 'Enable', state)
 
 function plot_data(handles)
 % see what graphs buttons are pressed
@@ -941,17 +943,234 @@ function plot_data(handles)
 
 function set_run_id(handles)
 
-dirinfo = what('data/')
+dirinfo = what('data/');
+MatFiles = dirinfo.mat;
 
 if length(MatFiles) == 0 % if there are no mat files
     set(handles.RunIDEditText, 'String', '00000')
 else % make new sequential run id
-    lastfile = sort(dirinfo.mat){end}; % get the last file
-    lastnum = str2double(lastfile[:end-2]) % number of the last file
+    filelist = sort(dirinfo.mat);
+    lastfile = filelist{end}; % get the last file
+    lastnum = str2double(lastfile(1:end-4)); % number of the last file
     newnum = num2str(lastnum + 1);
     % pad with zeros
-    for i = i:5-length(newnum)
-        newnum = ['0' newnum]
+    for i = 1:5-length(newnum)
+        newnum = ['0' newnum];
     end
     set(handles.RunIDEditText, 'String', newnum)
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function NotesEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NotesEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function DurationEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DurationEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VNavComPortEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function VNavSampleRateEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VNavSampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function NISampleRateEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NISampleRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function NewSpeedEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewSpeedEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewBicycleEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function NewManueverEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewManueverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function RunIDEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RunIDEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function RiderPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to RiderPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function SpeedPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SpeedPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function BicyclePopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BicyclePopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ManueverPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in EnvironmentPopupmenu.
+function EnvironmentPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to EnvironmentPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns EnvironmentPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from EnvironmentPopupmenu
+
+
+% --- Executes during object creation, after setting all properties.
+function EnvironmentPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to EnvironmentPopupmenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function NewEnviromentEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewEnviromentEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewEnviromentEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewEnviromentEditText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NewEnviromentEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewEnviromentEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
