@@ -187,19 +187,6 @@ function NotesText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NotesText as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function NotesText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NotesText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewSpeedEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -239,19 +226,6 @@ set(handles.SpeedPopupmenu, 'Value', index(number + 1))
 
 % put the old text back in the edit box
 set(hObject, 'String', 'Add a new speed')
-
-
-% --- Executes during object creation, after setting all properties.
-function NewSpeedEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewSpeedEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in ScaledRawButton.
@@ -423,7 +397,7 @@ switch get(eventdata.NewValue, 'Tag')
         lines = plot(data); % plot the raw data
         ylim([-5 5])
         ylabel('Voltage')
-        
+
         leg = legend(eval(['handles.' legtype '.' ButtonName]));
 %         labels = {'', '', '', '', ''};
 
@@ -460,6 +434,29 @@ switch get(eventdata.NewValue, 'Tag')
         end
     case 'RecordButton'
         % records data to file
+        set(handles.LoadButton, 'Enable', 'Off')
+        set(handles.DisplayButton, 'Enable', 'Off')
+        set(handles.TareButton, 'Enable', 'Off')
+
+        % start up the DAQ
+        start(handles.ai)
+        display('DAQ started, waiting for trigger...')
+        set(hObject, 'String', 'DAQ started, waiting for trigger...')
+        wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
+
+        % get the data from both devices
+        handles.nidata = getdata(handles.ai);
+        handles.vndatatext = get(handles.ai, 'UserData');
+
+        stop(handles.ai)
+
+        handles = parse_vnav_text_data(handles);
+
+        set(hObject, 'String', 'Record')
+        set(hObject, 'Value', 0.0)
+        set(handles.LoadButton, 'Enable', 'On')
+        set(handles.DisplayButton, 'Enable', 'On')
+        set(handles.TareButton, 'Enable', 'On')
 end
 
 
@@ -471,16 +468,6 @@ function BicycleDAQ_KeyReleaseFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was released
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) released
 % handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in ClearButton.
-function ClearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to ClearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-rmfield(handles, 'ai')
-delete(handles.ai)
-daqreset
 
 
 % --- Executes when user attempts to close BicycleDAQ.
@@ -506,6 +493,8 @@ switch get(hObject, 'Value')
         % button turns yellow and displays connecting
         set(hObject, 'String', 'Connecting...')
         set(hObject, 'BackgroundColor', 'Yellow')
+
+        enable_parameters(handles, 'Off')
 
         % get general parameters
         handles.duration = str2double(get(handles.DurationEditText, 'String'));
@@ -593,7 +582,7 @@ switch get(hObject, 'Value')
         % getdata(ai)
         set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
 
-        get(handles.ai)
+        get(handles.ai) % display the daq's attributes
 
         % tells the graph loop to keep going
         handles.stopgraph = 0;
@@ -605,21 +594,23 @@ switch get(hObject, 'Value')
         set(handles.TareButton, 'Enable', 'On')
 
     case 0.0 % disconnect
+        % tells the graph loop to stop
+        handles.stopgraph = 1;
+
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
         set(handles.DisplayButton, 'Enable', 'Off')
         set(handles.RecordButton, 'Enable', 'Off')
         set(handles.TareButton, 'Enable', 'Off')
-        % tells the graph loop to stop
-        handles.stopgraph = 1;
-        %rmfield(handles, 'ai')
-        %delete(handles.ai)
         get(handles.ai, 'Running')
+
         if strcmp(get(handles.ai, 'Running'), 'On')
             stop(handles.ai)
         end
+
+        % reset the daq (delete any daq objects)
         daqreset
-        
+
         % reset to factory settings
         display('-------------------------------------------------')
         display('Starting factory reset')
@@ -627,31 +618,17 @@ switch get(hObject, 'Value')
         display('Reset to factory')
         display(sprintf(response))
         display(sprintf('%d bytes in input buffer after reseting to factory', get(handles.s, 'BytesAvailable')))
+
         % close the VectorNav connection
         fclose(handles.s)
         display('Serial port is closed')
 
-        if exist('s', 'var')
-            delete(s)
-            clear s
-            display('Serial port is deleted')
-        end
-
+        enable_parameters(handles, 'On')
 end
 
 % Update handles structure
 guidata(hObject, handles);
-    
 
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over NewBicycleEditText.
-function NewBicycleEditText_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to NewBicycleEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-display('testing')
-set(hObject, 'Enable', 'on')
 
 % --- Executes on selection change in RiderPopupmenu.
 function RiderPopupmenu_Callback(hObject, eventdata, handles)
@@ -661,19 +638,6 @@ function RiderPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns RiderPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from RiderPopupmenu
-
-
-% --- Executes during object creation, after setting all properties.
-function RiderPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RiderPopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in SpeedPopupmenu.
@@ -686,53 +650,6 @@ function SpeedPopupmenu_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
 
 
-% --- Executes during object creation, after setting all properties.
-function SpeedPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to SpeedPopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over NewRiderEditText.
-function NewRiderEditText_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to NewRiderEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes during object creation, after setting all properties.
-function BicyclePopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to BicyclePopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function RunIDEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to RunIDEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in BicyclePopupmenu.
 function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to BicyclePopupmenu (see GCBO)
@@ -741,7 +658,6 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns BicyclePopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
-
 
 
 function NewManueverEditText_Callback(hObject, eventdata, handles)
@@ -777,32 +693,6 @@ set(handles.ManueverPopupmenu, 'Value', number + 1)
 set(hObject, 'String', 'Add a new manuever')
 
 
-% --- Executes during object creation, after setting all properties.
-function NewManueverEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewManueverEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ManueverPopupmenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in ManueverPopupmenu.
 function ManueverPopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to ManueverPopupmenu (see GCBO)
@@ -811,7 +701,6 @@ function ManueverPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns ManueverPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ManueverPopupmenu
-
 
 
 function RunIDEditText_Callback(hObject, eventdata, handles)
@@ -823,7 +712,6 @@ function RunIDEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of RunIDEditText as a double
 
 
-
 function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to VNavSampleRateEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -831,20 +719,6 @@ function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of VNavSampleRateEditText as text
 %        str2double(get(hObject,'String')) returns contents of VNavSampleRateEditText as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function VNavSampleRateEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to VNavSampleRateEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
@@ -856,20 +730,6 @@ function NISampleRateEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NISampleRateEditText as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function NISampleRateEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NISampleRateEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function DurationEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to DurationEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -877,20 +737,6 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of DurationEditText as text
 %        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function DurationEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to DurationEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function VNavComPortEditText_Callback(hObject, eventdata, handles)
@@ -901,18 +747,6 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of VNavComPortEditText as text
 %        str2double(get(hObject,'String')) returns contents of VNavComPortEditText as a double
 
-
-% --- Executes during object creation, after setting all properties.
-function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to VNavComPortEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 function trigger_callback(obj, events, handles)
 
@@ -1032,31 +866,8 @@ function RecordButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of RecordButton
-set(handles.LoadButton, 'Enable', 'Off')
-set(handles.DisplayButton, 'Enable', 'Off')
-set(handles.TareButton, 'Enable', 'Off')
 
-% start up the DAQ
-start(handles.ai)
-display('DAQ started, waiting for trigger...')
-set(hObject, 'String', 'DAQ started, waiting for trigger...')
-wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
 
-% get the data from both devices
-[nidata, time, abstime, events] = getdata(handles.ai);
-handles.vndatatext = get(handles.ai, 'UserData');
-
-stop(handles.ai)
-
-set(hObject, 'String', 'Record')
-set(hObject, 'Value', 0.0)
-set(handles.LoadButton, 'Enable', 'On')
-set(handles.DisplayButton, 'Enable', 'On')
-set(handles.TareButton, 'Enable', 'On')
-
-handles = parse_vnav_text_data(handles);
-handles.vndata
-%update_current_graph()
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
@@ -1096,3 +907,15 @@ for i=1:handles.vnnumsamples
         display(sprintf('%d is a bad one: %s', i, handles.vndatatext{i}))
     end
 end
+
+function enable_parameters(handles, state)
+% enables (on or off) parameters that should be set only when the VNav and NI
+% DAQ are disconnected
+% handles : guidata
+% state : 'On' or 'Off'
+
+set(handles.DurationEditText, 'Enable', state)
+set(handles.NISampleRateEditText, 'Enable', state)
+set(handles.VNSampleRateEditText, 'Enable', state)
+set(handles.VNComPortEditText, 'Enable', state)
+set(handles.WaitTimeEditText, 'Enable', state)
