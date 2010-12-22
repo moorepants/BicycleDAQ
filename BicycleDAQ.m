@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 21-Dec-2010 11:57:37
+% Last Modified by GUIDE v2.5 21-Dec-2010 15:08:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -96,75 +96,82 @@ handles.InputPairs = struct('PushButton',          0, ...
                             'RightFootBridge2',   18, ...
                             'LeftFootBridge1',    19, ...
                             'LeftFootBridge2',    20, ...
-                            'PullForceBrigde',    21);
+                            'PullForceBridge',    21, ...
+                            'ThreeVolts',         22, ...
+                            'FiveVolts',          23);
 
 % graph legends
 % the struct command doesn't seem to like values of different length so I
 % had to put all the cells in double brackets
-handles.RawLegends = struct('SteerAngleButton', {{'PushButton'
-                                                  'SteerPotentiometer'
-                                                  'SteerRateGyro'
-                                                  'WheelSpeedMotor'
-                                                  'SteerTorqueSensor'
-                                                  'FrameAccelX'
-                                                  'FrameAccelY'
-                                                  'FrameAccelZ'}}, ...
-                            'RiderRateButton', {{'HipPotentiometer'
-                                                 'LeanPotentionmeter'
-                                                 'TwistPotentionmeter'}}, ...
+handles.RawLegends = struct('PotAngleButton', {{'SteerPotentiometer'
+                                                'HipPotentiometer'
+                                                'LeanPotentionmeter'
+                                                'TwistPotentionmeter'}}, ...
+                            'RateAccelRateButton', {{'SteerRateGyro'
+                                                     'WheelSpeedMotor'
+                                                     'FrameAccelX'
+                                                     'FrameAccelY'
+                                                     'FrameAccelZ'}}, ...
                             'SeatpostAccelerationButton', {{'SeatpostBridge1'
                                                             'SeatpostBridge2'
                                                             'SeatpostBridge3'
                                                             'SeatpostBridge4'
                                                             'SeatpostBridge5'
                                                             'SeatpostBridge6'}}, ...
-                            'FeetForceButton', {{'RightFootBridge1'
+                            'FeetForceButton', {{'SteerTorqueSensor'
+                                                 'RightFootBridge1'
                                                  'RightFootBridge2'
                                                  'LeftFootBridge1'
-                                                 'LeftFootBridge2'}}, ...
-                            'VnavMomentButton', {{'Voltage 1'
-                                                  'Voltage 2'
-                                                  'Voltage 3'
-                                                  'Voltage 4'
-                                                  'Voltage 5'
-                                                  'Voltage 6'
-                                                  'Voltage 7'
-                                                  'Voltage 8'
-                                                  'Voltage 9'
-                                                  'Voltage 10'}});
-handles.ScaledLegends = struct('SteerAngleButton', {{'Steer Angle'
-                                                     'Roll Angle'
-                                                     'Yaw Angle'
-                                                     'Pitch Angle'
-                                                     'Hip Angle'
-                                                     'Lean Angle'
-                                                     'Twist Angle'}}, ...
-                               'RiderRateButton', {{'Steer Rate'
-                                                    'Roll Rate'
-                                                    'Yaw Rate'
-                                                    'Pitch Rate'
-                                                    'Wheel Rate'}}, ...
+                                                 'LeftFootBridge2'
+                                                 'PullForceBridge'}}, ...
+                            'VnavMomentButton', {{'Yaw Angle (Z)'
+                                                  'Pitch Angle (Y)'
+                                                  'Roll Angle (X)'
+                                                  'Mag X'
+                                                  'Mag Y'
+                                                  'Mag Z'
+                                                  'Acceleration X'
+                                                  'Acceleration Y'
+                                                  'Acceleration Z'
+                                                  'Angular Rate X'
+                                                  'Angular Rate Y'
+                                                  'Angular Rate Z'}}, ...
+                             'VoltageMagneticButton', {{'PushButton'
+                                                        'ThreeVolts'
+                                                        'FiveVolts'}});
+handles.ScaledLegends = struct('PotAngleButton', {{'Steer Angle'
+                                                    'Roll Angle'
+                                                    'Yaw Angle'
+                                                    'Pitch Angle'
+                                                    'Hip Angle'
+                                                    'Lean Angle'
+                                                    'Twist Angle'}}, ...
+                               'RateAccelRateButton', {{'Steer Rate'
+                                                         'Roll Rate'
+                                                         'Yaw Rate'
+                                                         'Pitch Rate'
+                                                         'Wheel Rate'}}, ...
                                'SeatpostAccelerationButton', {{'VNav X'
-                                                               'VNav Y'
-                                                               'VNav Z'
-                                                               'Frame X'
-                                                               'Frame Y'
-                                                               'Frame Z'}}, ...
+                                                                'VNav Y'
+                                                                'VNav Z'
+                                                                'Frame X'
+                                                                'Frame Y'
+                                                                'Frame Z'}}, ...
                                'FeetForceButton', {{'Seat Fx'
-                                                    'Seat Fy'
-                                                    'Seat Fz'
-                                                    'Right Foot'
-                                                    'Left Foot'
-                                                    'Pull Force'}}, ...
-                               'VnavMomentButton', {{'Steer Torque'
-                                                     'Seat Mx'
-                                                     'Seat My'
-                                                     'Seat Mz'
+                                                     'Seat Fy'
+                                                     'Seat Fz'
                                                      'Right Foot'
-                                                     'Left Foot'}}, ...
-                               'MagneticButton', {{'X'
-                                                   'Y'
-                                                   'Z'}});
+                                                     'Left Foot'
+                                                     'Pull Force'}}, ...
+                               'VnavMomentButton', {{'Steer Torque'
+                                                      'Seat Mx'
+                                                      'Seat My'
+                                                      'Seat Mz'
+                                                      'Right Foot'
+                                                      'Left Foot'}}, ...
+                               'VoltageMagneticButton', {{'X'
+                                                           'Y'
+                                                           'Z'}});
 
 % Update handles structure
 guidata(hObject, handles);
@@ -244,20 +251,20 @@ function ScaledRawButton_Callback(hObject, eventdata, handles)
 switch get(hObject, 'Value')
     case 0.0
         set(hObject, 'String', 'Scaled Data')
-        set(handles.SteerAngleButton, 'String', 'Steer')
-        set(handles.RiderRateButton, 'String', 'Rider')
+        set(handles.PotAngleButton, 'String', 'Steer')
+        set(handles.RateAccelRateButton, 'String', 'Rider')
         set(handles.SeatpostAccelerationButton, 'String', 'Seatpost')
         set(handles.FeetForceButton, 'String', 'Feet')
         set(handles.VnavMomentButton, 'String', 'VectorNav')
-        set(handles.MagneticButton, 'Enable', 'off')
+        set(handles.VoltageMagneticButton, 'Enable', 'off')
     case 1.0
         set(hObject, 'String', 'Raw Data')
-        set(handles.SteerAngleButton, 'String', 'Angles')
-        set(handles.RiderRateButton, 'String', 'Rates')
+        set(handles.PotAngleButton, 'String', 'Angles')
+        set(handles.RateAccelRateButton, 'String', 'Rates')
         set(handles.SeatpostAccelerationButton, 'String', 'Accelerations')
         set(handles.FeetForceButton, 'String', 'Forces')
         set(handles.VnavMomentButton, 'String', 'Moments')
-        set(handles.MagneticButton, 'Enable', 'on')
+        set(handles.VoltageMagneticButton, 'Enable', 'on')
 end
 
 
@@ -342,18 +349,18 @@ set(hObject, 'String', 'Add a new bicycle')
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 handles = guidata(hObject);
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
-    case 'SteerAngleButton'
-        display('angles')
-    case 'RiderRateButton'
-        display('angles')
+    case 'PotAngleButton'
+        plot_data(handles)
+    case 'RateAccelRateButton'
+        plot_data(handles)
     case 'SeatpostAccelerationButton'
-        display('accelerations')
+        plot_data(handles)
     case 'FeetForceButton'
-        display('forces')
+        plot_data(handles)
     case 'VnavMomentButton'
-        display('moments')
-    case 'MagneticButton'
-        display('magnetic')
+        plot_data(handles)
+    case 'VoltageMagneticButton'
+        plot_data(handles)
     otherwise
         % Code for when there is no match.
 end
@@ -542,8 +549,11 @@ switch get(hObject, 'Value')
         set(handles.ai, 'SampleRate', handles.nisamplerate)
         actualrate = get(handles.ai,'SampleRate');
         set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
+        
+        % NI channels
+        channelnames = fieldnames(handles.InputPairs);
 
-        chan = addchannel(handles.ai, [0 1 5 6 7 8 9]); % important that this comes after set(InputType)
+        chan = addchannel(handles.ai, 0:length(channelnames)-1); % important that this comes after set(InputType)
 
         % trigger details
         set(handles.ai, 'TriggerType', 'Software')
@@ -834,6 +844,25 @@ function TareButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+set(handles.LoadButton, 'Enable', 'Off')
+set(handles.RecordButton, 'Enable', 'Off')
+set(handles.DisplayButton, 'Enable', 'Off')
+
+set(hObject, 'String', 'Taring')
+
+response = send_command(handles.s, 'VNTAR');
+
+if strcmp(response, sprintf('$VNTAR*5F\r\n'))
+    display('Device was tared')
+else
+    display('Device did not tare')
+end
+   
+set(handles.LoadButton, 'Enable', 'On')
+set(handles.RecordButton, 'Enable', 'On')
+set(handles.DisplayButton, 'Enable', 'On')
+
+set(hObject, 'String', 'Tare')
 
 % --- Executes on button press in RecordButton.
 function RecordButton_Callback(hObject, eventdata, handles)
@@ -848,6 +877,7 @@ set_run_id(handles);
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.DisplayButton, 'Enable', 'Off')
 set(handles.TareButton, 'Enable', 'Off')
+set(handles.RecordButton, 'Enable', 'Off')
 
 % start up the DAQ
 start(handles.ai)
@@ -867,8 +897,12 @@ handles = parse_vnav_text_data(handles);
 
 % save the data to file
 
-
-save(['data\' get(handles.RunIDEditText, 'String') '.mat'])%, ...
+save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
+     '-struct', ...
+     'handles', ...
+     'vndata', ...
+     'vndatatext', ...
+     'nidata')%, ...
 %      handles.vndata, ...
 %      handles.vndatatext, ...
 %      handles.nidata, ...
@@ -878,10 +912,17 @@ save(['data\' get(handles.RunIDEditText, 'String') '.mat'])%, ...
 %      get(handles.NISampleRateEditText, 'String'), ...
 %      get(handles.VNavSampleRateEditText, 'String'))
 
+plot_data(handles)
+
+enable_graph_buttons(handles, 'On')
+
 set(hObject, 'String', 'Record')
 set(handles.LoadButton, 'Enable', 'On')
 set(handles.DisplayButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
+set(handles.RecordButton, 'Enable', 'On')
+
+guidata(hObject, handles)
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
@@ -935,11 +976,35 @@ set(handles.VNavComPortEditText, 'Enable', state)
 set(handles.WaitEditText, 'Enable', state)
 
 function plot_data(handles)
+% plots the data that is currently stored in handles.vndata and
+% handles.nidata to the graph in the gui
+
+% find out if the graph is raw or scaled data
+switch get(handles.ScaledRawButton, 'Value')
+    case 0.0
+        legtype = 'RawLegends';
+    case 1.0
+        legtype = 'ScaledLegends';
+end
+
+% set the plot axes to the graph
+axes(handles.Graph)
+
 % see what graphs buttons are pressed
+ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
 
-% set up the plot
-
-% plot the data
+if strcmp(ButtonName, 'VnavMomentButton')
+    plot(handles.vndata)
+else
+    % create a vector with the analog input numbers for this graph
+    datavals = zeros(1, length(handles.(legtype).(ButtonName)));
+    for i = 1:length(handles.(legtype).(ButtonName))
+        input = char(handles.(legtype).(ButtonName)(i));
+        datavals(i) = handles.InputPairs.(input);
+    end
+    plot(handles.nidata(:, datavals+1))
+end
+legend(handles.(legtype).(ButtonName))
 
 function set_run_id(handles)
 
@@ -1173,4 +1238,11 @@ function NewEnviromentEditText_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+function enable_graph_buttons(handles, state)
+
+buttons = fieldnames(handles.RawLegends);
+for i = 1:length(buttons)
+    set(handles.(buttons{i}), 'Enable', state)
 end
