@@ -436,7 +436,7 @@ switch get(eventdata.NewValue, 'Tag')
         end
     case 'RecordButton' % records data to file
 
-        
+
 end
 
 
@@ -549,7 +549,7 @@ switch get(hObject, 'Value')
         set(handles.ai, 'SampleRate', handles.nisamplerate)
         actualrate = get(handles.ai,'SampleRate');
         set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
-        
+
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
 
@@ -570,7 +570,7 @@ switch get(hObject, 'Value')
 
         % tells the graph loop to keep going
         handles.stopgraph = 0;
-        
+
         set(hObject, 'Enable', 'On')
         set(hObject, 'String', sprintf('Disconnect'))
         set(hObject, 'BackgroundColor', 'Red')
@@ -587,7 +587,6 @@ switch get(hObject, 'Value')
         set(handles.DisplayButton, 'Enable', 'Off')
         set(handles.RecordButton, 'Enable', 'Off')
         set(handles.TareButton, 'Enable', 'Off')
-        get(handles.ai, 'Running')
 
         if strcmp(get(handles.ai, 'Running'), 'On')
             stop(handles.ai)
@@ -858,7 +857,7 @@ if strcmp(response, sprintf('$VNTAR*5F\r\n'))
 else
     display('Device did not tare')
 end
-   
+
 set(handles.LoadButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
 set(handles.DisplayButton, 'Enable', 'On')
@@ -993,6 +992,8 @@ end
 legend(handles.(legtype).(ButtonName))
 
 function set_run_id(handles)
+% Sets the run id to a number that isn't already in the data directory.
+% handles : structure with handles and user data
 
 dirinfo = what('data/');
 MatFiles = dirinfo.mat;
@@ -1249,7 +1250,10 @@ save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
      'InputPairs', ...
      'RawLegends', ...
      'ScaledLegends')
- 
+
+RunID = get(handles.RunIDEditText, 'String');
+Rider = get(handles.Popupmenu, 'String'){get(handles.Popupmenu, 'Value')}
+
 save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
-      'handles.RunIDEditText.String', ...
+      'RunID', ...
       '-append')
