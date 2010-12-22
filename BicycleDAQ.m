@@ -475,15 +475,15 @@ switch get(hObject, 'Value')
         set(hObject, 'String', 'Connecting...')
         set(hObject, 'BackgroundColor', 'Yellow')
 
-        enable_parameters(handles, 'Off')
+        enable_parameters(handles, 'On')
+        %set(handles.VNavComPortEditText, 'Enable', state)
 
-        % get general parameters
+        % get default general parameters
         handles.duration = str2double(get(handles.DurationEditText, 'String'));
 
-        % get VectorNav parameters
+        % get VectorNav default parameters
         handles.comport = get(handles.VNavComPortEditText, 'String');
         handles.vnsamplerate = str2double(get(handles.VNavSampleRateEditText, 'String'));
-        % may need a way here to make sure the vn sample rate is a valid choice
         handles.vnnumsamples = handles.duration*handles.vnsamplerate;
 
         % see if the port is already open, close it if so
@@ -491,16 +491,18 @@ switch get(hObject, 'Value')
 
         % create the serial port
         handles.s = serial(handles.comport);
-        display('-------------------------------------------------')
+        display_hr()
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
         get(handles.s) % display the attributes of the port
-
+        display_hr()
+        
         % open the serial port
         fopen(handles.s);
-        display('-------------------------------------------------')
+        display_hr()
         display('Serial port is open')
-
+        display_hr()
+        
         p = 0.1; % pause value in seconds
         pause(p)
 
@@ -510,29 +512,14 @@ switch get(hObject, 'Value')
         set(handles.s, 'BaudRate', baudrate)
 
         % turn the async off on the VectorNav
-        send_command(handles.s, 'VNWRG,06,0');
-        pause(p)
-        flush_buffer(handles.s)
-        display('-------------------------------------------------')
-        display('The VectorNav async mode is off')
-        display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
+        set_async(handles.s, '0')
 
         % set the baudrate on the VNav and the laptop
-        baudrate = 921600;
-        response = send_command(handles.s, ['VNWRG,05,' num2str(baudrate)]);
-        set(handles.s, 'BaudRate', baudrate) % set the laptop baud rate to match
-        display('-------------------------------------------------')
-        display('VNav baud rate is now set to:')
-        display(sprintf(response))
-        display(sprintf('%d bytes in input buffer after setting the baud rate', get(handles.s, 'BytesAvailable')))
+        set_baudrate(handles.s, 921600)
 
         % set the samplerate
-        response = send_command(handles.s, ['VNWRG,07,' num2str(handles.vnsamplerate)]);
-        display('-------------------------------------------------')
-        display('VNav sample rate is now set to:')
-        display(sprintf(response))
-        display(sprintf('%d bytes in input buffer after setting the sample rate', get(handles.s, 'BytesAvailable')))
-
+        [handles, success] = set_vnav_sample_rate(handles, handles.vnsamplerate);
+        
         % initialize the VectorNav data
         handles.vndata = zeros(handles.vnsamplerate*handles.duration, 12); % YMR
         handles.vndatatext = cell(handles.vnsamplerate*handles.duration, 1);
@@ -546,26 +533,17 @@ switch get(hObject, 'Value')
 
         % configure the DAQ
         set(handles.ai, 'InputType', 'SingleEnded') % Differential is default
-        set(handles.ai, 'SampleRate', handles.nisamplerate)
-        actualrate = get(handles.ai,'SampleRate');
-        set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
-
+        handles = set_ni_samples_per_trigger(handles, ...
+                                             handles.duration, ...
+                                             handles.nisamplerate);
+        
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
-
         chan = addchannel(handles.ai, 0:length(channelnames)-1); % important that this comes after set(InputType)
 
         % trigger details
-        set(handles.ai, 'TriggerType', 'Software')
-        set(handles.ai, 'TriggerChannel', chan(1))
-        set(handles.ai, 'TriggerCondition', 'Rising')
-        set(handles.ai, 'TriggerConditionValue', 4.9)
-        set(handles.ai, 'TriggerDelay', 0.00)
-
-        % this function takes longer than the duration to run, which is good for
-        % getdata(ai)
-        set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
-
+        set_trigger(handles, chan)
+        
         get(handles.ai) % display the daq's attributes
 
         % tells the graph loop to keep going
@@ -596,7 +574,7 @@ switch get(hObject, 'Value')
         daqreset
 
         % reset to factory settings
-        display('-------------------------------------------------')
+    display_hr()
         display('Starting factory reset')
         response = send_command(handles.s, 'VNRFS');
         display('Reset to factory')
@@ -607,7 +585,7 @@ switch get(hObject, 'Value')
         fclose(handles.s)
         display('Serial port is closed')
 
-        enable_parameters(handles, 'On')
+        enable_parameters(handles, 'Off')
 end
 
 % Update handles structure
@@ -704,6 +682,8 @@ function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of VNavSampleRateEditText as text
 %        str2double(get(hObject,'String')) returns contents of VNavSampleRateEditText as a double
 
+[handles, success] = set_vnav_sample_rate(handles, str2double(get(hObject, 'String')));
+guidata(hObject, handles)
 
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NISampleRateEditText (see GCBO)
@@ -713,6 +693,11 @@ function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NISampleRateEditText as text
 %        str2double(get(hObject,'String')) returns contents of NISampleRateEditText as a double
 
+handles = set_ni_samples_per_trigger(handles, ...
+                                     handles.duration, ...
+                                     str2double(get(hObject,'String')));
+
+guidata(hObject, handles)
 
 function DurationEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to DurationEditText (see GCBO)
@@ -722,6 +707,11 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DurationEditText as text
 %        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
 
+handles = set_ni_samples_per_trigger(handles, ...
+                                     str2double(get(hObject,'String')), ...
+                                     handles.nisamplerate); 
+
+guidata(hObject, handles)
 
 function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to VNavComPortEditText (see GCBO)
@@ -739,10 +729,7 @@ display('Trigger called')
 set(handles.RecordButton, 'String', 'Recording')
 
 % set the async type and turn it on
-response = send_command(handles.s, 'VNWRG,06,14');
-display('-------------------------------------------------')
-display('VNav async is now set to:')
-display(sprintf(response))
+set_async(handles.s, '14')
 
 % record data
 for i=1:handles.duration
@@ -753,12 +740,7 @@ for i=1:handles.duration
 end
 
 % turn the async off on the VectorNav
-send_command(handles.s, 'VNWRG,06,0');
-pause(0.1)
-flush_buffer(handles.s)
-display('-------------------------------------------------')
-display('The VectorNav async mode is off')
-display(sprintf('%d bytes in input buffer after turning async off and flushing', get(handles.s, 'BytesAvailable')))
+set_async(handles.s, '0')
 
 obj.UserData = handles.vndatatext;
 display('VN data done')
@@ -779,15 +761,11 @@ for i = 1:length(baudrates)
     % set the serial object baudrate
     s.BaudRate = baudrates(i);
     % first set the async to off
-    send_command(s, 'VNWRG,06,0');
-    pause(0.1)
-    display('-------------------------------------------------')
-    display(sprintf('Checking the %d baudrate', baudrates(i)))
-    display('The VectorNav async mode is off')
+    set_async(s, '0')
     % flush the buffer
     flush_buffer(s)
     display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
-    display('-------------------------------------------------')
+    display_hr()
     % see if it will return the version number
     response = send_command(s, 'VNRRG,01');
     if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
@@ -957,7 +935,6 @@ function enable_parameters(handles, state)
 set(handles.DurationEditText, 'Enable', state)
 set(handles.NISampleRateEditText, 'Enable', state)
 set(handles.VNavSampleRateEditText, 'Enable', state)
-set(handles.VNavComPortEditText, 'Enable', state)
 set(handles.WaitEditText, 'Enable', state)
 
 function plot_data(handles)
@@ -1252,8 +1229,105 @@ save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
      'ScaledLegends')
 
 RunID = get(handles.RunIDEditText, 'String');
-Rider = get(handles.Popupmenu, 'String'){get(handles.Popupmenu, 'Value')}
+%Rider = get(handles.Popupmenu, 'String'){get(handles.Popupmenu, 'Value')}
 
 save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
       'RunID', ...
       '-append')
+  
+function [handles, success] = set_vnav_sample_rate(handles, rate)
+% set the samplerate
+% rate : 
+% Returns
+% success : 0 or 1
+%           0 : failed a setting the rate
+%           1 : success a setting the rate
+
+PossibleRates = [1 2 4 5 10 20 25 40 50 100 200];
+
+if find(PossibleRates==rate)
+    handles.vnavsamplerate = rate;
+    response = send_command(handles.s, ['VNWRG,07,' num2str(rate)]);
+    display_hr()
+    display('VNav sample rate is now set to:')
+    display(sprintf(response))
+    display(sprintf('%d bytes in input buffer after setting the sample rate', get(handles.s, 'BytesAvailable')))
+    display_hr()
+    success = 1;
+else
+    display(sprintf('%d is an invalid rate\n', rate))
+    display_hr()
+    display('Valid rates are:')
+    display(PossibleRates)
+    response = send_command(handles.s, 'VNRRG,07');
+    display('VNav sample rate is currently set to:')
+    display(sprintf(response))
+    display_hr()
+    success = 0;
+end
+
+function display_hr()
+display(['--------------------------------------' ...
+         '-------------------------------------'])
+
+function handles = set_ni_sample_rate(handles, rate)
+set(handles.ai, 'SampleRate', rate)
+handles.nisamplerate = get(handles.ai, 'SampleRate');
+set(handles.NISampleRateEditText, 'String', num2str(get(handles.ai, 'SampleRate')))
+set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
+display_hr()
+display(sprintf('NI sample rate changed to %d hz', get(handles.ai, 'SampleRate')))
+display(sprintf('NI samples per trigger changed to %d', get(handles.ai, 'SamplesPerTrigger')))
+display_hr()
+
+function handles = set_duration(handles, duration)
+handles.duration = duration;
+set(handles.ai, 'SamplesPerTrigger', duration*get(handles.ai,'SampleRate'))
+display_hr()
+display(sprintf('Duration is now set to %d', duration))
+display(sprintf('NI samples per trigger changed to %d', get(handles.ai, 'SamplesPerTrigger')))
+display_hr()
+
+function handles = set_ni_samples_per_trigger(handles, duration, rate)
+handles.duration = duration;
+set(handles.ai, 'SampleRate', rate)
+actualrate = get(handles.ai, 'SampleRate');
+handles.nisamplerate = actualrate;
+set(handles.NISampleRateEditText, 'String', num2str(actualrate))
+set(handles.ai, 'SamplesPerTrigger', duration*actualrate)
+handles.ninumsamples = get(handles.ai, 'SamplesPerTrigger');
+display_hr()
+display(sprintf('Duration is now set to %d', duration))
+display(sprintf('NI sample is now set to %d hz', actualrate))
+display(sprintf('NI samples per trigger now set to %d', get(handles.ai, 'SamplesPerTrigger')))
+display_hr()
+
+function set_trigger(handles, chan)
+% trigger details
+set(handles.ai, 'TriggerType', 'Software')
+set(handles.ai, 'TriggerChannel', chan(1))
+set(handles.ai, 'TriggerCondition', 'Rising')
+set(handles.ai, 'TriggerConditionValue', 4.9)
+set(handles.ai, 'TriggerDelay', 0.00)
+set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
+
+function set_baudrate(s, baudrate)
+% set the baudrate on the VNav and the laptop
+response = send_command(s, ['VNWRG,05,' num2str(baudrate)]);
+set(s, 'BaudRate', baudrate) % set the laptop baud rate to match
+display_hr()
+display('VNav baud rate is now set to:')
+display(sprintf(response))
+display(sprintf('%d bytes in input buffer after setting the baud rate', get(s, 'BytesAvailable')))
+display_hr()
+
+function set_async(s, value)
+% turn the async off on the VectorNav
+% value : string e.g. '0' for off
+send_command(s, ['VNWRG,06,' value]);
+pause(0.1)
+flush_buffer(s)
+display_hr()
+display('The VectorNav async mode is off')
+display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
+display_hr()
