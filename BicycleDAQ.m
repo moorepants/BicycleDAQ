@@ -1341,3 +1341,7 @@ set(handles.([menu 'Popupmenu']), 'Value', number + 1)
 
 % put the old text back in the edit box
 set(hObject, 'String', ['Add a new ' lower(menu)])
+
+function populate_gui(handles)
+
+% populate the gui with either the default parameters or the appended ones
