@@ -503,6 +503,8 @@ switch get(hObject, 'Value')
 
         % turn the async off on the VectorNav
         set_async(handles.s, '0')
+        
+        set_baudrate(handles.s, handles.par.BaudRate, handles);
 
         % connect to the NI USB-6218
         handles.ai = analoginput('nidaq', 'Dev1');
