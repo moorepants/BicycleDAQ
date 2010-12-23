@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 21-Dec-2010 15:08:33
+% Last Modified by GUIDE v2.5 23-Dec-2010 11:49:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -213,7 +213,7 @@ newitem = get(hObject, 'String');
 items = get(handles.SpeedPopupmenu, 'String');
 
 % if the popupmenu is not a cell then make it one
-if sum(class(items) == 'cell') ~= 4
+if strcmp(class(items), 'cell') ~= 1
     items = {items};
 end
 
@@ -282,7 +282,7 @@ newitem = get(hObject, 'String');
 items = get(handles.RiderPopupmenu, 'String');
 
 % if the popupmenu is not a cell then make it one
-if sum(class(items) == 'cell') ~= 4
+if strcmp(class(items), 'cell') ~= 1
     items = {items};
 end
 
@@ -328,7 +328,7 @@ newitem = get(hObject, 'String');
 items = get(handles.BicyclePopupmenu, 'String');
 
 % if the popupmenu is not a cell then make it one
-if sum(class(items) == 'cell') ~= 4
+if strcmp(class(items), 'cell') ~= 1
     items = {items};
 end
 
@@ -474,23 +474,16 @@ switch get(hObject, 'Value')
         set(hObject, 'Enable', 'Off')
         set(hObject, 'String', 'Connecting...')
         set(hObject, 'BackgroundColor', 'Yellow')
+        set(handles.VNavComPortEditText, 'Enable', 'Off')
 
-        enable_parameters(handles, 'On')
-        %set(handles.VNavComPortEditText, 'Enable', state)
-
-        % get default general parameters
-        handles.duration = str2double(get(handles.DurationEditText, 'String'));
-
-        % get VectorNav default parameters
-        handles.comport = get(handles.VNavComPortEditText, 'String');
-        handles.vnsamplerate = str2double(get(handles.VNavSampleRateEditText, 'String'));
-        handles.vnnumsamples = handles.duration*handles.vnsamplerate;
+        % grab the current parameters and store them
+        handles = store_current_parameters(handles);
 
         % see if the port is already open, close it if so
-        close_port(handles.comport)
+        close_port(handles.par.VNavComPort)
 
         % create the serial port
-        handles.s = serial(handles.comport);
+        handles.s = serial(handles.par.VNavComPort);
         display_hr()
         display('Serial port created, here are the initial properties:')
         set(handles.s, 'InputBufferSize', 512*6)
@@ -503,51 +496,27 @@ switch get(hObject, 'Value')
         display('Serial port is open')
         display_hr()
         
-        p = 0.1; % pause value in seconds
-        pause(p)
-
         % determine the VNav baud rate and set the serial port baud rate to
         % match
-        baudrate = determine_vnav_baud_rate(handles.s);
-        set(handles.s, 'BaudRate', baudrate)
+        CurrentBaudRate = determine_vnav_baud_rate(handles.s);
+        set(handles.s, 'BaudRate', CurrentBaudRate)
 
         % turn the async off on the VectorNav
         set_async(handles.s, '0')
-
-        % set the baudrate on the VNav and the laptop
-        set_baudrate(handles.s, 921600)
-
-        % set the samplerate
-        [handles, success] = set_vnav_sample_rate(handles, handles.vnsamplerate);
-        
-        % initialize the VectorNav data
-        handles.vndata = zeros(handles.vnsamplerate*handles.duration, 12); % YMR
-        handles.vndatatext = cell(handles.vnsamplerate*handles.duration, 1);
-
-        % daq parameters
-        handles.nisamplerate = str2num(get(handles.NISampleRateEditText, 'String')); % sample rate in hz
-        handles.ninumsamples = handles.duration*handles.nisamplerate;
 
         % connect to the NI USB-6218
         handles.ai = analoginput('nidaq', 'Dev1');
 
         % configure the DAQ
         set(handles.ai, 'InputType', 'SingleEnded') % Differential is default
-        handles = set_ni_samples_per_trigger(handles, ...
-                                             handles.duration, ...
-                                             handles.nisamplerate);
         
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
-        chan = addchannel(handles.ai, 0:length(channelnames)-1); % important that this comes after set(InputType)
-
-        % trigger details
-        set_trigger(handles, chan)
+        % important that this comes after set(InputType)
+        handles.chan = addchannel(handles.ai, 0:length(channelnames)-1); 
         
-        get(handles.ai) % display the daq's attributes
-
-        % tells the graph loop to keep going
-        handles.stopgraph = 0;
+        % display the daq's attributes
+        get(handles.ai)
 
         set(hObject, 'Enable', 'On')
         set(hObject, 'String', sprintf('Disconnect'))
@@ -555,6 +524,7 @@ switch get(hObject, 'Value')
         set(handles.DisplayButton, 'Enable', 'On')
         set(handles.RecordButton, 'Enable', 'On')
         set(handles.TareButton, 'Enable', 'On')
+        enable_parameters(handles, 'On')
 
     case 0.0 % disconnect
         % tells the graph loop to stop
@@ -574,18 +544,22 @@ switch get(hObject, 'Value')
         daqreset
 
         % reset to factory settings
-    display_hr()
+        display_hr()
         display('Starting factory reset')
         response = send_command(handles.s, 'VNRFS');
         display('Reset to factory')
         display(sprintf(response))
         display(sprintf('%d bytes in input buffer after reseting to factory', get(handles.s, 'BytesAvailable')))
-
+        display_hr()
+        
         % close the VectorNav connection
         fclose(handles.s)
+        display_hr()
         display('Serial port is closed')
+        display_hr()
 
         enable_parameters(handles, 'Off')
+        set(handles.VNavComPortEditText, 'Enable', 'On')
 end
 
 % Update handles structure
@@ -637,7 +611,7 @@ newitem = get(hObject, 'String');
 items = get(handles.ManueverPopupmenu, 'String');
 
 % if the popupmenu is not a cell then make it one
-if sum(class(items) == 'cell') ~= 4
+if strcmp(class(items), 'cell') ~= 1
     items = {items};
 end
 
@@ -682,7 +656,10 @@ function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of VNavSampleRateEditText as text
 %        str2double(get(hObject,'String')) returns contents of VNavSampleRateEditText as a double
 
-[handles, success] = set_vnav_sample_rate(handles, str2double(get(hObject, 'String')));
+handles = store_current_parameters(handles);
+[handles, success] = set_vnav_sample_rate(handles);
+handles = store_current_parameters(handles);
+
 guidata(hObject, handles)
 
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
@@ -693,9 +670,8 @@ function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NISampleRateEditText as text
 %        str2double(get(hObject,'String')) returns contents of NISampleRateEditText as a double
 
-handles = set_ni_samples_per_trigger(handles, ...
-                                     handles.duration, ...
-                                     str2double(get(hObject,'String')));
+handles = store_current_parameters(handles);
+handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
 
@@ -707,9 +683,8 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of DurationEditText as text
 %        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
 
-handles = set_ni_samples_per_trigger(handles, ...
-                                     str2double(get(hObject,'String')), ...
-                                     handles.nisamplerate); 
+handles = store_current_parameters(handles);
+handles = set_ni_samples_per_trigger(handles); 
 
 guidata(hObject, handles)
 
@@ -734,7 +709,7 @@ set_async(handles.s, '14')
 % record data
 for i=1:handles.duration
     for j=1:handles.vnsamplerate
-        handles.vndatatext{(i-1)*handles.vnsamplerate+j} = fgets(handles.s);
+        handles.VNavDataText{(i-1)*handles.vnsamplerate+j} = fgets(handles.s);
     end
     display(sprintf('Data taken for %d seconds', i))
 end
@@ -742,7 +717,7 @@ end
 % turn the async off on the VectorNav
 set_async(handles.s, '0')
 
-obj.UserData = handles.vndatatext;
+obj.UserData = handles.VNavDataText;
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
@@ -857,6 +832,19 @@ set(handles.DisplayButton, 'Enable', 'Off')
 set(handles.TareButton, 'Enable', 'Off')
 set(handles.RecordButton, 'Enable', 'Off')
 
+% set the baudrate on the VNav and the laptop
+set_baudrate(handles.s, handles.par.BaudRate)
+
+% set the samplerate
+[handles, success] = set_vnav_sample_rate(handles, ...
+    handles.par.VNavSampleRate);
+
+% initialize the VectorNav data
+handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
+handles.VNavDataText = cell(handles.par.VNavNumSamples, 1);
+handles = set_ni_samples_per_trigger(handles);
+% trigger details
+        set_trigger(handles)
 % start up the DAQ
 start(handles.ai)
 display('DAQ started, waiting for trigger...')
@@ -866,7 +854,7 @@ wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the per
 set(handles.RecordButton, 'String', 'Processing')
 % get the data from both devices
 handles.nidata = getdata(handles.ai);
-handles.vndatatext = get(handles.ai, 'UserData');
+handles.VNavDataText = get(handles.ai, 'UserData');
 
 stop(handles.ai)
 
@@ -895,6 +883,9 @@ function WaitEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of WaitEditText as text
 %        str2double(get(hObject,'String')) returns contents of WaitEditText as a double
 
+handles.par.Wait = str2double(get(hObject,'String'));
+
+guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
 function WaitEditText_CreateFcn(hObject, eventdata, handles)
@@ -912,17 +903,17 @@ function handles = parse_vnav_text_data(handles)
 
 %Create parse string
 ps = '%*6c';
-for i=1:size(handles.vndata, 2)
+for i=1:size(handles.VNavData, 2)
     ps = [ps ',%g'];
 end
 
 % process the text data
 for i=1:handles.vnnumsamples
     try
-        handles.vndata(i, :) = sscanf(handles.vndatatext{i}, ps);
+        handles.VNavData(i, :) = sscanf(handles.VNavDataText{i}, ps);
     catch
-        handles.vndata(i, :) = NaN*ones(size(handles.vndata(i, :)));
-        display(sprintf('%d is a bad one: %s', i, handles.vndatatext{i}))
+        handles.VNavData(i, :) = NaN*ones(size(handles.VNavData(i, :)));
+        display(sprintf('%d is a bad one: %s', i, handles.VNavDataText{i}))
     end
 end
 
@@ -936,9 +927,10 @@ set(handles.DurationEditText, 'Enable', state)
 set(handles.NISampleRateEditText, 'Enable', state)
 set(handles.VNavSampleRateEditText, 'Enable', state)
 set(handles.WaitEditText, 'Enable', state)
+set(handles.BaudRateEditText, 'Enable', state)
 
 function plot_data(handles)
-% plots the data that is currently stored in handles.vndata and
+% plots the data that is currently stored in handles.VNavData and
 % handles.nidata to the graph in the gui
 
 % find out if the graph is raw or scaled data
@@ -956,7 +948,7 @@ axes(handles.Graph)
 ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
 
 if strcmp(ButtonName, 'VnavMomentButton')
-    plot(handles.vndata)
+    plot(handles.VNavData)
 else
     % create a vector with the analog input numbers for this graph
     datavals = zeros(1, length(handles.(legtype).(ButtonName)));
@@ -1218,8 +1210,8 @@ save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
      'handles', ...
      'vnsamplerate', ...
      'vnnumsamples', ...
-     'vndata', ...
-     'vndatatext', ...
+     'VNavData', ...
+     'VNavDataText', ...
      'nidata', ...
      'ninumsamples', ...
      'nisamplerate', ...
@@ -1235,7 +1227,7 @@ save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
       'RunID', ...
       '-append')
   
-function [handles, success] = set_vnav_sample_rate(handles, rate)
+function [handles, success] = set_vnav_sample_rate(handles)
 % set the samplerate
 % rate : 
 % Returns
@@ -1245,8 +1237,9 @@ function [handles, success] = set_vnav_sample_rate(handles, rate)
 
 PossibleRates = [1 2 4 5 10 20 25 40 50 100 200];
 
+rate = handles.par.VNavSampleRate;
+
 if find(PossibleRates==rate)
-    handles.vnavsamplerate = rate;
     response = send_command(handles.s, ['VNWRG,07,' num2str(rate)]);
     display_hr()
     display('VNav sample rate is now set to:')
@@ -1264,62 +1257,70 @@ else
     display(sprintf(response))
     display_hr()
     success = 0;
+    parse = sscanf(response, '%*6c,%g,%g');
+    set(handles.VNavSampleRateEditText, 'String', num2str(parse(2)))
 end
 
 function display_hr()
 display(['--------------------------------------' ...
          '-------------------------------------'])
 
-function handles = set_ni_sample_rate(handles, rate)
-set(handles.ai, 'SampleRate', rate)
-handles.nisamplerate = get(handles.ai, 'SampleRate');
-set(handles.NISampleRateEditText, 'String', num2str(get(handles.ai, 'SampleRate')))
-set(handles.ai, 'SamplesPerTrigger', handles.duration*get(handles.ai,'SampleRate'))
-display_hr()
-display(sprintf('NI sample rate changed to %d hz', get(handles.ai, 'SampleRate')))
-display(sprintf('NI samples per trigger changed to %d', get(handles.ai, 'SamplesPerTrigger')))
-display_hr()
+function handles = set_ni_samples_per_trigger(handles)
+duration = handles.par.Duration;
+rate = handles.par.NISampleRate;
 
-function handles = set_duration(handles, duration)
-handles.duration = duration;
-set(handles.ai, 'SamplesPerTrigger', duration*get(handles.ai,'SampleRate'))
-display_hr()
-display(sprintf('Duration is now set to %d', duration))
-display(sprintf('NI samples per trigger changed to %d', get(handles.ai, 'SamplesPerTrigger')))
-display_hr()
-
-function handles = set_ni_samples_per_trigger(handles, duration, rate)
-handles.duration = duration;
 set(handles.ai, 'SampleRate', rate)
 actualrate = get(handles.ai, 'SampleRate');
-handles.nisamplerate = actualrate;
-set(handles.NISampleRateEditText, 'String', num2str(actualrate))
 set(handles.ai, 'SamplesPerTrigger', duration*actualrate)
-handles.ninumsamples = get(handles.ai, 'SamplesPerTrigger');
+
+handles.par.NISampleRate = actualrate;
+handles.par.NINumSamples = get(handles.ai, 'SamplesPerTrigger');
+
+set(handles.NISampleRateEditText, 'String', num2str(actualrate))
 display_hr()
 display(sprintf('Duration is now set to %d', duration))
 display(sprintf('NI sample is now set to %d hz', actualrate))
 display(sprintf('NI samples per trigger now set to %d', get(handles.ai, 'SamplesPerTrigger')))
 display_hr()
 
-function set_trigger(handles, chan)
+handles = store_current_parameters(handles);
+
+function set_trigger(handles)
 % trigger details
 set(handles.ai, 'TriggerType', 'Software')
-set(handles.ai, 'TriggerChannel', chan(1))
+set(handles.ai, 'TriggerChannel', handles.chan(1))
 set(handles.ai, 'TriggerCondition', 'Rising')
 set(handles.ai, 'TriggerConditionValue', 4.9)
 set(handles.ai, 'TriggerDelay', 0.00)
 set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
 
-function set_baudrate(s, baudrate)
+function set_baudrate(s, baudrate, handles)
 % set the baudrate on the VNav and the laptop
-response = send_command(s, ['VNWRG,05,' num2str(baudrate)]);
-set(s, 'BaudRate', baudrate) % set the laptop baud rate to match
-display_hr()
-display('VNav baud rate is now set to:')
-display(sprintf(response))
-display(sprintf('%d bytes in input buffer after setting the baud rate', get(s, 'BytesAvailable')))
-display_hr()
+
+BaudRates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
+
+if find(BaudRates==baudrate)
+    response = send_command(s, ['VNWRG,05,' num2str(baudrate)]);
+    set(s, 'BaudRate', baudrate) % set the laptop baud rate to match
+    display_hr()
+    display('VNav baud rate is now set to:')
+    display(sprintf(response))
+    display(sprintf('%d bytes in input buffer after setting the baud rate', get(s, 'BytesAvailable')))
+    display_hr()
+else
+    display(sprintf('%d is an invalid baud rate\n', baudrate))
+    display_hr()
+    display('Valid rates are:')
+    display(BaudRates)
+    response = send_command(s, 'VNRRG,05');
+    display('VNav baud rate is currently set to:')
+    display(sprintf(response))
+    display_hr()
+    parse = sscanf(response, '%*6c,%g,%g');
+    set(handles.BaudRateEditText, 'String', num2str(parse(2)))
+end
+
+
 
 function set_async(s, value)
 % turn the async off on the VectorNav
@@ -1331,3 +1332,75 @@ display_hr()
 display('The VectorNav async mode is off')
 display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
 display_hr()
+
+function handles = store_current_parameters(handles)
+% Cycles through each of the user input parameters and stores there current
+% values in a structure.
+par = struct();
+
+menus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'};
+type = {'String' 'Double' 'String' 'String' 'String'};
+
+% for each popupmenu
+for i = 1:length(menus)
+    list = get(handles.([menus{i} 'Popupmenu']), 'String');
+    % if the popupmenu is not a cell then make it one
+    if iscell(list) ~= 1
+        list = {list};
+    end
+    if strcmp(type{i}, 'Double')
+        par.(menus{i}) = ...
+            str2double(list{get(handles.([menus{i} 'Popupmenu']), ...
+                                          'Value')});
+    elseif strcmp(type{i}, 'String')
+        par.(menus{i}) = ...
+            list{get(handles.([menus{i} 'Popupmenu']), 'Value')};
+    end
+end
+
+editboxes = {'RunID', 'Notes', 'Duration', 'NISampleRate', ...
+             'VNavSampleRate', 'VNavComPort', 'Wait', 'BaudRate'};
+type = {'Double', 'String', 'Double', 'Double', 'Double', ...
+        'String', 'Double', 'Double'};
+         
+for i = 1:length(editboxes)
+    if strcmp(type{i}, 'Double')
+         par.(editboxes{i}) = ...
+             str2double(get(handles.([editboxes{i} 'EditText']), ...
+                                     'String'));
+    elseif strcmp(type{i}, 'String')
+        par.(editboxes{i}) = get(handles.([editboxes{i} 'EditText']), ...
+                                          'String');
+    end
+end
+
+par.VNavNumSamples = par.Duration*par.VNavSampleRate;
+par.NINumSamples = par.Duration*par.NISampleRate;
+
+handles.par = par;
+
+function BaudRateEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to BaudRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of BaudRateEditText as text
+%        str2double(get(hObject,'String')) returns contents of BaudRateEditText as a double
+
+handles = store_current_parameters(handles);
+set_baudrate(handles.s, handles.par.BaudRate, handles);
+handles = store_current_parameters(handles);
+
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function BaudRateEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BaudRateEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
