@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 23-Dec-2010 11:49:14
+% Last Modified by GUIDE v2.5 23-Dec-2010 14:38:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -206,37 +206,7 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewSpeedEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
-% get the name of the new menu item
-newitem = get(hObject, 'String');
-
-% get the items in the popmenu
-items = get(handles.SpeedPopupmenu, 'String');
-
-% if the popupmenu is not a cell then make it one
-if strcmp(class(items), 'cell') ~= 1
-    items = {items};
-end
-
-% how many are already in the list
-number = length(items);
-
-% add the new item to the end of the list
-items{number + 1} = newitem;
-
-% sort the speeds
-[sorteditems, index] = sort(str2double(items));
-
-% convert the sorted speeds back to a strings and cells
-for i = 1:length(sorteditems)
-    items{i} = num2str(sorteditems(i));
-end
-
-% rewrite the popupmenu and set the value to the new item
-set(handles.SpeedPopupmenu, 'String', items)
-set(handles.SpeedPopupmenu, 'Value', index(number + 1))
-
-% put the old text back in the edit box
-set(hObject, 'String', 'Add a new speed')
+add_to_popupmenu(hObject, handles)
 
 
 % --- Executes on button press in ScaledRawButton.
@@ -275,29 +245,7 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewRiderEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
 
-% get the name of the new menu item
-newitem = get(hObject, 'String');
-
-% get the items in the popmenu
-items = get(handles.RiderPopupmenu, 'String');
-
-% if the popupmenu is not a cell then make it one
-if strcmp(class(items), 'cell') ~= 1
-    items = {items};
-end
-
-% how many are already in the list
-number = length(items);
-
-% add the new item to the end of the list
-items{number + 1} = newitem;
-
-% rewrite the popupmenu and set the value to the new item
-set(handles.RiderPopupmenu, 'String', items)
-set(handles.RiderPopupmenu, 'Value', number + 1)
-
-% put the old text back in the edit box
-set(hObject, 'String', 'Add a new rider')
+add_to_popupmenu(hObject, handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -321,29 +269,7 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewBicycleEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
-% get the name of the new menu item
-newitem = get(hObject, 'String');
-
-% get the items in the popmenu
-items = get(handles.BicyclePopupmenu, 'String');
-
-% if the popupmenu is not a cell then make it one
-if strcmp(class(items), 'cell') ~= 1
-    items = {items};
-end
-
-% how many are already in the list
-number = length(items);
-
-% add the new item to the end of the list
-items{number + 1} = newitem;
-
-% rewrite the popupmenu and set the value to the new item
-set(handles.BicyclePopupmenu, 'String', items)
-set(handles.BicyclePopupmenu, 'Value', number + 1)
-
-% put the old text back in the edit box
-set(hObject, 'String', 'Add a new bicycle')
+add_to_popupmenu(hObject, handles)
 
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 handles = guidata(hObject);
@@ -606,29 +532,7 @@ function NewManueverEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewManueverEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewManueverEditText as a double
 
-% get the name of the new menu item
-newitem = get(hObject, 'String');
-
-% get the items in the popmenu
-items = get(handles.ManueverPopupmenu, 'String');
-
-% if the popupmenu is not a cell then make it one
-if strcmp(class(items), 'cell') ~= 1
-    items = {items};
-end
-
-% how many are already in the list
-number = length(items);
-
-% add the new item to the end of the list
-items{number + 1} = newitem;
-
-% rewrite the popupmenu and set the value to the new item
-set(handles.ManueverPopupmenu, 'String', items)
-set(handles.ManueverPopupmenu, 'Value', number + 1)
-
-% put the old text back in the edit box
-set(hObject, 'String', 'Add a new manuever')
+add_to_popupmenu(hObject, handles)
 
 
 % --- Executes on selection change in ManueverPopupmenu.
@@ -1176,19 +1080,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-function NewEnviromentEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NewEnviromentEditText (see GCBO)
+function NewEnvironmentEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewEnvironmentEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NewEnviromentEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewEnviromentEditText as a double
+% Hints: get(hObject,'String') returns contents of NewEnvironmentEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewEnvironmentEditText as a double
 
+add_to_popupmenu(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
-function NewEnviromentEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewEnviromentEditText (see GCBO)
+function NewEnvironmentEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewEnvironmentEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1406,3 +1310,34 @@ function BaudRateEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% NewBlankEditText
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+
+menu = tag(4:begin-1);
+
+% get the items in the popmenu
+items = get(handles.([menu 'Popupmenu']), 'String');
+
+% if the popupmenu is not a cell then make it one
+if iscell(items) ~= 1
+    items = {items};
+end
+
+% how many are already in the list
+number = length(items);
+
+% add the new item to the end of the list
+items{number + 1} = newitem;
+
+% rewrite the popupmenu and set the value to the new item
+set(handles.([menu 'Popupmenu']), 'String', items)
+set(handles.([menu 'Popupmenu']), 'Value', number + 1)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
