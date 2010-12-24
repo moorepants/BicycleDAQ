@@ -71,6 +71,10 @@ if exist('data/', 'dir') ~= 7
     mkdir('data/')
 end
 
+% set the default parameters in the gui
+populate_gui(handles)
+
+% update the run id number
 set_run_id(handles)
 
 % this is what is plugged into each analog input on the NI USB-6218
@@ -1343,5 +1347,25 @@ set(handles.([menu 'Popupmenu']), 'Value', number + 1)
 set(hObject, 'String', ['Add a new ' lower(menu)])
 
 function populate_gui(handles)
-
 % populate the gui with either the default parameters or the appended ones
+
+dirinfo = what() % get the matlab files in the current directory
+% check for an AppendedParamters.mat and load, otherwise load the default
+if sum(ismember(dirinfo.mat, 'AppendedParameters.mat')
+    load('AppendedParameters.mat'))
+else
+    load('DefaultParameters.mat')
+end
+
+EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
+             'VNavSampleRate' 'VNavComport' 'BaudRate' 'Wait'}
+
+Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'}
+
+for i = 1:length(EditTexts)
+    set(handles.([EditTexts{i} 'EditText']), 'String', eval(EditTexts{i}))
+end
+
+for i = 1:length(Popupmenus)
+    set(handles.([Popupmenus{i} 'Popupmenu']), 'String', eval(Popupmenus{i}))
+end
