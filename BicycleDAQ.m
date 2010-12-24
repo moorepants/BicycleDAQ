@@ -389,19 +389,19 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % update the pop up menus
-Rider = get(handles.RiderPopupmenu, 'String')
-Speed = get(handles.SpeedPopupmenu, 'String')
-Bicycle = get(handles.BicyclePopupmenu, 'String')
-Manuever = get(handles.ManueverPopupmenu, 'String')
-Environment = get(handles.EnvironmentPopupmenu, 'String')
+Rider = get(handles.RiderPopupmenu, 'String');
+Speed = get(handles.SpeedPopupmenu, 'String');
+Bicycle = get(handles.BicyclePopupmenu, 'String');
+Manuever = get(handles.ManueverPopupmenu, 'String');
+Environment = get(handles.EnvironmentPopupmenu, 'String');
 
 % make a copy of the default parameters file
-copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
+%copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
 
 % append the additonal popup menus to the new file
-save('AppendedParameters.mat', ...
-     'Rider', 'Speed', 'Bicycle', 'Manuever', 'Enviroment', ...
-     '-append')
+%save('AppendedParameters.mat', ...
+%     'Rider', 'Speed', 'Bicycle', 'Manuever', 'Enviroment', ...
+%     '-append')
 
 % delete the gui
 delete(hObject);
@@ -1392,8 +1392,8 @@ function populate_gui(handles)
 
 dirinfo = what() % get the matlab files in the current directory
 % check for an AppendedParamters.mat and load, otherwise load the default
-if sum(ismember(dirinfo.mat, 'AppendedParameters.mat')
-    load('AppendedParameters.mat'))
+if sum(ismember(dirinfo.mat, 'AppendedParameters.mat'))
+    load('AppendedParameters.mat')
 else
     load('DefaultParameters.mat')
 end
