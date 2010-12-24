@@ -224,12 +224,12 @@ function ScaledRawButton_Callback(hObject, eventdata, handles)
 switch get(hObject, 'Value')
     case 0.0
         set(hObject, 'String', 'Scaled Data')
-        set(handles.PotAngleButton, 'String', 'Steer')
-        set(handles.RateAccelRateButton, 'String', 'Rider')
+        set(handles.PotAngleButton, 'String', 'Pots')
+        set(handles.RateAccelRateButton, 'String', 'Rates/Accels')
         set(handles.SeatpostAccelerationButton, 'String', 'Seatpost')
         set(handles.FeetForceButton, 'String', 'Feet')
         set(handles.VnavMomentButton, 'String', 'VectorNav')
-        set(handles.VoltageMagneticButton, 'Enable', 'off')
+        set(handles.VoltageMagneticButton, 'String', 'Voltage')
     case 1.0
         set(hObject, 'String', 'Raw Data')
         set(handles.PotAngleButton, 'String', 'Angles')
@@ -237,7 +237,7 @@ switch get(hObject, 'Value')
         set(handles.SeatpostAccelerationButton, 'String', 'Accelerations')
         set(handles.FeetForceButton, 'String', 'Forces')
         set(handles.VnavMomentButton, 'String', 'Moments')
-        set(handles.VoltageMagneticButton, 'Enable', 'on')
+        set(handles.VoltageMagneticButton, 'String', 'Magnetic')
 end
 
 
@@ -419,13 +419,13 @@ switch get(hObject, 'Value')
         set(handles.s, 'InputBufferSize', 512*6)
         get(handles.s) % display the attributes of the port
         display_hr()
-        
+
         % open the serial port
         fopen(handles.s);
         display_hr()
         display('Serial port is open')
         display_hr()
-        
+
         % determine the VNav baud rate and set the serial port baud rate to
         % match
         CurrentBaudRate = determine_vnav_baud_rate(handles.s);
@@ -433,7 +433,7 @@ switch get(hObject, 'Value')
 
         % turn the async off on the VectorNav
         set_async(handles.s, '0')
-        
+
         set_baudrate(handles.s, handles.par.BaudRate, handles);
 
         % connect to the NI USB-6218
@@ -441,12 +441,12 @@ switch get(hObject, 'Value')
 
         % configure the DAQ
         set(handles.ai, 'InputType', 'SingleEnded') % Differential is default
-        
+
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
         % important that this comes after set(InputType)
-        handles.chan = addchannel(handles.ai, 0:length(channelnames)-1); 
-        
+        handles.chan = addchannel(handles.ai, 0:length(channelnames)-1);
+
         % display the daq's attributes
         get(handles.ai)
 
@@ -483,7 +483,7 @@ switch get(hObject, 'Value')
         display(sprintf(response))
         display(sprintf('%d bytes in input buffer after reseting to factory', get(handles.s, 'BytesAvailable')))
         display_hr()
-        
+
         % close the VectorNav connection
         fclose(handles.s)
         display_hr()
@@ -594,7 +594,7 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
 
 handles = store_current_parameters(handles);
-handles = set_ni_samples_per_trigger(handles); 
+handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
 
@@ -617,9 +617,9 @@ set(handles.RecordButton, 'String', 'Recording')
 set_async(handles.s, '14')
 
 % record data
-for i=1:handles.duration
-    for j=1:handles.vnsamplerate
-        handles.VNavDataText{(i-1)*handles.vnsamplerate+j} = fgets(handles.s);
+for i = 1:handles.par.Duration
+    for j = 1:handles.par.VNavSampleRate
+        handles.par.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = fgets(handles.s);
     end
     display(sprintf('Data taken for %d seconds', i))
 end
@@ -639,6 +639,7 @@ baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
 
 baudrate = NaN;
 
+% set the timeout property low so the search goes fast
 DefaultTimeout = get(s, 'Timeout');
 set(s, 'Timeout', 0.1)
 
@@ -665,17 +666,32 @@ set(s, 'Timeout', DefaultTimeout)
 
 function response = send_command(s, command)
 % Returns the latest response from the input buffer after the issued
-% command. Response will only work correctly  when async is off.
-% s : serial port object for the VectorNav
+% command. Response will not necessarily deliver the correct response when
+% async is off.
+%
+% Parameters
+% ----------
+% s : serial port object
+%   The object should be connected to the VectorNav
 % command : string
+%   One of the accepted ASCII commands for the VectorNav not including the '$',
+%   '*' or checksum.
+%
+% Returns
+% -------
 % response : string
+%   The full response from the VectorNav including the '$', '*' and checksum.
 
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(0.1)
 response = fgets(s);
 
 function flush_buffer(s)
-% flushes the serial port input buffer
+% Flushes the serial port input buffer.
+%
+% Parameters
+% ----------
+% s : serial port object
 
 while get(s, 'BytesAvailable') > 0
     flushinput(s)
@@ -683,9 +699,14 @@ while get(s, 'BytesAvailable') > 0
 end
 
 function close_port(comport)
-% check to see if COM port is already open, if so then close COM port.
+% Checks to see if comport is already open, if so it closes it.
+%
+% Parameters
+% ----------
+% comport : string
+%   Comport name such as 'COM3'.
 
-ports = instrfind;
+ports = instrfind; % get a list of the ports
 if length(ports) == 0
     display('No ports exist')
 else
@@ -735,35 +756,47 @@ function RecordButton_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of RecordButton
 
-set_run_id(handles);
-
+% make sure you can't click things while the recording is happening
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.DisplayButton, 'Enable', 'Off')
 set(handles.TareButton, 'Enable', 'Off')
 set(handles.RecordButton, 'Enable', 'Off')
 
+% make sure the run id is set correctly
+set_run_id(handles);
+
+% make sure all the parameters are current
+handles = store_current_parameters(handles);
+
 % set the baudrate on the VNav and the laptop
 set_baudrate(handles.s, handles.par.BaudRate)
 
-% set the samplerate
+% set the VectorNavsamplerate
 [handles, success] = set_vnav_sample_rate(handles, ...
     handles.par.VNavSampleRate);
 
 % initialize the VectorNav data
 handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
 handles.VNavDataText = cell(handles.par.VNavNumSamples, 1);
+
 handles = set_ni_samples_per_trigger(handles);
+
 % trigger details
-        set_trigger(handles)
+set_trigger(handles)
+
+% store parameters again
+handles = store_current_parameters(handles);
+
 % start up the DAQ
 start(handles.ai)
 display('DAQ started, waiting for trigger...')
-set(hObject, 'String', 'DAQ started, waiting for trigger...')
-wait(handles.ai, str2double(get(handles.WaitEditText, 'String'))) % give the person some time to hit the button
+set(hObject, 'String', 'Waiting for trigger...')
+wait(handles.ai, handles.par.Wait) % give the person some time to hit the button
 
 set(handles.RecordButton, 'String', 'Processing')
+
 % get the data from both devices
-handles.nidata = getdata(handles.ai);
+handles.NIData = getdata(handles.ai);
 handles.VNavDataText = get(handles.ai, 'UserData');
 
 stop(handles.ai)
@@ -828,10 +861,15 @@ for i=1:handles.vnnumsamples
 end
 
 function enable_parameters(handles, state)
-% enables (on or off) parameters that should be set only when the VNav and NI
-% DAQ are disconnected
-% handles : guidata
-% state : 'On' or 'Off'
+% Enables (on or off) parameters that should be set only when the VNav and NI
+% DAQ are disconnected.
+%
+% Parameters
+% ----------
+% handles : structure
+%   guidata
+% state : string
+%   'On' or 'Off'
 
 set(handles.DurationEditText, 'Enable', state)
 set(handles.NISampleRateEditText, 'Enable', state)
@@ -841,7 +879,7 @@ set(handles.BaudRateEditText, 'Enable', state)
 
 function plot_data(handles)
 % plots the data that is currently stored in handles.VNavData and
-% handles.nidata to the graph in the gui
+% handles.NIData to the graph in the gui
 
 % find out if the graph is raw or scaled data
 switch get(handles.ScaledRawButton, 'Value')
@@ -929,6 +967,8 @@ function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+handles.par.VNavComPort = get(hObject, 'String')
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1115,28 +1155,14 @@ end
 
 function save_data(handles)
 % save the data to file
-save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
-     '-struct', ...
-     'handles', ...
-     'vnsamplerate', ...
-     'vnnumsamples', ...
-     'VNavData', ...
-     'VNavDataText', ...
-     'nidata', ...
-     'ninumsamples', ...
-     'nisamplerate', ...
-     'duration', ...
-     'InputPairs', ...
-     'RawLegends', ...
-     'ScaledLegends')
 
-RunID = get(handles.RunIDEditText, 'String');
-%Rider = get(handles.Popupmenu, 'String'){get(handles.Popupmenu, 'Value')}
+save(['data\' handles.par.RunID '.mat'], ...
+     '-struct', 'handles.par')
 
-save(['data\' get(handles.RunIDEditText, 'String') '.mat'], ...
-      'RunID', ...
+save(['data\' handles.par.RunID '.mat'], ...
+      'handles.VNData', 'handles.VNDataText', 'handles.NIData', ...
       '-append')
-  
+
 function [handles, success] = set_vnav_sample_rate(handles)
 % set the samplerate
 % rate : 
@@ -1230,8 +1256,6 @@ else
     set(handles.BaudRateEditText, 'String', num2str(parse(2)))
 end
 
-
-
 function set_async(s, value)
 % turn the async off on the VectorNav
 % value : string e.g. '0' for off
@@ -1272,7 +1296,7 @@ editboxes = {'RunID', 'Notes', 'Duration', 'NISampleRate', ...
              'VNavSampleRate', 'VNavComPort', 'Wait', 'BaudRate'};
 type = {'Double', 'String', 'Double', 'Double', 'Double', ...
         'String', 'Double', 'Double'};
-         
+
 for i = 1:length(editboxes)
     if strcmp(type{i}, 'Double')
          par.(editboxes{i}) = ...
