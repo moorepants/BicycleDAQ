@@ -387,6 +387,23 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+
+% update the pop up menus
+Rider = get(handles.RiderPopupmenu, 'String')
+Speed = get(handles.SpeedPopupmenu, 'String')
+Bicycle = get(handles.BicyclePopupmenu, 'String')
+Manuever = get(handles.ManueverPopupmenu, 'String')
+Environment = get(handles.EnvironmentPopupmenu, 'String')
+
+% make a copy of the default parameters file
+copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
+
+% append the additonal popup menus to the new file
+save('AppendedParameters.mat', ...
+     'Rider', 'Speed', 'Bicycle', 'Manuever', 'Enviroment', ...
+     '-append')
+
+% delete the gui
 delete(hObject);
 
 
