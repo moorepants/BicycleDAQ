@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 24-Dec-2010 10:44:27
+% Last Modified by GUIDE v2.5 24-Dec-2010 13:10:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -316,7 +316,7 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 Rider = get(handles.RiderPopupmenu, 'String');
 Speed = get(handles.SpeedPopupmenu, 'String');
 Bicycle = get(handles.BicyclePopupmenu, 'String');
-Manuever = get(handles.ManueverPopupmenu, 'String');
+Maneuver = get(handles.ManeuverPopupmenu, 'String');
 Environment = get(handles.EnvironmentPopupmenu, 'String');
 
 % make a copy of the default parameters file
@@ -324,7 +324,7 @@ copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
 
 %append the additonal popup menus to the new file
 save('AppendedParameters.mat', ...
-    'Rider', 'Speed', 'Bicycle', 'Manuever', 'Environment', ...
+    'Rider', 'Speed', 'Bicycle', 'Maneuver', 'Environment', ...
     '-append')
 
 % delete the gui
@@ -469,25 +469,25 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
 
 
-function NewManueverEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NewManueverEditText (see GCBO)
+function NewManeuverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NewManueverEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewManueverEditText as a double
+% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
 add_to_popupmenu(hObject, handles)
 
 
-% --- Executes on selection change in ManueverPopupmenu.
-function ManueverPopupmenu_Callback(hObject, eventdata, handles)
-% hObject    handle to ManueverPopupmenu (see GCBO)
+% --- Executes on selection change in ManeuverPopupmenu.
+function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns ManueverPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ManueverPopupmenu
+% Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
 
 
 function RunIDEditText_Callback(hObject, eventdata, handles)
@@ -963,8 +963,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function NewManueverEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewManueverEditText (see GCBO)
+function NewManeuverEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1028,8 +1028,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ManueverPopupmenu (see GCBO)
+function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1213,7 +1213,7 @@ function handles = store_current_parameters(handles)
 % values in a structure.
 par = struct();
 
-menus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'};
+menus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 type = {'String' 'Double' 'String' 'String' 'String'};
 
 % for each popupmenu
@@ -1325,7 +1325,7 @@ end
 EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
              'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
 
-Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'};
+Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 
 for i = 1:length(EditTexts)
     set(handles.([EditTexts{i} 'EditText']), 'String', eval(EditTexts{i}))
@@ -1403,3 +1403,13 @@ while handles.stopgraph == 0
     drawnow
     handles = guidata(handles.BicycleDAQ);
 end
+
+
+
+function NewManueverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
