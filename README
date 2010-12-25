@@ -2,8 +2,10 @@ BicycleDAQ
 
 This a simple graphical user interface to collect data on an instrumented
 bicycle. It connects to a National Instruments USB-6218 and to a VectorNav
-VN-100 development board both through USB connections. It is intended to run on
-a netbook computer, in particular the ASUS Eee PC 1001P-MU17-WT.
+VN-100 development board both through USB connections. It makes use of the
+Matlab Data Aquistion Toolbox, NIDAQmx driver and the Matlab Serial interface.
+It is intended to run on a netbook computer, in particular the ASUS Eee PC
+1001P-MU17-WT.
 
 Bicycle description:
 http://biosport.ucdavis.edu/research-projects/bicycle/instrumented-bicycle

@@ -55,11 +55,12 @@ function BicycleDAQ_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for BicycleDAQ
 handles.output = hObject;
 
+% make sure the analog input was properly deleted
 if exist('handles.ai')
     delete(handles.ai)
 end
 
-% these permanently set the functions for these callbacks in the gui
+% permanently set the function for this callback in the gui
 set(handles.GraphTypeButtonGroup, 'SelectionChangeFcn', ...
     @GraphTypeButtonGroup_SelectionChangeFcn);
 
@@ -127,9 +128,9 @@ handles.RawLegends = struct('PotAngleButton', {{'SteerPotentiometer'
                                                  'LeftFootBridge1'
                                                  'LeftFootBridge2'
                                                  'PullForceBridge'}}, ...
-                            'VnavMomentButton', {{'Yaw Angle (Z)'
-                                                  'Pitch Angle (Y)'
-                                                  'Roll Angle (X)'
+                            'VnavMomentButton', {{'Angular Rotation Z'
+                                                  'Angular Rotation Y'
+                                                  'Angular Rotation X'
                                                   'Mag X'
                                                   'Mag Y'
                                                   'Mag Z'
@@ -143,38 +144,38 @@ handles.RawLegends = struct('PotAngleButton', {{'SteerPotentiometer'
                                                         'ThreeVolts'
                                                         'FiveVolts'}});
 handles.ScaledLegends = struct('PotAngleButton', {{'Steer Angle'
-                                                    'Roll Angle'
-                                                    'Yaw Angle'
-                                                    'Pitch Angle'
-                                                    'Hip Angle'
-                                                    'Lean Angle'
-                                                    'Twist Angle'}}, ...
+                                                   'Roll Angle'
+                                                   'Yaw Angle'
+                                                   'Pitch Angle'
+                                                   'Hip Angle'
+                                                   'Lean Angle'
+                                                   'Twist Angle'}}, ...
                                'RateAccelRateButton', {{'Steer Rate'
-                                                         'Roll Rate'
-                                                         'Yaw Rate'
-                                                         'Pitch Rate'
-                                                         'Wheel Rate'}}, ...
+                                                        'Roll Rate'
+                                                        'Yaw Rate'
+                                                        'Pitch Rate'
+                                                        'Wheel Rate'}}, ...
                                'SeatpostAccelerationButton', {{'VNav X'
-                                                                'VNav Y'
-                                                                'VNav Z'
-                                                                'Frame X'
-                                                                'Frame Y'
-                                                                'Frame Z'}}, ...
+                                                               'VNav Y'
+                                                               'VNav Z'
+                                                               'Frame X'
+                                                               'Frame Y'
+                                                               'Frame Z'}}, ...
                                'FeetForceButton', {{'Seat Fx'
-                                                     'Seat Fy'
-                                                     'Seat Fz'
-                                                     'Right Foot'
-                                                     'Left Foot'
-                                                     'Pull Force'}}, ...
+                                                    'Seat Fy'
+                                                    'Seat Fz'
+                                                    'Right Foot'
+                                                    'Left Foot'
+                                                    'Pull Force'}}, ...
                                'VnavMomentButton', {{'Steer Torque'
-                                                      'Seat Mx'
-                                                      'Seat My'
-                                                      'Seat Mz'
-                                                      'Right Foot'
-                                                      'Left Foot'}}, ...
+                                                     'Seat Mx'
+                                                     'Seat My'
+                                                     'Seat Mz'
+                                                     'Right Foot'
+                                                     'Left Foot'}}, ...
                                'VoltageMagneticButton', {{'X'
-                                                           'Y'
-                                                           'Z'}});
+                                                          'Y'
+                                                          'Z'}});
 
 % Update handles structure
 guidata(hObject, handles);
@@ -201,6 +202,7 @@ function NotesEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NotesEditText as text
 %        str2double(get(hObject,'String')) returns contents of NotesEditText as a double
 
+handles.par.notes = get(hObject, 'String')
 
 function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewSpeedEditText (see GCBO)
@@ -211,6 +213,7 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
 add_to_popupmenu(hObject, handles)
+handles.par.Speed = str2double(get(hObject, 'String'))
 
 
 % --- Executes on button press in ScaledRawButton.
@@ -227,7 +230,7 @@ switch get(hObject, 'Value')
         set(handles.PotAngleButton, 'String', 'Pots')
         set(handles.RateAccelRateButton, 'String', 'Rates/Accels')
         set(handles.SeatpostAccelerationButton, 'String', 'Seatpost')
-        set(handles.FeetForceButton, 'String', 'Feet')
+        set(handles.FeetForceButton, 'String', 'Feet/Forces')
         set(handles.VnavMomentButton, 'String', 'VectorNav')
         set(handles.VoltageMagneticButton, 'String', 'Voltage')
     case 1.0
@@ -250,6 +253,7 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
 
 add_to_popupmenu(hObject, handles)
+handles.par.Rider = get(hObject, 'String')
 
 
 % --- Executes during object creation, after setting all properties.
@@ -274,25 +278,21 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
 add_to_popupmenu(hObject, handles)
+handles.par.Bicycle = get(hObject, 'String')
 
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
+% Plots the data of the current graph button that is pressed.
+% Parameters
+% ----------
+% hObject : handle to the GraphTypeButton
+% eventdata : handle to the button press event
+
+% get the latest handles since it wasn't passed in
 handles = guidata(hObject);
-switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
-    case 'PotAngleButton'
-        plot_data(handles)
-    case 'RateAccelRateButton'
-        plot_data(handles)
-    case 'SeatpostAccelerationButton'
-        plot_data(handles)
-    case 'FeetForceButton'
-        plot_data(handles)
-    case 'VnavMomentButton'
-        plot_data(handles)
-    case 'VoltageMagneticButton'
-        plot_data(handles)
-    otherwise
-        % Code for when there is no match.
-end
+
+% update the graph
+plot_data(handles)
+
 
 function ActionButtonGroup_SelectionChangeFcn(hObject, eventdata)
 
