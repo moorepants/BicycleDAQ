@@ -202,7 +202,10 @@ function NotesEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NotesEditText as text
 %        str2double(get(hObject,'String')) returns contents of NotesEditText as a double
 
-handles.par.notes = get(hObject, 'String')
+handles.par.Notes = get(hObject, 'String')
+
+guidata(hObject, handles)
+
 
 function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewSpeedEditText (see GCBO)
@@ -215,6 +218,7 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 add_to_popupmenu(hObject, handles)
 handles.par.Speed = str2double(get(hObject, 'String'))
 
+guidata(hObject, handles)
 
 % --- Executes on button press in ScaledRawButton.
 function ScaledRawButton_Callback(hObject, eventdata, handles)
@@ -255,6 +259,8 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 add_to_popupmenu(hObject, handles)
 handles.par.Rider = get(hObject, 'String')
 
+guidata(hObject, handles)
+
 
 % --- Executes during object creation, after setting all properties.
 function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
@@ -279,6 +285,8 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 
 add_to_popupmenu(hObject, handles)
 handles.par.Bicycle = get(hObject, 'String')
+
+guidata(hObject, handles)
 
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 % Plots the data of the current graph button that is pressed.
@@ -322,7 +330,7 @@ Environment = get(handles.EnvironmentPopupmenu, 'String');
 % make a copy of the default parameters file
 copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
 
-%append the additonal popup menus to the new file
+% overwrite popup menu data
 save('AppendedParameters.mat', ...
     'Rider', 'Speed', 'Bicycle', 'Maneuver', 'Environment', ...
     '-append')
@@ -448,6 +456,10 @@ function RiderPopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns RiderPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from RiderPopupmenu
 
+contents = get(hObject,'String')
+handles.par.Rider = contents{get(hObject,'Value')}
+
+guidata(hObject, handles)
 
 % --- Executes on selection change in SpeedPopupmenu.
 function SpeedPopupmenu_Callback(hObject, eventdata, handles)
@@ -457,6 +469,11 @@ function SpeedPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns SpeedPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
+
+contents = get(hObject,'String')
+handles.par.Speed = contents{get(hObject,'Value')}
+
+guidata(hObject, handles)
 
 
 % --- Executes on selection change in BicyclePopupmenu.
@@ -468,6 +485,11 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns BicyclePopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
 
+contents = get(hObject,'String')
+handles.par.Bicycle = contents{get(hObject,'Value')}
+
+guidata(hObject, handles)
+
 
 function NewManeuverEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewManeuverEditText (see GCBO)
@@ -478,6 +500,9 @@ function NewManeuverEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
 add_to_popupmenu(hObject, handles)
+handles.par.Maneuver = get(hObject, 'String')
+
+guidata(hObject, handles)
 
 
 % --- Executes on selection change in ManeuverPopupmenu.
@@ -488,6 +513,11 @@ function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
+
+contents = get(hObject,'String')
+handles.par.Maneuver = contents{get(hObject,'Value')}
+
+guidata(hObject, handles)
 
 
 function RunIDEditText_Callback(hObject, eventdata, handles)
@@ -549,42 +579,61 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 
 handles.par.VNavComPort = get(hObject, 'String');
 
+guidata(hObject, handles)
+
 function trigger_callback(obj, events, handles)
+% Records data from the VectorNav when the NI DAQ is triggered.
+% Parameters
+% ----------
+% obj : the analog input object
+% events : structure
+%   trigger event details
+% handles : structure
+%   contains the gui handles and user data
 
 display('Trigger called')
 
 set(handles.RecordButton, 'String', 'Recording')
 
 % set the async type and turn it on
-set_async(handles.s, '14')
+set_async(handles.s, '14') % 14 is YMR
 
 % record data
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
-        handles.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = fgets(handles.s);
+        handles.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
+        fgets(handles.s);
     end
-    display(sprintf('Data taken for %d seconds', i))
+    display(sprintf('Data recorded for %d seconds', i))
 end
 
 % turn the async off on the VectorNav
 set_async(handles.s, '0')
 
+% the trigger is anonymous so it can't return anything so store the data in the
+% ai object
 obj.UserData = handles.VNavDataText;
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
 % Returns the baudrate that the VectorNav is set to or NaN if it can't be
 % determined.
+%
+% Parameters
+% ----------
 % s : serial port object for the VectorNav
 
+% the possible baud rates the VectorNav can connect with
 baudrates = [9600 19200 38400 57600 115200 128000 230400 460800 921600];
 
+% intialize the baud rate
 baudrate = NaN;
 
 % set the timeout property low so the search goes fast
 DefaultTimeout = get(s, 'Timeout');
 set(s, 'Timeout', 0.1)
 
+% try to connect at each baud rate
 for i = 1:length(baudrates)
     % set the serial object baudrate
     s.BaudRate = baudrates(i);
@@ -592,6 +641,7 @@ for i = 1:length(baudrates)
     set_async(s, '0')
     % flush the buffer
     flush_buffer(s)
+    display_hr()
     display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
     display_hr()
     % see if it will return the version number
@@ -604,7 +654,9 @@ for i = 1:length(baudrates)
     end
 end
 
+% set the Timeout back to default
 set(s, 'Timeout', DefaultTimeout)
+
 
 function response = send_command(s, command)
 % Returns the latest response from the input buffer after the issued
@@ -624,9 +676,13 @@ function response = send_command(s, command)
 % response : string
 %   The full response from the VectorNav including the '$', '*' and checksum.
 
+% calculate the checksum and send the command
 fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+% wait a little for the response
 pause(0.1)
+% get the response
 response = fgets(s);
+
 
 function flush_buffer(s)
 % Flushes the serial port input buffer.
@@ -689,6 +745,7 @@ set(handles.RecordButton, 'Enable', 'On')
 set(handles.DisplayButton, 'Enable', 'On')
 
 set(hObject, 'String', 'Tare')
+
 
 % --- Executes on button press in RecordButton.
 function RecordButton_Callback(hObject, eventdata, handles)
@@ -759,6 +816,7 @@ set(handles.RecordButton, 'Enable', 'On')
 
 guidata(hObject, handles)
 
+
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -771,8 +829,12 @@ handles.par.Wait = str2double(get(hObject,'String'));
 
 guidata(hObject, handles)
 
-% --- Executes during object creation, after setting all properties.
+
 function WaitEditText_CreateFcn(hObject, eventdata, handles)
+% Executes during object creation, after setting all properties.
+%
+% Parameters
+% ----------
 % hObject    handle to WaitEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -784,8 +846,14 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function handles = parse_vnav_text_data(handles)
+% Converts the ASCII string data from the VectorNav to Matlab arrays.
+%
+% Parameters
+% ----------
+% handles : structure
+%   Handles to gui objects and user data.
 
-%Create parse string
+% create parse string
 ps = '%*6c';
 for i=1:size(handles.VNavData, 2)
     ps = [ps ',%g'];
@@ -800,6 +868,7 @@ for i=1:handles.par.VNavNumSamples
         display(sprintf('%d is a bad one: %s', i, handles.VNavDataText{i}))
     end
 end
+
 
 function enable_parameters(handles, state)
 % Enables (on or off) parameters that should be set only when the VNav and NI
@@ -818,9 +887,15 @@ set(handles.VNavSampleRateEditText, 'Enable', state)
 set(handles.WaitEditText, 'Enable', state)
 set(handles.BaudRateEditText, 'Enable', state)
 
+
 function plot_data(handles)
-% plots the data that is currently stored in handles.VNavData and
-% handles.NIData to the graph in the gui
+% Plots the data that is currently stored in handles.VNavData and
+% handles.NIData to the graph in the gui.
+%
+% Parameters
+% ----------
+% handles : structure
+%   Handles to gui objects and user data.
 
 % find out if the graph is raw or scaled data
 switch get(handles.ScaledRawButton, 'Value')
@@ -848,6 +923,7 @@ else
     plot(handles.NIData(:, datavals+1))
 end
 legend(handles.(legtype).(ButtonName))
+
 
 function set_run_id(handles)
 % Sets the run id to a number that isn't already in the data directory.
