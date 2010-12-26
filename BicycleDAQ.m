@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 23-Dec-2010 14:38:12
+% Last Modified by GUIDE v2.5 24-Dec-2010 13:10:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -294,82 +294,6 @@ handles = guidata(hObject);
 plot_data(handles)
 
 
-function ActionButtonGroup_SelectionChangeFcn(hObject, eventdata)
-
-% get the latest handles
-handles = guidata(hObject);
-get(eventdata.NewValue, 'Tag')
-switch get(eventdata.NewValue, 'Tag')
-    case 'LoadButton'
-        % brings up a selection window for a file
-    case 'DisplayButton'
-        % displays the live data
-        % start collecting data from the DAQ
-        start(handles.ai)
-        trigger(handles.ai)
-        % find out what graph button is pressed
-        ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
-        % find out if the graph is raw or scaled data
-        switch get(handles.ScaledRawButton, 'Value')
-            case 0.0
-                legtype = 'RawLegends';
-            case 1.0
-                legtype = 'ScaledLegends';
-        end
-        % create a vector with the analog input numbers for this graph
-        datavals = zeros(1,length(eval(['handles.' legtype '.' ButtonName])));
-        for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
-            input = char(eval(['handles.' legtype '.' ButtonName '(i)']));
-            datavals(i) = eval(['handles.InputPairs.' input]);
-        end
-        % set the plot axes to the graph
-        axes(handles.Graph)
-        % plot blank data
-        data = zeros(50,length(eval(['handles.RawLegends.' ButtonName])));
-        lines = plot(data); % plot the raw data
-        ylim([-5 5])
-        ylabel('Voltage')
-
-        leg = legend(eval(['handles.' legtype '.' ButtonName]));
-%         labels = {'', '', '', '', ''};
-
-        daqdata = zeros(50, length(fieldnames(handles.InputPairs)));
-        vnavdata = zeros(50, 10);
-        % update the plot while the data is being taken
-        while handles.stopgraph == 0
-            display('another while')
-            for i = 1:50
-                tic
-                display('VNav')
-                vnavdata(i, :) = VNgetsamples(handles.s, 'RAW', 1);
-                toc
-                tic
-                display('DAQ')
-                daqdata(i, :) = peekdata(handles.ai, 1);
-                toc
-                %getsample(handles.ai);
-            end
-            % return the latest 100 samples
-%             data = peekdata(handles.ai, 50);
-            for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
-                set(lines(i), 'YData', daqdata(:, datavals(i)+1))
-            end
-%             meanData = mean(data);
-%             labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
-%             labels{2} = sprintf('Steer Rate = %1.2f V', meanData(2));
-%             labels{3} = sprintf('Steer Torque = %1.2f V', meanData(3));
-%             labels{4} = sprintf('Wheel Speed = %1.2f V', meanData(4));
-%             labels{5} = sprintf('Button = %1.2f V', meanData(5));
-%             set(leg, 'String', labels)
-            drawnow
-            handles = guidata(handles.BicycleDAQ);
-        end
-    case 'RecordButton' % records data to file
-
-
-end
-
-
 % --- Executes on key release with focus on BicycleDAQ and none of its controls.
 function BicycleDAQ_KeyReleaseFcn(hObject, eventdata, handles)
 % hObject    handle to BicycleDAQ (see GCBO)
@@ -392,16 +316,16 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 Rider = get(handles.RiderPopupmenu, 'String');
 Speed = get(handles.SpeedPopupmenu, 'String');
 Bicycle = get(handles.BicyclePopupmenu, 'String');
-Manuever = get(handles.ManueverPopupmenu, 'String');
+Maneuver = get(handles.ManeuverPopupmenu, 'String');
 Environment = get(handles.EnvironmentPopupmenu, 'String');
 
 % make a copy of the default parameters file
-%copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
+copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
 
-% append the additonal popup menus to the new file
-%save('AppendedParameters.mat', ...
-%     'Rider', 'Speed', 'Bicycle', 'Manuever', 'Enviroment', ...
-%     '-append')
+%append the additonal popup menus to the new file
+save('AppendedParameters.mat', ...
+    'Rider', 'Speed', 'Bicycle', 'Maneuver', 'Environment', ...
+    '-append')
 
 % delete the gui
 delete(hObject);
@@ -545,25 +469,25 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
 
 
-function NewManueverEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NewManueverEditText (see GCBO)
+function NewManeuverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NewManueverEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewManueverEditText as a double
+% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
 add_to_popupmenu(hObject, handles)
 
 
-% --- Executes on selection change in ManueverPopupmenu.
-function ManueverPopupmenu_Callback(hObject, eventdata, handles)
-% hObject    handle to ManueverPopupmenu (see GCBO)
+% --- Executes on selection change in ManeuverPopupmenu.
+function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns ManueverPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ManueverPopupmenu
+% Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
 
 
 function RunIDEditText_Callback(hObject, eventdata, handles)
@@ -623,6 +547,7 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of VNavComPortEditText as text
 %        str2double(get(hObject,'String')) returns contents of VNavComPortEditText as a double
 
+handles.par.VNavComPort = get(hObject, 'String');
 
 function trigger_callback(obj, events, handles)
 
@@ -636,7 +561,7 @@ set_async(handles.s, '14')
 % record data
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
-        handles.par.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = fgets(handles.s);
+        handles.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = fgets(handles.s);
     end
     display(sprintf('Data taken for %d seconds', i))
 end
@@ -789,8 +714,7 @@ handles = store_current_parameters(handles);
 set_baudrate(handles.s, handles.par.BaudRate)
 
 % set the VectorNavsamplerate
-[handles, success] = set_vnav_sample_rate(handles, ...
-    handles.par.VNavSampleRate);
+[handles, success] = set_vnav_sample_rate(handles);
 
 % initialize the VectorNav data
 handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
@@ -868,7 +792,7 @@ for i=1:size(handles.VNavData, 2)
 end
 
 % process the text data
-for i=1:handles.vnnumsamples
+for i=1:handles.par.VNavNumSamples
     try
         handles.VNavData(i, :) = sscanf(handles.VNavDataText{i}, ps);
     catch
@@ -921,7 +845,7 @@ else
         input = char(handles.(legtype).(ButtonName)(i));
         datavals(i) = handles.InputPairs.(input);
     end
-    plot(handles.nidata(:, datavals+1))
+    plot(handles.NIData(:, datavals+1))
 end
 legend(handles.(legtype).(ButtonName))
 
@@ -932,7 +856,7 @@ function set_run_id(handles)
 dirinfo = what('data/');
 MatFiles = dirinfo.mat;
 
-if length(MatFiles) == 0 % if there are no mat files
+if isempty(MatFiles) % if there are no mat files
     set(handles.RunIDEditText, 'String', '00000')
 else % make new sequential run id
     filelist = sort(dirinfo.mat);
@@ -984,8 +908,6 @@ function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-handles.par.VNavComPort = get(hObject, 'String')
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1041,8 +963,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function NewManueverEditText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NewManueverEditText (see GCBO)
+function NewManeuverEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1106,8 +1028,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function ManueverPopupmenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ManueverPopupmenu (see GCBO)
+function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ManeuverPopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1172,13 +1094,15 @@ end
 
 function save_data(handles)
 % save the data to file
+RunIDString = num2str(handles.par.RunID);
+% pad with zeros
+for i = 1:5-length(RunIDString)
+    RunIDString = ['0' RunIDString];
+end
 
-save(['data\' handles.par.RunID '.mat'], ...
-     '-struct', 'handles.par')
+save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
+     'par', 'VNavData', 'VNavDataText', 'NIData')
 
-save(['data\' handles.par.RunID '.mat'], ...
-      'handles.VNData', 'handles.VNDataText', 'handles.NIData', ...
-      '-append')
 
 function [handles, success] = set_vnav_sample_rate(handles)
 % set the samplerate
@@ -1289,7 +1213,7 @@ function handles = store_current_parameters(handles)
 % values in a structure.
 par = struct();
 
-menus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'};
+menus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 type = {'String' 'Double' 'String' 'String' 'String'};
 
 % for each popupmenu
@@ -1390,7 +1314,7 @@ set(hObject, 'String', ['Add a new ' lower(menu)])
 function populate_gui(handles)
 % populate the gui with either the default parameters or the appended ones
 
-dirinfo = what() % get the matlab files in the current directory
+dirinfo = what(); % get the matlab files in the current directory
 % check for an AppendedParamters.mat and load, otherwise load the default
 if sum(ismember(dirinfo.mat, 'AppendedParameters.mat'))
     load('AppendedParameters.mat')
@@ -1399,9 +1323,9 @@ else
 end
 
 EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
-             'VNavSampleRate' 'VNavComport' 'BaudRate' 'Wait'}
+             'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
 
-Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Manuever' 'Environment'}
+Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 
 for i = 1:length(EditTexts)
     set(handles.([EditTexts{i} 'EditText']), 'String', eval(EditTexts{i}))
@@ -1410,3 +1334,82 @@ end
 for i = 1:length(Popupmenus)
     set(handles.([Popupmenus{i} 'Popupmenu']), 'String', eval(Popupmenus{i}))
 end
+
+
+% --- Executes on button press in DisplayButton.
+function DisplayButton_Callback(hObject, eventdata, handles)
+% hObject    handle to DisplayButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% displays the live data
+% start collecting data from the DAQ
+start(handles.ai)
+trigger(handles.ai)
+% find out what graph button is pressed
+ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
+% find out if the graph is raw or scaled data
+switch get(handles.ScaledRawButton, 'Value')
+    case 0.0
+        legtype = 'RawLegends';
+    case 1.0
+        legtype = 'ScaledLegends';
+end
+% create a vector with the analog input numbers for this graph
+datavals = zeros(1,length(eval(['handles.' legtype '.' ButtonName])));
+for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
+    input = char(eval(['handles.' legtype '.' ButtonName '(i)']));
+    datavals(i) = eval(['handles.InputPairs.' input]);
+end
+% set the plot axes to the graph
+axes(handles.Graph)
+% plot blank data
+data = zeros(50,length(eval(['handles.RawLegends.' ButtonName])));
+lines = plot(data); % plot the raw data
+ylim([-5 5])
+ylabel('Voltage')
+
+leg = legend(eval(['handles.' legtype '.' ButtonName]));
+%         labels = {'', '', '', '', ''};
+
+daqdata = zeros(50, length(fieldnames(handles.InputPairs)));
+vnavdata = zeros(50, 10);
+% update the plot while the data is being taken
+while handles.stopgraph == 0
+    display('another while')
+    for i = 1:50
+        tic
+        display('VNav')
+        vnavdata(i, :) = VNgetsamples(handles.s, 'RAW', 1);
+        toc
+        tic
+        display('DAQ')
+        daqdata(i, :) = peekdata(handles.ai, 1);
+        toc
+        %getsample(handles.ai);
+    end
+    % return the latest 100 samples
+%             data = peekdata(handles.ai, 50);
+    for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
+        set(lines(i), 'YData', daqdata(:, datavals(i)+1))
+    end
+%             meanData = mean(data);
+%             labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
+%             labels{2} = sprintf('Steer Rate = %1.2f V', meanData(2));
+%             labels{3} = sprintf('Steer Torque = %1.2f V', meanData(3));
+%             labels{4} = sprintf('Wheel Speed = %1.2f V', meanData(4));
+%             labels{5} = sprintf('Button = %1.2f V', meanData(5));
+%             set(leg, 'String', labels)
+    drawnow
+    handles = guidata(handles.BicycleDAQ);
+end
+
+
+
+function NewManueverEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to NewManeuverEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
+%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
