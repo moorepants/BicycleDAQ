@@ -216,7 +216,7 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
 add_to_popupmenu(hObject, handles)
-handles.par.Speed = str2double(get(hObject, 'String'))
+handles.par.Speed = str2double(get(hObject, 'String'));
 
 guidata(hObject, handles)
 
@@ -257,7 +257,7 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
 
 add_to_popupmenu(hObject, handles)
-handles.par.Rider = get(hObject, 'String')
+handles.par.Rider = get(hObject, 'String');
 
 guidata(hObject, handles)
 
@@ -284,7 +284,7 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
 add_to_popupmenu(hObject, handles)
-handles.par.Bicycle = get(hObject, 'String')
+handles.par.Bicycle = get(hObject, 'String');
 
 guidata(hObject, handles)
 
@@ -456,8 +456,8 @@ function RiderPopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns RiderPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from RiderPopupmenu
 
-contents = get(hObject,'String')
-handles.par.Rider = contents{get(hObject,'Value')}
+contents = get(hObject,'String');
+handles.par.Rider = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
 
@@ -470,8 +470,8 @@ function SpeedPopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns SpeedPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
 
-contents = get(hObject,'String')
-handles.par.Speed = contents{get(hObject,'Value')}
+contents = get(hObject,'String');
+handles.par.Speed = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
 
@@ -485,8 +485,8 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns BicyclePopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
 
-contents = get(hObject,'String')
-handles.par.Bicycle = contents{get(hObject,'Value')}
+contents = get(hObject,'String');
+handles.par.Bicycle = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
 
@@ -500,7 +500,7 @@ function NewManeuverEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
 add_to_popupmenu(hObject, handles)
-handles.par.Maneuver = get(hObject, 'String')
+handles.par.Maneuver = get(hObject, 'String');
 
 guidata(hObject, handles)
 
@@ -514,8 +514,8 @@ function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
 % Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
 
-contents = get(hObject,'String')
-handles.par.Maneuver = contents{get(hObject,'Value')}
+contents = get(hObject,'String');
+handles.par.Maneuver = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
 
