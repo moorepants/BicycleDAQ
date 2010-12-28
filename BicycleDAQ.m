@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 27-Dec-2010 16:00:53
+% Last Modified by GUIDE v2.5 27-Dec-2010 19:38:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1181,9 +1181,14 @@ save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
 
 
 function [handles, success] = set_vnav_sample_rate(handles)
-% set the samplerate
-% rate : 
+% Set the VectorNav sample rate
+%
+% Parameters
+% ----------
+% handles : structure
+%   handles to gui objects and user data
 % Returns
+% -------
 % success : 0 or 1
 %           0 : failed a setting the rate
 %           1 : success a setting the rate
@@ -1525,3 +1530,23 @@ handles = populate_gui(handles, [path filename]);
 plot_data(handles)
 enable_graph_buttons(handles, 'On')
 guidata(hObject, handles)
+
+
+% --- Executes on button press in SaveButton.
+function SaveButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+RunID = get(handles.RunIDEditText, 'String')
+question = sprintf('Do you really want to overwrite run %s', RunID)
+button = questdlg(question, 'Box', 'Yes', 'No', 'No')
+
+switch button
+    case 'Yes'
+        save_data(handles)
+    case 'No'
+        % do nothing
+    otherwise
+        % do nothing
+end
