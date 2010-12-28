@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 24-Dec-2010 13:10:24
+% Last Modified by GUIDE v2.5 27-Dec-2010 16:00:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,7 +73,7 @@ if exist('data/', 'dir') ~= 7
 end
 
 % set the default parameters in the gui
-populate_gui(handles)
+default_populate_gui(handles)
 
 % update the run id number
 set_run_id(handles)
@@ -1387,7 +1387,7 @@ set(handles.([menu 'Popupmenu']), 'Value', number + 1)
 % put the old text back in the edit box
 set(hObject, 'String', ['Add a new ' lower(menu)])
 
-function populate_gui(handles)
+function default_populate_gui(handles)
 % populate the gui with either the default parameters or the appended ones
 
 dirinfo = what(); % get the matlab files in the current directory
@@ -1409,6 +1409,29 @@ end
 
 for i = 1:length(Popupmenus)
     set(handles.([Popupmenus{i} 'Popupmenu']), 'String', eval(Popupmenus{i}))
+end
+
+function handles = populate_gui(handles, filename)
+% populate the gui with either data from a file
+
+load(filename)
+
+handles.par = par;
+handles.NIData = NIData;
+handles.VNavData = VNavData;
+handle.VNavDataText = VNavDataText;
+
+EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
+             'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
+
+Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
+
+for i = 1:length(EditTexts)
+    set(handles.([EditTexts{i} 'EditText']), 'String', handles.par.(EditTexts{i}))
+end
+
+for i = 1:length(Popupmenus)
+    set(handles.([Popupmenus{i} 'Popupmenu']), 'String', handles.par.(Popupmenus{i}))
 end
 
 
@@ -1489,3 +1512,16 @@ function NewManueverEditText_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
+
+
+% --- Executes on button press in LoadButton.
+function LoadButton_Callback(hObject, eventdata, handles)
+% hObject    handle to LoadButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[filename, path] = uigetfile('*.mat', 'Select a run', 'data/');
+handles = populate_gui(handles, [path filename]);
+plot_data(handles)
+enable_graph_buttons(handles, 'On')
+guidata(hObject, handles)

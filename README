@@ -13,10 +13,10 @@ http://biosport.ucdavis.edu/research-projects/bicycle/instrumented-bicycle
 Software description:
 http://biosport.ucdavis.edu/research-projects/bicycle/instrumented-bicycle/software
 
-Requirements
------------
+Requirements (Probably not that strict)
+------------
 - Windows XP Pro
-- Matlab
+- Matlab (7.8.0 R2009a)
 - VectorNav VN-100 http://www.vectornav.com
 - VectorNav Matlab Library http://www.vectornav.com/downloads
 - NI USB-6218 (or other similar device)
