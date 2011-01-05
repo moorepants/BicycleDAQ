@@ -583,6 +583,7 @@ guidata(hObject, handles)
 
 function trigger_callback(obj, events, handles)
 % Records data from the VectorNav when the NI DAQ is triggered.
+%
 % Parameters
 % ----------
 % obj : the analog input object
@@ -594,6 +595,7 @@ function trigger_callback(obj, events, handles)
 display('Trigger called')
 
 set(handles.RecordButton, 'String', 'Recording')
+set(handles.RecordButton, 'BackgroundColor', 'Red')
 
 % set the async type and turn it on
 set_async(handles.s, '14') % 14 is YMR
@@ -755,6 +757,10 @@ function RecordButton_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of RecordButton
 
+% give the user some feedback
+set(hObject, 'BackgroundColor', 'Yellow')
+set(hObject, 'String', 'Initializing')
+
 % make sure you can't click things while the recording is happening
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.DisplayButton, 'Enable', 'Off')
@@ -764,7 +770,7 @@ set(handles.RecordButton, 'Enable', 'Off')
 % make sure the run id is set correctly
 set_run_id(handles);
 
-% make sure all the parameters are current
+% get all the parameters from the text boxes and edit menus
 handles = store_current_parameters(handles);
 
 % set the baudrate on the VNav and the laptop
@@ -777,21 +783,23 @@ set_baudrate(handles.s, handles.par.BaudRate)
 handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
 handles.VNavDataText = cell(handles.par.VNavNumSamples, 1);
 
+% set the sample rate for the NI daq
 handles = set_ni_samples_per_trigger(handles);
 
 % trigger details
 set_trigger(handles)
 
-% store parameters again
-handles = store_current_parameters(handles);
-
 % start up the DAQ
 start(handles.ai)
 display('DAQ started, waiting for trigger...')
 set(hObject, 'String', 'Waiting for trigger...')
-wait(handles.ai, handles.par.Wait) % give the person some time to hit the button
+set(hObject, 'BackgroundColor', 'Green')
 
-set(handles.RecordButton, 'String', 'Processing')
+% give the person some time to hit the button
+wait(handles.ai, handles.par.Wait)
+
+set(hObject, 'String', 'Processing')
+set(hObject, 'BackgroundColor', 'Yellow')
 
 % get the data from both devices
 handles.NIData = getdata(handles.ai);
@@ -802,13 +810,16 @@ stop(handles.ai)
 % parse the text data and return numerical values
 handles = parse_vnav_text_data(handles);
 
+% save the data just taken to file
 save_data(handles)
 
+% plot the data just taken
 plot_data(handles)
 
 enable_graph_buttons(handles, 'On')
 
 set(hObject, 'String', 'Record')
+set(hObject, 'BackgroundColor', [0.831 0.816 0.784])
 set(handles.LoadButton, 'Enable', 'On')
 set(handles.DisplayButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
@@ -850,6 +861,11 @@ function handles = parse_vnav_text_data(handles)
 %
 % Parameters
 % ----------
+% handles : structure
+%   Handles to gui objects and user data.
+%
+% Returns
+% -------
 % handles : structure
 %   Handles to gui objects and user data.
 
@@ -1169,9 +1185,15 @@ for i = 1:length(buttons)
 end
 
 function save_data(handles)
-% save the data to file
+% Save the data to file.
+%
+% Parameters
+% ----------
+% handles : structure
+%   handles to gui objects and user data
+
+% get the run id number and make a string padded with zeros
 RunIDString = num2str(handles.par.RunID);
-% pad with zeros
 for i = 1:5-length(RunIDString)
     RunIDString = ['0' RunIDString];
 end
@@ -1187,16 +1209,22 @@ function [handles, success] = set_vnav_sample_rate(handles)
 % ----------
 % handles : structure
 %   handles to gui objects and user data
+%
 % Returns
 % -------
-% success : 0 or 1
-%           0 : failed a setting the rate
-%           1 : success a setting the rate
+% handles : structure
+%   handles to gui objects and user data
+% success : integer
+%   0 or 1
+%   0 : failed a setting the rate
+%   1 : success a setting the rate
 
+% the VectorNav can only connect at these rates
 PossibleRates = [1 2 4 5 10 20 25 40 50 100 200];
 
 rate = handles.par.VNavSampleRate;
 
+% if the user input rate is valid then set it, otherwise leave it as is
 if find(PossibleRates==rate)
     response = send_command(handles.s, ['VNWRG,07,' num2str(rate)]);
     display_hr()
@@ -1210,13 +1238,17 @@ else
     display_hr()
     display('Valid rates are:')
     display(PossibleRates)
+    % read what the rate is currently set to
     response = send_command(handles.s, 'VNRRG,07');
     display('VNav sample rate is currently set to:')
     display(sprintf(response))
     display_hr()
     success = 0;
+    % extract the sample rate
     parse = sscanf(response, '%*6c,%g,%g');
+    % set the text box and parameter value to the current setting
     set(handles.VNavSampleRateEditText, 'String', num2str(parse(2)))
+    handles.par.VNavSampleRate = str2double(parse(2));
 end
 
 function display_hr()
@@ -1224,16 +1256,33 @@ display(['--------------------------------------' ...
          '-------------------------------------'])
 
 function handles = set_ni_samples_per_trigger(handles)
+% Sets the sample rate and samples per trigger on the NI daq box and
+% updates the handles.par accordingly.
+%
+% Parameters
+% ----------
+% handles : structure
+%   handles to gui objects and user data
+% 
+% Returns
+% -------
+% handles : structure
+%   handles to gui objects and user data
+
+% grab the user inputed duration and sample rate
 duration = handles.par.Duration;
 rate = handles.par.NISampleRate;
 
+% set the values on the device
 set(handles.ai, 'SampleRate', rate)
 actualrate = get(handles.ai, 'SampleRate');
 set(handles.ai, 'SamplesPerTrigger', duration*actualrate)
 
+% update the stored parameters
 handles.par.NISampleRate = actualrate;
 handles.par.NINumSamples = get(handles.ai, 'SamplesPerTrigger');
 
+% update the display box
 set(handles.NISampleRateEditText, 'String', num2str(actualrate))
 display_hr()
 display(sprintf('Duration is now set to %d', duration))
@@ -1241,10 +1290,14 @@ display(sprintf('NI sample is now set to %d hz', actualrate))
 display(sprintf('NI samples per trigger now set to %d', get(handles.ai, 'SamplesPerTrigger')))
 display_hr()
 
-handles = store_current_parameters(handles);
-
 function set_trigger(handles)
-% trigger details
+% Sets the NI daq trigger details.
+%
+% Parameters
+% ----------
+% handles : structure
+%   handles to gui objects and user data
+
 set(handles.ai, 'TriggerType', 'Software')
 set(handles.ai, 'TriggerChannel', handles.chan(1))
 set(handles.ai, 'TriggerCondition', 'Rising')
@@ -1290,20 +1343,35 @@ display(sprintf('%d bytes in input buffer after turning async off and flushing',
 display_hr()
 
 function handles = store_current_parameters(handles)
-% Cycles through each of the user input parameters and stores there current
-% values in a structure.
+% Cycles through each of the user input parameters and stores their current
+% values in a structure, par.
+%
+% Parameters:
+% -----------
+% handles : structure
+%   handles to gui objects and user data
+%
+% Returns:
+% --------
+% handles : structure
+%   handles to gui objects and user data
+
+% initialize the parameter structure
 par = struct();
 
+% a list of the gui menus and what type of data they are
 menus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 type = {'String' 'Double' 'String' 'String' 'String'};
 
 % for each popupmenu
 for i = 1:length(menus)
+    % get the current popupmenu
     list = get(handles.([menus{i} 'Popupmenu']), 'String');
     % if the popupmenu is not a cell then make it one
     if iscell(list) ~= 1
         list = {list};
     end
+    % grab the currently selected item in the menu and store it
     if strcmp(type{i}, 'Double')
         par.(menus{i}) = ...
             str2double(list{get(handles.([menus{i} 'Popupmenu']), ...
@@ -1314,11 +1382,13 @@ for i = 1:length(menus)
     end
 end
 
+% now make a list of the edit boxes and their types
 editboxes = {'RunID', 'Notes', 'Duration', 'NISampleRate', ...
              'VNavSampleRate', 'VNavComPort', 'Wait', 'BaudRate'};
 type = {'Double', 'String', 'Double', 'Double', 'Double', ...
         'String', 'Double', 'Double'};
 
+% grab the current value in the edit box and store it
 for i = 1:length(editboxes)
     if strcmp(type{i}, 'Double')
          par.(editboxes{i}) = ...
@@ -1330,9 +1400,11 @@ for i = 1:length(editboxes)
     end
 end
 
+% calculate the number of samples and store
 par.VNavNumSamples = par.Duration*par.VNavSampleRate;
 par.NINumSamples = par.Duration*par.NISampleRate;
 
+% store the parameters in handles so it can be returned
 handles.par = par;
 
 function BaudRateEditText_Callback(hObject, eventdata, handles)
@@ -1418,13 +1490,19 @@ end
 
 function handles = populate_gui(handles, filename)
 % populate the gui with either data from a file
+%
+% Parameters
+% ----------
+% handles : structure
+% filename : string
+%   path to the file with the data for populating the gui
 
 load(filename)
 
 handles.par = par;
 handles.NIData = NIData;
 handles.VNavData = VNavData;
-handle.VNavDataText = VNavDataText;
+handles.VNavDataText = VNavDataText;
 
 EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
              'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
@@ -1538,9 +1616,9 @@ function SaveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-RunID = get(handles.RunIDEditText, 'String')
-question = sprintf('Do you really want to overwrite run %s', RunID)
-button = questdlg(question, 'Box', 'Yes', 'No', 'No')
+RunID = get(handles.RunIDEditText, 'String');
+question = sprintf('Do you really want to overwrite run %s', RunID);
+button = questdlg(question, 'Box', 'Yes', 'No', 'No');
 
 switch button
     case 'Yes'
