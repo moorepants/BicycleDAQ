@@ -215,7 +215,19 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewSpeedEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
-add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the name of the popup menu
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+menu = tag(4:begin-1);
+
+add_to_popupmenu(newitem, menu, handles)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
+
 handles.par.Speed = str2double(get(hObject, 'String'));
 
 guidata(hObject, handles)
@@ -256,7 +268,19 @@ function NewRiderEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewRiderEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewRiderEditText as a double
 
-add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the name of the popup menu
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+menu = tag(4:begin-1);
+
+add_to_popupmenu(newitem, menu, handles)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
+
 handles.par.Rider = get(hObject, 'String');
 
 guidata(hObject, handles)
@@ -283,7 +307,19 @@ function NewBicycleEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewBicycleEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewBicycleEditText as a double
 
-add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the name of the popup menu
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+menu = tag(4:begin-1);
+
+add_to_popupmenu(newitem, menu, handles)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
+
 handles.par.Bicycle = get(hObject, 'String');
 
 guidata(hObject, handles)
@@ -471,7 +507,7 @@ function SpeedPopupmenu_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
 
 contents = get(hObject,'String');
-handles.par.Speed = contents{get(hObject,'Value')};
+handles.par.Speed = str2double(contents{get(hObject,'Value')});
 
 guidata(hObject, handles)
 
@@ -499,7 +535,19 @@ function NewManeuverEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
-add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the name of the popup menu
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+menu = tag(4:begin-1);
+
+add_to_popupmenu(newitem, menu, handles)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
+
 handles.par.Maneuver = get(hObject, 'String');
 
 guidata(hObject, handles)
@@ -1163,7 +1211,22 @@ function NewEnvironmentEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NewEnvironmentEditText as text
 %        str2double(get(hObject,'String')) returns contents of NewEnvironmentEditText as a double
 
-add_to_popupmenu(hObject, handles)
+% get the name of the new menu item
+newitem = get(hObject, 'String');
+
+% get the name of the popup menu
+tag = get(hObject, 'Tag');
+begin = strfind(tag, 'EditText');
+menu = tag(4:begin-1);
+
+add_to_popupmenu(newitem, menu, handles)
+
+% put the old text back in the edit box
+set(hObject, 'String', ['Add a new ' lower(menu)])
+
+handles.par.Enviroment = get(hObject, 'String');
+
+guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
 function NewEnvironmentEditText_CreateFcn(hObject, eventdata, handles)
@@ -1433,15 +1496,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function add_to_popupmenu(hObject, handles)
+function add_to_popupmenu(newitem, menu, handles)
+% Checks a string against the current popup menu. If the string already
+% exits it sets the popup menu to that string. If it doesn't exist, it adds
+% it and sets the popup menu to that string.
 % get the name of the new menu item
-newitem = get(hObject, 'String');
-
-% NewBlankEditText
-tag = get(hObject, 'Tag');
-begin = strfind(tag, 'EditText');
-
-menu = tag(4:begin-1);
+% Parameters
+% ----------
+% newitem : string
+%   A string for the pop up menu list.
+% menu : string
+%   Pop up menu label. (e.g. 'Rider')
+% handles : structure
+%   Handles to gui objects and user data.
 
 % get the items in the popmenu
 items = get(handles.([menu 'Popupmenu']), 'String');
@@ -1451,18 +1518,22 @@ if iscell(items) ~= 1
     items = {items};
 end
 
-% how many are already in the list
-number = length(items);
+% if the string is already in the list
+cellnum = find(ismember(items, newitem));
+if cellnum
+    set(handles.([menu 'Popupmenu']), 'Value', cellnum)
+else
+    % how many are already in the list
+    number = length(items);
 
-% add the new item to the end of the list
-items{number + 1} = newitem;
+    % add the new item to the end of the list
+    items{number + 1} = newitem;
 
-% rewrite the popupmenu and set the value to the new item
-set(handles.([menu 'Popupmenu']), 'String', items)
-set(handles.([menu 'Popupmenu']), 'Value', number + 1)
+    % rewrite the popupmenu and set the value to the new item
+    set(handles.([menu 'Popupmenu']), 'String', items)
+    set(handles.([menu 'Popupmenu']), 'Value', number + 1)
 
-% put the old text back in the edit box
-set(hObject, 'String', ['Add a new ' lower(menu)])
+end
 
 function default_populate_gui(handles)
 % populate the gui with either the default parameters or the appended ones
@@ -1489,13 +1560,19 @@ for i = 1:length(Popupmenus)
 end
 
 function handles = populate_gui(handles, filename)
-% populate the gui with either data from a file
+% Populate the gui with either data from a file.
 %
 % Parameters
 % ----------
 % handles : structure
+%   handles to gui objects and user data
 % filename : string
 %   path to the file with the data for populating the gui
+%
+% Returns
+% -------
+% handles : structure
+%   handles to gui objects and user data
 
 load(filename)
 
@@ -1507,14 +1584,22 @@ handles.VNavDataText = VNavDataText;
 EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
              'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
 
-Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 
 for i = 1:length(EditTexts)
     set(handles.([EditTexts{i} 'EditText']), 'String', handles.par.(EditTexts{i}))
 end
 
+Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
+type = {'String' 'Double' 'String' 'String' 'String'};
+
 for i = 1:length(Popupmenus)
-    set(handles.([Popupmenus{i} 'Popupmenu']), 'String', handles.par.(Popupmenus{i}))
+    if strcmp(type{i}, 'String')
+        add_to_popupmenu(handles.par.(Popupmenus{i}), ...
+                         Popupmenus{i}, handles)
+    elseif strcmp(type{i}, 'Double')
+        add_to_popupmenu(num2str(handles.par.(Popupmenus{i})), ...
+                         Popupmenus{i}, handles)
+    end
 end
 
 
@@ -1586,17 +1671,6 @@ while handles.stopgraph == 0
     handles = guidata(handles.BicycleDAQ);
 end
 
-
-
-function NewManueverEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NewManeuverEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
-
-
 % --- Executes on button press in LoadButton.
 function LoadButton_Callback(hObject, eventdata, handles)
 % hObject    handle to LoadButton (see GCBO)
@@ -1604,10 +1678,13 @@ function LoadButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 [filename, path] = uigetfile('*.mat', 'Select a run', 'data/');
-handles = populate_gui(handles, [path filename]);
-plot_data(handles)
-enable_graph_buttons(handles, 'On')
-guidata(hObject, handles)
+if filename==0
+else
+    handles = populate_gui(handles, [path filename]);
+    plot_data(handles)
+    enable_graph_buttons(handles, 'On')
+    guidata(hObject, handles)
+end
 
 
 % --- Executes on button press in SaveButton.
