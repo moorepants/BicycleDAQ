@@ -1188,7 +1188,10 @@ function EnvironmentPopupmenu_Callback(hObject, eventdata, handles)
 
 % Hints: contents = get(hObject,'String') returns EnvironmentPopupmenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from EnvironmentPopupmenu
+contents = get(hObject,'String');
+handles.par.Environment = contents{get(hObject,'Value')};
 
+guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
 function EnvironmentPopupmenu_CreateFcn(hObject, eventdata, handles)
@@ -1256,10 +1259,7 @@ function save_data(handles)
 %   handles to gui objects and user data
 
 % get the run id number and make a string padded with zeros
-RunIDString = num2str(handles.par.RunID);
-for i = 1:5-length(RunIDString)
-    RunIDString = ['0' RunIDString];
-end
+RunIDString = pad_with_zeros(num2str(handles.par.RunID), 5);
 
 save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
      'par', 'VNavData', 'VNavDataText', 'NIData')
@@ -1704,8 +1704,8 @@ function SaveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-RunID = get(handles.RunIDEditText, 'String');
-question = sprintf('Do you really want to overwrite run %s', RunID);
+RunID = pad_with_zeros(num2str(handles.par.RunID), 5);
+question = sprintf('Do you really want to overwrite run %s?', RunID);
 button = questdlg(question, 'Box', 'Yes', 'No', 'No');
 
 switch button
