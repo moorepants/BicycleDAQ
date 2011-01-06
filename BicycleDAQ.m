@@ -976,7 +976,8 @@ axes(handles.Graph)
 ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
 
 if strcmp(ButtonName, 'VnavMomentButton')
-    plot(handles.VNavData)
+    timestep = handles.par.VNavSampleRate^(-1);
+    plot(timestep:timestep:handles.par.Duration, handles.VNavData)
 else
     % create a vector with the analog input numbers for this graph
     datavals = zeros(1, length(handles.(legtype).(ButtonName)));
@@ -984,8 +985,11 @@ else
         input = char(handles.(legtype).(ButtonName)(i));
         datavals(i) = handles.InputPairs.(input);
     end
-    plot(handles.NIData(:, datavals+1))
+    timestep = handles.par.NISampleRate^(-1);
+    plot(timestep:timestep:handles.par.Duration, handles.NIData(:, datavals+1))
+    ylabel('Voltage [V]')
 end
+xlabel('Time [s]')
 legend(handles.(legtype).(ButtonName))
 
 
