@@ -640,6 +640,9 @@ function trigger_callback(obj, events, handles)
 % handles : structure
 %   contains the gui handles and user data
 
+% mark a time stamp
+handles.par.DateTime = fix(clock);
+
 display('Trigger called')
 
 set(handles.RecordButton, 'String', 'Recording')
@@ -662,7 +665,7 @@ set_async(handles.s, '0')
 
 % the trigger is anonymous so it can't return anything so store the data in the
 % ai object
-obj.UserData = handles.VNavDataText;
+obj.UserData = handles;
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
@@ -850,8 +853,8 @@ set(hObject, 'String', 'Processing')
 set(hObject, 'BackgroundColor', 'Yellow')
 
 % get the data from both devices
+handles = get(handles.ai, 'UserData');
 handles.NIData = getdata(handles.ai);
-handles.VNavDataText = get(handles.ai, 'UserData');
 
 stop(handles.ai)
 

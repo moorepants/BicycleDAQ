@@ -27,3 +27,4 @@ TODO
 - Display the data realtime
 - Scaled data graphs
 - Store the date and time of the experiment
+- If the trigger doesn't get pushed then have it break out of record mode
