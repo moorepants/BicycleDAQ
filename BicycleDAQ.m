@@ -357,11 +357,11 @@ function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % update the pop up menus
-Rider = get(handles.RiderPopupmenu, 'String');
-Speed = get(handles.SpeedPopupmenu, 'String');
-Bicycle = get(handles.BicyclePopupmenu, 'String');
-Maneuver = get(handles.ManeuverPopupmenu, 'String');
-Environment = get(handles.EnvironmentPopupmenu, 'String');
+Rider = sort(get(handles.RiderPopupmenu, 'String'));
+Speed = sort(get(handles.SpeedPopupmenu, 'String'));
+Bicycle = sort(get(handles.BicyclePopupmenu, 'String'));
+Maneuver = sort(get(handles.ManeuverPopupmenu, 'String'));
+Environment = sort(get(handles.EnvironmentPopupmenu, 'String'));
 
 % make a copy of the default parameters file
 copyfile('DefaultParameters.mat', 'AppendedParameters.mat')
@@ -781,7 +781,7 @@ function TareButton_Callback(hObject, eventdata, handles)
 
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.RecordButton, 'Enable', 'Off')
-set(handles.DisplayButton, 'Enable', 'Off')
+%set(handles.DisplayButton, 'Enable', 'Off')
 
 set(hObject, 'String', 'Taring')
 
@@ -795,7 +795,7 @@ end
 
 set(handles.LoadButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
-set(handles.DisplayButton, 'Enable', 'On')
+%set(handles.DisplayButton, 'Enable', 'On')
 
 set(hObject, 'String', 'Tare')
 
