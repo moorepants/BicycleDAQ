@@ -1350,7 +1350,8 @@ set(handles.NISampleRateEditText, 'String', num2str(actualrate))
 display_hr()
 display(sprintf('Duration is now set to %d', duration))
 display(sprintf('NI sample is now set to %d hz', actualrate))
-display(sprintf('NI samples per trigger now set to %d', get(handles.ai, 'SamplesPerTrigger')))
+display(sprintf('NI samples per trigger now set to %d', ...
+                get(handles.ai, 'SamplesPerTrigger')))
 display_hr()
 
 function set_trigger(handles)
@@ -1546,7 +1547,7 @@ else
     load('DefaultParameters.mat')
 end
 
-EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
+EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate' ...
              'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
 
 Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
@@ -1581,12 +1582,21 @@ handles.NIData = NIData;
 handles.VNavData = VNavData;
 handles.VNavDataText = VNavDataText;
 
-EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate'
-             'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
-
-
+EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate' 'VNavSampleRate' ...
+             'VNavComPort' 'BaudRate' 'Wait'};
+type = {'Double', 'String', 'Double', 'Double', 'Double', ...
+        'String', 'Double', 'Double'};
 for i = 1:length(EditTexts)
-    set(handles.([EditTexts{i} 'EditText']), 'String', handles.par.(EditTexts{i}))
+    if strcmp(type{i}, 'String')
+        text = handles.par.(EditTexts{i});
+    elseif strcmp(type{i}, 'Double')
+        text = num2str(handles.par.(EditTexts{i}));
+    end
+    if strcmp(EditTexts{i}, 'RunID')
+        text = pad_with_zeros(text, 5);
+    end
+    set(handles.([EditTexts{i} 'EditText']), 'String',...
+        text)
 end
 
 Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
@@ -1594,12 +1604,11 @@ type = {'String' 'Double' 'String' 'String' 'String'};
 
 for i = 1:length(Popupmenus)
     if strcmp(type{i}, 'String')
-        add_to_popupmenu(handles.par.(Popupmenus{i}), ...
-                         Popupmenus{i}, handles)
+        newitem = handles.par.(Popupmenus{i});
     elseif strcmp(type{i}, 'Double')
-        add_to_popupmenu(num2str(handles.par.(Popupmenus{i})), ...
-                         Popupmenus{i}, handles)
+        newitem = num2str(handles.par.(Popupmenus{i}));
     end
+    add_to_popupmenu(newitem, Popupmenus{i}, handles)
 end
 
 
@@ -1677,6 +1686,7 @@ function LoadButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+set(hObject, 'Enable', 'Off')
 [filename, path] = uigetfile('*.mat', 'Select a run', 'data/');
 if filename==0
 else
@@ -1685,6 +1695,7 @@ else
     enable_graph_buttons(handles, 'On')
     guidata(hObject, handles)
 end
+set(hObject, 'Enable', 'On')
 
 
 % --- Executes on button press in SaveButton.
@@ -1704,4 +1715,21 @@ switch button
         % do nothing
     otherwise
         % do nothing
+end
+
+function num = pad_with_zeros(num, digits)
+% Adds zeros to the front of a string needed to produce the number of
+% digits.
+%
+% Parameters
+% ----------
+% num : string
+%   A string representation of a number (i.e. '25')
+% digits : integer
+%   The total number of digits desired.
+% 
+% If digits = 4 and num = '25' then the function returns '0025'.
+
+for i = 1:digits-length(num)
+    num = ['0' num];
 end
