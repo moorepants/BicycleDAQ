@@ -25,5 +25,5 @@ TODO
 ----
 - Add in the LED light
 - Display the data realtime
-- Load previous data files
 - Scaled data graphs
+- Store the date and time of the experiment
