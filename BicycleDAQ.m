@@ -830,6 +830,18 @@ set_baudrate(handles.s, handles.par.BaudRate)
 % set the VectorNavsamplerate
 [handles, success] = set_vnav_sample_rate(handles);
 
+% set the hard/soft iron parameters
+
+% set the filter tuning parameters
+% tune out magnetometers
+response = send_command(handles.s, ...
+             'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E2,1E2,1E2,1E-6,1E-6,1E-6');
+display_hr()
+display(response)
+display_hr()
+
+% set the active filter tuning parameters
+
 % initialize the VectorNav data
 handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
 handles.VNavDataText = cell(handles.par.VNavNumSamples, 1);
