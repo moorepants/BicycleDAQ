@@ -421,6 +421,12 @@ switch get(hObject, 'Value')
 
         set_baudrate(handles.s, handles.par.BaudRate, handles);
 
+        % get Model Number, Hardware Revision, Serial Number, Firmware Version
+        handles.par.ModelNumber = send_command(handles.s, 'VNRRG,01');
+        handles.par.HardwareRevision = send_command(handles.s, 'VNRRG,02');
+        handles.par.SerialNumber = send_command(handles.s, 'VNRRG,03');
+        handles.par.FirmwareVersion = send_command(handles.s, 'VNRRG,04');
+
         % connect to the NI USB-6218
         handles.ai = analoginput('nidaq', 'Dev1');
 
@@ -830,17 +836,54 @@ set_baudrate(handles.s, handles.par.BaudRate)
 % set the VectorNavsamplerate
 [handles, success] = set_vnav_sample_rate(handles);
 
-% set the hard/soft iron parameters
-
 % set the filter tuning parameters
 % tune out magnetometers
-response = send_command(handles.s, ...
-             'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E2,1E2,1E2,1E-6,1E-6,1E-6');
+handles.par.FilterTuningParameters = ...
+    send_command(handles.s, ...
+                 'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E2,1E2,1E2,1E-6,1E-6,1E-6');
 display_hr()
-display(response)
+display(handles.par.FilterTuningParameters)
 display_hr()
 
-% set the active filter tuning parameters
+% get the hard/soft iron parameters
+handles.par.HardSoftIronParameters = ...
+    send_command(handles.s, 'VNRRG,23');
+
+display_hr()
+display(handles.par.HardSoftIronParameters)
+display_hr()
+
+% get the filter active tuning parameters
+handles.par.FilterActiveTuningParameters = ...
+    send_command(handles.s, 'VNRRG,24');
+
+display_hr()
+display(handles.par.FilterActiveTuningParameters)
+display_hr()
+
+% get the accelerometer compensation
+handles.par.AccelerometerCompensation = ...
+    send_command(handles.s, 'VNRRG,25');
+
+display_hr()
+display(handles.par.AccelerometerCompensation)
+display_hr()
+
+% rotate the reference frame from the VectorNav to the typical bicycle model
+handles.par.ReferenceFrameRotation = ...
+    send_command(handles.s, 'VNWRG,26,1,0,0,0,0,-1,0,-1,0');
+
+display_hr()
+display(handles.par.ReferenceFrameRotation)
+display_hr()
+
+% get the accelerometer gain
+handles.par.AccelerometerGain = ...
+    send_command(handles.s, 'VNRRG,28');
+
+display_hr()
+display(handles.par.AccelerometerGain)
+display_hr()
 
 % initialize the VectorNav data
 handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
