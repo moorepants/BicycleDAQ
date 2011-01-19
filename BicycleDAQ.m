@@ -426,6 +426,15 @@ switch get(hObject, 'Value')
         handles.par.HardwareRevision = send_command(handles.s, 'VNRRG,02');
         handles.par.SerialNumber = send_command(handles.s, 'VNRRG,03');
         handles.par.FirmwareVersion = send_command(handles.s, 'VNRRG,04');
+        
+        % rotate the reference frame from the VectorNav to the typical bicycle model
+        handles.par.ReferenceFrameRotation = ...
+            send_command(handles.s, 'VNWRG,26,1,0,0,0,0,-1,0,-1,0');
+
+        display_hr()
+        display(handles.par.ReferenceFrameRotation)
+        display_hr()
+
 
         % connect to the NI USB-6218
         handles.ai = analoginput('nidaq', 'Dev1');
@@ -867,14 +876,6 @@ handles.par.AccelerometerCompensation = ...
 
 display_hr()
 display(handles.par.AccelerometerCompensation)
-display_hr()
-
-% rotate the reference frame from the VectorNav to the typical bicycle model
-handles.par.ReferenceFrameRotation = ...
-    send_command(handles.s, 'VNWRG,26,1,0,0,0,0,-1,0,-1,0');
-
-display_hr()
-display(handles.par.ReferenceFrameRotation)
 display_hr()
 
 % get the accelerometer gain
