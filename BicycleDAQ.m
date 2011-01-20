@@ -429,12 +429,11 @@ switch get(hObject, 'Value')
         
         % rotate the reference frame from the VectorNav to the typical bicycle model
         handles.par.ReferenceFrameRotation = ...
-            send_command(handles.s, 'VNWRG,26,1,0,0,0,0,-1,0,-1,0');
+            send_command(handles.s, 'VNWRG,26,1,0,0,0,0,1,0,-1,0');
 
         display_hr()
         display(handles.par.ReferenceFrameRotation)
         display_hr()
-
 
         % connect to the NI USB-6218
         handles.ai = analoginput('nidaq', 'Dev1');
@@ -845,6 +844,10 @@ set_baudrate(handles.s, handles.par.BaudRate)
 % set the VectorNavsamplerate
 [handles, success] = set_vnav_sample_rate(handles);
 
+% get the filter tuning parameters
+% tune out magnetometers
+handles.par.FilterTuningParameters = send_command(handles.s, 'VNRRG,22');
+             
 % set the filter tuning parameters
 % tune out magnetometers
 handles.par.FilterTuningParameters = ...
