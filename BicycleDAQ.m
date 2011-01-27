@@ -427,9 +427,20 @@ switch get(hObject, 'Value')
         handles.par.SerialNumber = send_command(handles.s, 'VNRRG,03');
         handles.par.FirmwareVersion = send_command(handles.s, 'VNRRG,04');
         
-        % rotate the reference frame from the VectorNav to the typical bicycle model
+        % rotate the reference frame from the VectorNav to the body fixed
+        % frame used in our models
+%         handles.par.ReferenceFrameRotation = ...
+%             send_command(handles.s, 'VNWRG,26,1,0,0,0,0,1,0,-1,0');
+        
+        % rotate the reference frame from the VectorNav to the body fixed
+        % frame that aligns with the benchmark bicycle in the upright
+        % configuration
+        a = 37.943; % rear wheel offset [in]
+        b = 1.8825; % front wheel offset [in]
+        c = 13.521; % steer axis length [in]
+        lambda = atan(c/(a+b)); % steer axis tilt [rad]
         handles.par.ReferenceFrameRotation = ...
-            send_command(handles.s, 'VNWRG,26,1,0,0,0,0,1,0,-1,0');
+            send_command(handles.s, 'VNWRG,26,cos(lambda),-sin(lambda),0,0,0,1,-sin(lambda),-cos(lambda),0');
 
         display_hr()
         display(handles.par.ReferenceFrameRotation)
