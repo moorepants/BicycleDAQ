@@ -439,8 +439,14 @@ switch get(hObject, 'Value')
         b = 1.8825; % front wheel offset [in]
         c = 13.521; % steer axis length [in]
         lambda = atan(c/(a+b)); % steer axis tilt [rad]
+        clam = num2str(cos(lambda));
+        nclam = num2str(-cos(lambda));
+        nslam = num2str(-sin(lambda));
         handles.par.ReferenceFrameRotation = ...
-            send_command(handles.s, 'VNWRG,26,cos(lambda),-sin(lambda),0,0,0,1,-sin(lambda),-cos(lambda),0');
+            send_command(handles.s, ['VNWRG,26,' ...
+                                     clam ',' nslam ',0' ...
+                                     ',0,0,1,' ...
+                                     nslam ',' nclam ',0']);
 
         display_hr()
         display(handles.par.ReferenceFrameRotation)
