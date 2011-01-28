@@ -427,6 +427,14 @@ switch get(hObject, 'Value')
         handles.par.SerialNumber = send_command(handles.s, 'VNRRG,03');
         handles.par.FirmwareVersion = send_command(handles.s, 'VNRRG,04');
         
+        display_hr()
+        display('Details of the VN-100')
+        display(handles.par.ModelNumber)
+        display(handles.par.HardwareRevision)
+        display(handles.par.SerialNumber)
+        display(handles.par.FirmwareVersion)
+        display_hr()
+        
         % rotate the reference frame from the VectorNav to the body fixed
         % frame used in our models
 %         handles.par.ReferenceFrameRotation = ...
@@ -449,6 +457,7 @@ switch get(hObject, 'Value')
                                      nslam ',' nclam ',0']);
 
         display_hr()
+        display('The Reference Frame Rotation matrix is:')
         display(handles.par.ReferenceFrameRotation)
         display_hr()
 
@@ -862,7 +871,6 @@ set_baudrate(handles.s, handles.par.BaudRate)
 [handles, success] = set_vnav_sample_rate(handles);
 
 % get the filter tuning parameters
-% tune out magnetometers
 handles.par.FilterTuningParameters = send_command(handles.s, 'VNRRG,22');
              
 % set the filter tuning parameters
@@ -871,6 +879,7 @@ handles.par.FilterTuningParameters = ...
     send_command(handles.s, ...
                  'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E2,1E2,1E2,1E-6,1E-6,1E-6');
 display_hr()
+display('The filter tuning parameters are set to:')
 display(handles.par.FilterTuningParameters)
 display_hr()
 
@@ -879,6 +888,7 @@ handles.par.HardSoftIronParameters = ...
     send_command(handles.s, 'VNRRG,23');
 
 display_hr()
+display('The hard/soft iron parameters are set to:')
 display(handles.par.HardSoftIronParameters)
 display_hr()
 
@@ -886,7 +896,12 @@ display_hr()
 handles.par.FilterActiveTuningParameters = ...
     send_command(handles.s, 'VNRRG,24');
 
+% set the filter active tuning parameters
+handles.par.FilterActiveTuningParameters = ...
+    send_command(handles.s, 'VNWRG,24,0,0.5,0.1,0.1');
+
 display_hr()
+display('The filter active tuning parameters are set to:')
 display(handles.par.FilterActiveTuningParameters)
 display_hr()
 
@@ -895,6 +910,7 @@ handles.par.AccelerometerCompensation = ...
     send_command(handles.s, 'VNRRG,25');
 
 display_hr()
+display('The accelerometer compensation is:')
 display(handles.par.AccelerometerCompensation)
 display_hr()
 
@@ -903,6 +919,7 @@ handles.par.AccelerometerGain = ...
     send_command(handles.s, 'VNRRG,28');
 
 display_hr()
+display('The accelerometer gain is:')
 display(handles.par.AccelerometerGain)
 display_hr()
 
