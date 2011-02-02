@@ -1501,7 +1501,8 @@ if find(BaudRates==baudrate)
     display_hr()
     display('VNav baud rate is now set to:')
     display(sprintf(response))
-    display(sprintf('%d bytes in input buffer after setting the baud rate', get(s, 'BytesAvailable')))
+    display(sprintf('%d bytes in input buffer after setting the baud rate', ...
+                    get(s, 'BytesAvailable')))
     display_hr()
 else
     display(sprintf('%d is an invalid baud rate\n', baudrate))
@@ -1524,7 +1525,8 @@ pause(0.1)
 flush_buffer(s)
 display_hr()
 display('The VectorNav async mode is off')
-display(sprintf('%d bytes in input buffer after turning async off and flushing', get(s, 'BytesAvailable')))
+display(sprintf('%d bytes in input buffer after turning async off and flushing', ...
+                get(s, 'BytesAvailable')))
 display_hr()
 
 function handles = store_current_parameters(handles)
