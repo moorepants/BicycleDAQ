@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 27-Dec-2010 19:38:02
+% Last Modified by GUIDE v2.5 01-Feb-2011 15:02:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -176,6 +176,17 @@ handles.ScaledLegends = struct('PotAngleButton', {{'Steer Angle'
                                'VoltageMagneticButton', {{'X'
                                                           'Y'
                                                           'Z'}});
+handles.UnfilteredRawLegends = handles.RawLegends;
+handles.UnfilteredRawLegends.VnavMomentButton = {'Mag X'
+                                                 'Mag Y'
+                                                 'Mag Z'
+                                                 'Acceleration X'
+                                                 'Acceleration Y'
+                                                 'Acceleration Z'
+                                                 'Angular Rate X'
+                                                 'Angular Rate Y'
+                                                 'Angular Rate Z'
+                                                 'Temperature'};
 
 % Update handles structure
 guidata(hObject, handles);
@@ -202,7 +213,7 @@ function NotesEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of NotesEditText as text
 %        str2double(get(hObject,'String')) returns contents of NotesEditText as a double
 
-handles.par.Notes = get(hObject, 'String')
+handles.par.Notes = get(hObject, 'String');
 
 guidata(hObject, handles)
 
@@ -689,7 +700,7 @@ set(handles.RecordButton, 'String', 'Recording')
 set(handles.RecordButton, 'BackgroundColor', 'Red')
 
 % set the async type and turn it on
-set_async(handles.s, '14') % 14 is YMR
+set_async(handles.s, num2str(handles.par.ADOT))
 
 % record data
 for i = 1:handles.par.Duration
@@ -898,7 +909,7 @@ handles.par.FilterActiveTuningParameters = ...
 
 % set the filter active tuning parameters
 handles.par.FilterActiveTuningParameters = ...
-    send_command(handles.s, 'VNWRG,24,0,0.5,0.1,0.1');
+    send_command(handles.s, 'VNWRG,24,0,1,0,0');
 
 display_hr()
 display('The filter active tuning parameters are set to:')
@@ -922,9 +933,15 @@ display_hr()
 display('The accelerometer gain is:')
 display(handles.par.AccelerometerGain)
 display_hr()
-
+handles.par
 % initialize the VectorNav data
-handles.VNavData = zeros(handles.par.VNavNumSamples, 12); % YMR
+if handles.par.ADOT == 14
+    legends = 'RawLegends';
+elseif handles.par.ADOT == 253
+    legends = 'UnfilteredRawLegends';
+end
+handles.VNavData = zeros(handles.par.VNavNumSamples, ...
+                         length(handles.(legends).VnavMomentButton));
 handles.VNavDataText = cell(handles.par.VNavNumSamples, 1);
 
 % set the sample rate for the NI daq
@@ -1060,7 +1077,11 @@ function plot_data(handles)
 % find out if the graph is raw or scaled data
 switch get(handles.ScaledRawButton, 'Value')
     case 0.0
-        legtype = 'RawLegends';
+        if handles.par.ADOT == 14
+            legtype = 'RawLegends';
+        elseif handles.par.ADOT == 253
+            legtype = 'UnfilteredRawLegends';
+        end
     case 1.0
         legtype = 'ScaledLegends';
 end
@@ -1568,6 +1589,13 @@ end
 par.VNavNumSamples = par.Duration*par.VNavSampleRate;
 par.NINumSamples = par.Duration*par.NISampleRate;
 
+% store the ADOT
+if get(handles.UnfilteredCheckbox, 'Value')
+    par.ADOT = 253;
+else
+    par.ADOT = 14;
+end
+
 % store the parameters in handles so it can be returned
 handles.par = par;
 
@@ -1711,6 +1739,12 @@ for i = 1:length(Popupmenus)
     add_to_popupmenu(newitem, Popupmenus{i}, handles)
 end
 
+if handles.par.ADOT == 14
+    set(handles.UnfilteredCheckbox, 'Value', 0)
+elseif handles.par.ADOT == 253
+    set(handles.UnfilteredCheckbox, 'Value', 1)
+end
+
 
 % --- Executes on button press in DisplayButton.
 function DisplayButton_Callback(hObject, eventdata, handles)
@@ -1833,3 +1867,13 @@ function num = pad_with_zeros(num, digits)
 for i = 1:digits-length(num)
     num = ['0' num];
 end
+
+
+% --- Executes on button press in UnfilteredCheckbox.
+function UnfilteredCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to UnfilteredCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of UnfilteredCheckbox
+    
