@@ -888,7 +888,7 @@ handles.par.FilterTuningParameters = send_command(handles.s, 'VNRRG,22');
 % tune out magnetometers
 handles.par.FilterTuningParameters = ...
     send_command(handles.s, ...
-                 'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E2,1E2,1E2,1E-6,1E-6,1E-6');
+                 'VNWRG,22,1E-9,1E-9,1E-9,1E-9,1E-1,1E-1,1E1,1E-5,1E-5,1E-5');
 display_hr()
 display('The filter tuning parameters are set to:')
 display(handles.par.FilterTuningParameters)
@@ -908,8 +908,8 @@ handles.par.FilterActiveTuningParameters = ...
     send_command(handles.s, 'VNRRG,24');
 
 % set the filter active tuning parameters
-handles.par.FilterActiveTuningParameters = ...
-    send_command(handles.s, 'VNWRG,24,0,1,0,0');
+% handles.par.FilterActiveTuningParameters = ...
+%     send_command(handles.s, 'VNWRG,24,0,1,0,0');
 
 display_hr()
 display('The filter active tuning parameters are set to:')
