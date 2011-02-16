@@ -382,6 +382,8 @@ save('AppendedParameters.mat', ...
     'Rider', 'Speed', 'Bicycle', 'Maneuver', 'Environment', ...
     '-append')
 
+build_run_list()
+
 % delete the gui
 delete(hObject);
 
@@ -1878,4 +1880,61 @@ function UnfilteredCheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of UnfilteredCheckbox
+
+function build_run_list()
+% Checks the directory for the database csv file and creates or updates it
+% with the latest runs.
+
+directory = 'data';
+filename = 'runlist.txt';
+
+dirinfo = dir(directory) % get a list of files in the directory
+filenames = dirinfo.name
+
+dirinfo2 = what(directory); % get a list of the mat files in the directory
+matfiles = dirinfo2.mat;
+
+latestfile = filenames(end);
+
+% if the file exists
+if exist([pwd filesep directory filesep filename], 'file')
+    display('the file exists')
+else
+    display('the file does not exist')
+    fid = fopen([directory filesep filename], 'w');
+    % write the header
+    load([directory filesep matfiles{end}])
+    colnames = fieldnames(par);
+    for i=1:length(colnames)
+        if i==1
+            header = colnames{i};
+        else
+            header = [header ';' colnames{i}];
+        end
+    end
+    fprintf(fid, '%s\r', header);
+    clear NIData VNavData VNavDataText par
+    % write the data to the file
+    for i=1:length(matfiles)
+        load([directory filesep matfiles{i}])
+        for j=1:length(colnames)
+            if j==1
+                try
+                    line = num2str(par.(colnames{j}));
+                catch
+                    line = 'NA';
+                end
+            else
+                try
+                    line = [line ';' num2str(par.(colnames{j}))];
+                catch
+                    line = [line ';NA'];
+                end
+            end
+        end
+        fprintf(fid, '%s\r', line);
+        clear line
+    end
+    fclose(fid)
+end
     
