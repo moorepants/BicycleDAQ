@@ -426,7 +426,7 @@ switch get(hObject, 'Value')
 
         % determine the VNav baud rate and set the serial port baud rate to
         % match
-        CurrentBaudRate = determine_vnav_baud_rate(handles.s);
+        CurrentBaudRate = determine_vnav_baud_rate(handles.s)
         set(handles.s, 'BaudRate', CurrentBaudRate)
 
         % turn the async off on the VectorNav
@@ -644,6 +644,7 @@ handles = store_current_parameters(handles);
 
 guidata(hObject, handles)
 
+
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NISampleRateEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -656,6 +657,7 @@ handles = store_current_parameters(handles);
 handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
+
 
 function DurationEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to DurationEditText (see GCBO)
@@ -670,6 +672,7 @@ handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
 
+
 function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to VNavComPortEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -681,6 +684,7 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 handles.par.VNavComPort = get(hObject, 'String');
 
 guidata(hObject, handles)
+
 
 function trigger_callback(obj, events, handles)
 % Records data from the VectorNav when the NI DAQ is triggered.
@@ -721,6 +725,7 @@ set_async(handles.s, '0')
 obj.UserData = handles;
 display('VN data done')
 
+
 function baudrate = determine_vnav_baud_rate(s)
 % Returns the baudrate that the VectorNav is set to or NaN if it can't be
 % determined.
@@ -752,7 +757,7 @@ for i = 1:length(baudrates)
     display_hr()
     % see if it will return the version number
     response = send_command(s, 'VNRRG,01');
-    if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47\r\n'))
+    if strcmp(response, sprintf('$VNRRG,01,VN-100_v4*47'))
         % then the baudrate is correct and we should save it
         baudrate = baudrates(i);
         display(sprintf('The VNav baud rate is %d', baudrate))
@@ -787,7 +792,9 @@ fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 % wait a little for the response
 pause(0.1)
 % get the response
-response = fgets(s);
+% the response from the VectorNav always ends in \r\n
+response = fgetl(s); % fgetl removes the \n 
+response = response(1:end-1); % this removes the \r
 
 
 function flush_buffer(s)
@@ -801,6 +808,7 @@ while get(s, 'BytesAvailable') > 0
     flushinput(s)
     display('Flushed the input buffer')
 end
+
 
 function close_port(comport)
 % Checks to see if comport is already open, if so it closes it.
@@ -840,7 +848,7 @@ set(hObject, 'String', 'Taring')
 
 response = send_command(handles.s, 'VNTAR');
 
-if strcmp(response, sprintf('$VNTAR*5F\r\n'))
+if strcmp(response, sprintf('$VNTAR*5F'))
     display('Device was tared')
 else
     display('Device did not tare')
@@ -1888,8 +1896,8 @@ function build_run_list()
 directory = 'data';
 filename = 'runlist.txt';
 
-dirinfo = dir(directory) % get a list of files in the directory
-filenames = dirinfo.name
+dirinfo = dir(directory); % get a list of files in the directory
+filenames = dirinfo.name;
 
 dirinfo2 = what(directory); % get a list of the mat files in the directory
 matfiles = dirinfo2.mat;
@@ -1912,7 +1920,7 @@ else
             header = [header ';' colnames{i}];
         end
     end
-    fprintf(fid, '%s\r', header);
+    fprintf(fid, '%s\n', header);
     clear NIData VNavData VNavDataText par
     % write the data to the file
     for i=1:length(matfiles)
@@ -1932,9 +1940,9 @@ else
                 end
             end
         end
-        fprintf(fid, '%s\r', line);
+        fprintf(fid, '%s\n', line);
         clear line
     end
-    fclose(fid)
+    fclose(fid);
 end
     
