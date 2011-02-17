@@ -793,8 +793,8 @@ fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
 pause(0.1)
 % get the response
 % the response from the VectorNav always ends in \r\n
-response = fgetl(s); % fgetl removes the \n 
-response = response(1:end-1); % this removes the \r
+response = fgetl(s); % fgetl removes the \n
+response = sscanf(response, '%s\r');
 
 
 function flush_buffer(s)
