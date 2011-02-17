@@ -1924,7 +1924,9 @@ else
     clear NIData VNavData VNavDataText par
     % write the data to the file
     for i=1:length(matfiles)
+        % load the mat file
         load([directory filesep matfiles{i}])
+        % for each column get the data and add to the line
         for j=1:length(colnames)
             if j==1
                 try
