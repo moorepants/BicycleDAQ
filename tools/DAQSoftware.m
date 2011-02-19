@@ -14,7 +14,7 @@ ActualRate = get(ai,'SampleRate');
 set(ai,'SamplesPerTrigger',duration*ActualRate);
 set(ai,'TriggerType','Manual');
 set(ai,'InputType','SingleEnded');
-channels = [0 1 5 6 7 8 9 21];
+channels = [23 24];
 chan = addchannel(ai, channels);
 get(ai)
 ochan = addchannel(ao,0);

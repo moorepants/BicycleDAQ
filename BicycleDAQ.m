@@ -1103,23 +1103,34 @@ axes(handles.Graph)
 
 % see what graphs buttons are pressed
 ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
+  
+% grab the legend titles for this button and legend type
+legendlist = handles.(legtype).(ButtonName);
 
 if strcmp(ButtonName, 'VnavMomentButton')
     timestep = handles.par.VNavSampleRate^(-1);
     plot(timestep:timestep:handles.par.Duration, handles.VNavData)
 else
     % create a vector with the analog input numbers for this graph
-    datavals = zeros(1, length(handles.(legtype).(ButtonName)));
-    for i = 1:length(handles.(legtype).(ButtonName))
-        input = char(handles.(legtype).(ButtonName)(i));
-        datavals(i) = handles.InputPairs.(input);
+    datavals = zeros(1, length(legendlist));
+    for i = 1:length(legendlist)
+        % a vector with channel numbers that correspond to the legend name
+        datavals(i) = handles.InputPairs.(legendlist{i});
     end
+    % this is a hack because early runs didn't have the roll pot signal, it
+    % adds a data line with NaNs to NIData
+    [m, n] = size(handles.NIData);
+    if datavals(end)+1 > n
+        handles.NIData(:, n+1) = NaN*ones(m, 1);
+    end
+    % plot the data
     timestep = handles.par.NISampleRate^(-1);
-    plot(timestep:timestep:handles.par.Duration, handles.NIData(:, datavals+1))
+    plot(timestep:timestep:handles.par.Duration, ...
+         handles.NIData(:, datavals+1))
     ylabel('Voltage [V]')
 end
 xlabel('Time [s]')
-legend(handles.(legtype).(ButtonName))
+legend(legendlist)
 
 
 function set_run_id(handles)
@@ -1908,7 +1919,7 @@ latestfile = filenames(end);
 
 % if the file exists
 if exist([pwd filesep directory filesep filename], 'file')
-    display('the file exists')
+    display('Runlist.txt exists so just append.')
 else
     display('the file does not exist')
     fid = fopen([directory filesep filename], 'w');
