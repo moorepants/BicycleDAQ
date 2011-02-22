@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 01-Feb-2011 15:02:10
+% Last Modified by GUIDE v2.5 22-Feb-2011 13:55:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1917,23 +1917,65 @@ function build_run_list()
 directory = 'data';
 filename = 'runlist.txt';
 
-dirinfo = dir(directory); % get a list of files in the directory
+% get a list of files in the directory
+dirinfo = dir(directory);
 filenames = dirinfo.name;
 
-dirinfo2 = what(directory); % get a list of the mat files in the directory
+% get a list of the mat files in the directory
+dirinfo2 = what(directory);
 matfiles = dirinfo2.mat;
 
-latestfile = filenames(end);
+% get the column names from the newest file
+try
+    load([directory filesep matfiles{end}])
+    colnames = fieldnames(par);
+    clear NIData VNavData VNavDataText par
+catch
+    dispaly(['There are no files in the directory.' ...
+             'Save at least one run, then close'])
+end
 
 % if the file exists
 if exist([pwd filesep directory filesep filename], 'file')
     display('Runlist.txt exists so just append.')
+    % determine the run number of the last line in the file
+    lastline = get_last_line([directory filesep filename]);
+    splitline = regexp(lastline, ';', 'split');
+    lastlineid = str2num(splitline{6});
+    % get the last mat file in the directory
+    lastmatfile = str2num(matfiles{end}(1:end-4));
+    % make a list of files to append
+    filestoappend = lastlineid+1:lastmatfile;
+    % append the data to the file
+    fid = fopen([directory filesep filename], 'a');
+    for i=1:length(filestoappend)
+        % load the mat file
+        load([directory filesep matfiles{filestoappend(i)+1}])
+        % for each column get the data and add to the line
+        for j=1:length(colnames)
+            if j==1
+                try
+                    line = num2str(par.(colnames{j}));
+                catch
+                    line = 'NA';
+                end
+            else
+                try
+                    line = [line ';' num2str(par.(colnames{j}))];
+                catch
+                    line = [line ';NA'];
+                end
+            end
+        end
+        fprintf(fid, '%s\n', line);
+        clear line
+    end
+    fclose(fid);
+
 else
     display('the file does not exist')
     fid = fopen([directory filesep filename], 'w');
     % write the header
-    load([directory filesep matfiles{end}])
-    colnames = fieldnames(par);
     for i=1:length(colnames)
         if i==1
             header = colnames{i};
@@ -1942,7 +1984,6 @@ else
         end
     end
     fprintf(fid, '%s\n', header);
-    clear NIData VNavData VNavDataText par
     % write the data to the file
     for i=1:length(matfiles)
         % load the mat file
@@ -1969,3 +2010,18 @@ else
     fclose(fid);
 end
     
+function lastLine = get_last_line(pathtofile)
+% Returns the last line of a text file. Taken from
+% http://stackoverflow.com/questions/2659375/matlab-command-to-access-the-last-line-of-each-file
+fid = fopen(pathtofile,'r');     %# Open the file as a binary
+lastLine = '';                   %# Initialize to empty
+offset = 1;                      %# Offset from the end of file
+fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
+newChar = fread(fid,1,'*char');  %# Read one character
+while (~strcmp(newChar,char(10))) || (offset == 1)
+  lastLine = [newChar lastLine];   %# Add the character to a string
+  offset = offset+1;
+  fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
+  newChar = fread(fid,1,'*char');  %# Read one character
+end
+fclose(fid);  %# Close the file
