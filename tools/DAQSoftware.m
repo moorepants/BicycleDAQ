@@ -14,7 +14,7 @@ ActualRate = get(ai,'SampleRate');
 set(ai,'SamplesPerTrigger',duration*ActualRate);
 set(ai,'TriggerType','Manual');
 set(ai,'InputType','SingleEnded');
-channels = [23 24];
+channels = [1 24];
 chan = addchannel(ai, channels);
 get(ai)
 ochan = addchannel(ao,0);
@@ -33,7 +33,7 @@ data = zeros(numsamps, length(channels));
 % make the figure
 figure(1)
 lines = plot(data); % plot the raw data
-ylim([-10 10])
+ylim([0 5])
 ylabel('Voltage')
 labels = {''};
 for i = 2:length(channels)
