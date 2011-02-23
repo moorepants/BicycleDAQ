@@ -108,76 +108,78 @@ handles.InputPairs = struct('PushButton',          0, ...
 % graph legends
 % the struct command doesn't seem to like values of different length so I
 % had to put all the cells in double brackets
-handles.RawLegends = struct('PotAngleButton', {{'SteerPotentiometer'
-                                                'HipPotentiometer'
-                                                'LeanPotentiometer'
-                                                'TwistPotentiometer'
-                                                'RollPotentiometer'}}, ...
-                            'RateAccelRateButton', {{'SteerRateGyro'
-                                                     'WheelSpeedMotor'
-                                                     'FrameAccelX'
-                                                     'FrameAccelY'
-                                                     'FrameAccelZ'}}, ...
-                            'SeatpostAccelerationButton', {{'SeatpostBridge1'
-                                                            'SeatpostBridge2'
-                                                            'SeatpostBridge3'
-                                                            'SeatpostBridge4'
-                                                            'SeatpostBridge5'
-                                                            'SeatpostBridge6'}}, ...
-                            'FeetForceButton', {{'SteerTorqueSensor'
-                                                 'RightFootBridge1'
-                                                 'RightFootBridge2'
-                                                 'LeftFootBridge1'
-                                                 'LeftFootBridge2'
-                                                 'PullForceBridge'}}, ...
-                            'VnavMomentButton', {{'Angular Rotation Z'
-                                                  'Angular Rotation Y'
-                                                  'Angular Rotation X'
-                                                  'Mag X'
-                                                  'Mag Y'
-                                                  'Mag Z'
-                                                  'Acceleration X'
-                                                  'Acceleration Y'
-                                                  'Acceleration Z'
-                                                  'Angular Rate X'
-                                                  'Angular Rate Y'
-                                                  'Angular Rate Z'}}, ...
-                             'VoltageMagneticButton', {{'PushButton'
-                                                        'ThreeVolts'
-                                                        'FiveVolts'}});
-handles.ScaledLegends = struct('PotAngleButton', {{'Steer Angle'
-                                                   'Roll Angle'
-                                                   'Yaw Angle'
-                                                   'Pitch Angle'
-                                                   'Hip Angle'
-                                                   'Lean Angle'
-                                                   'Twist Angle'}}, ...
-                               'RateAccelRateButton', {{'Steer Rate'
-                                                        'Roll Rate'
-                                                        'Yaw Rate'
-                                                        'Pitch Rate'
-                                                        'Wheel Rate'}}, ...
-                               'SeatpostAccelerationButton', {{'VNav X'
-                                                               'VNav Y'
-                                                               'VNav Z'
-                                                               'Frame X'
-                                                               'Frame Y'
-                                                               'Frame Z'}}, ...
-                               'FeetForceButton', {{'Seat Fx'
-                                                    'Seat Fy'
-                                                    'Seat Fz'
-                                                    'Right Foot'
-                                                    'Left Foot'
-                                                    'Pull Force'}}, ...
-                               'VnavMomentButton', {{'Steer Torque'
-                                                     'Seat Mx'
-                                                     'Seat My'
-                                                     'Seat Mz'
-                                                     'Right Foot'
-                                                     'Left Foot'}}, ...
-                               'VoltageMagneticButton', {{'X'
-                                                          'Y'
-                                                          'Z'}});
+handles.RawLegends = ...
+    struct('PotAngleButton', {{'SteerPotentiometer'
+                               'HipPotentiometer'
+                               'LeanPotentiometer'
+                               'TwistPotentiometer'
+                               'RollPotentiometer'}}, ...
+           'RateAccelRateButton', {{'SteerRateGyro'
+                                    'WheelSpeedMotor'
+                                    'FrameAccelX'
+                                    'FrameAccelY'
+                                    'FrameAccelZ'}}, ...
+           'SeatpostAccelerationButton', {{'SeatpostBridge1'
+                                           'SeatpostBridge2'
+                                           'SeatpostBridge3'
+                                           'SeatpostBridge4'
+                                           'SeatpostBridge5'
+                                           'SeatpostBridge6'}}, ...
+           'FeetForceButton', {{'SteerTorqueSensor'
+                                'RightFootBridge1'
+                                'RightFootBridge2'
+                                'LeftFootBridge1'
+                                'LeftFootBridge2'
+                                'PullForceBridge'}}, ...
+           'VnavMomentButton', {{'Angular Rotation Z'
+                                 'Angular Rotation Y'
+                                 'Angular Rotation X'
+                                 'Mag X'
+                                 'Mag Y'
+                                 'Mag Z'
+                                 'Acceleration X'
+                                 'Acceleration Y'
+                                 'Acceleration Z'
+                                 'Angular Rate X'
+                                 'Angular Rate Y'
+                                 'Angular Rate Z'}}, ...
+           'VoltageMagneticButton', {{'PushButton'
+                                      'ThreeVolts'
+                                      'FiveVolts'}});
+handles.ScaledLegends = ...
+    struct('PotAngleButton', {{'Steer Angle'
+                               'Roll Angle'
+                               'Yaw Angle'
+                               'Pitch Angle'
+                               'Hip Angle'
+                               'Lean Angle'
+                               'Twist Angle'}}, ...
+           'RateAccelRateButton', {{'Steer Rate'
+                                    'Roll Rate'
+                                    'Yaw Rate'
+                                    'Pitch Rate'
+                                    'Wheel Rate'}}, ...
+           'SeatpostAccelerationButton', {{'VNav X'
+                                           'VNav Y'
+                                           'VNav Z'
+                                           'Frame X'
+                                           'Frame Y'
+                                           'Frame Z'}}, ...
+           'FeetForceButton', {{'Seat Fx'
+                                'Seat Fy'
+                                'Seat Fz'
+                                'Right Foot'
+                                'Left Foot'
+                                'Pull Force'}}, ...
+           'VnavMomentButton', {{'Steer Torque'
+                                 'Seat Mx'
+                                 'Seat My'
+                                 'Seat Mz'
+                                 'Right Foot'
+                                 'Left Foot'}}, ...
+           'VoltageMagneticButton', {{'X'
+                                      'Y'
+                                      'Z'}});
 handles.UnfilteredRawLegends = handles.RawLegends;
 handles.UnfilteredRawLegends.VnavMomentButton = {'Mag X'
                                                  'Mag Y'
@@ -491,9 +493,10 @@ switch get(hObject, 'Value')
         
         % set all the input ranges
         set(handles.chan, 'InputRange', [-5 5])
-        % set the wheel speed and steer torque
+        % set the wheel speed, pull force, and steer torque
         set(handles.chan(7), 'InputRange', [-10 10])
         set(handles.chan(11), 'InputRange', [-10 10])
+        set(handles.chan(22), 'InputRange', [-10 10])
         
         % display the daq's attributes
         get(handles.ai)

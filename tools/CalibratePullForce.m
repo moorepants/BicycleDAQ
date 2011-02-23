@@ -12,7 +12,7 @@ set(ai,'SampleRate',200)
 ActualRate = get(ai,'SampleRate');
 set(ai,'SamplesPerTrigger',duration*ActualRate);
 set(ai,'InputType','SingleEnded');
-chan = addchannel(ai,[21]);
+chan = addchannel(ai, [21]);
 
 % how many trials will you do?
 numTrials = str2num(input('How many trials?\n', 's'));
