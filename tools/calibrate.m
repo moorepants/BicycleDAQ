@@ -98,6 +98,12 @@ for i = 1:length(y)
     stop(ai)
     display('Data collected.')
 end
+% sort the data in case it is not in order
+[y, indice] = sort(y);
+size(x)
+pause
+x = x(:, indice);
+v = v(:, indice);
 % basic regression fit for the mean voltage and the applied weight
 avgX = mean(x, 1)';
 coef = polyfit(avgX, y, 1);
