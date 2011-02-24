@@ -39,7 +39,7 @@ switch choice
         channels = [23 24];
     case 3
         % 21 is the pull force bridge
-        channels = [21];
+        channels = 21;
 end
 
 display(choices{choice})
@@ -51,21 +51,31 @@ accuracy = ...
 numTrials = str2num(input('How many trials?\n', 's'));
 % initialize x and y vectors
 x = zeros(duration*ActualRate, numTrials); % voltage measurement
-y = zeros(numTrials, 1);
+y = zeros(numTrials, 1); % manual reading
 v = zeros(duration*ActualRate, numTrials); % supply voltage
 
 for i = 1:length(y)
-    if choice == 3
-        % ask the user to enter the number of pounds added
-        yAdded = ...
-            str2num(input('How many pounds have you added?\n', 's'));
-        if i == 1
-            y(i) = yAdded;
-        else
-            y(i) = y(i-1) + yAdded;
-        end
-    else
-        y(i) = str2num(input('What is the manual reading?\n', 's'));
+    switch choice
+        case 1
+            y(i) = ...
+                str2num(input('What is the protractor reading?\n', 's'));
+        case 2
+            reading = ...
+                str2num(input('What is the digital level reading?\n', 's'));
+            if sign(reading) == -1
+                y(i) = -(90+reading);
+            else
+                y(i) = 90-reading;
+            end
+        case 3
+            % ask the user to enter the number of pounds added
+            yAdded = ...
+                str2num(input('How many pounds have you added?\n', 's'));
+            if i == 1
+                y(i) = yAdded;
+            else
+                y(i) = y(i-1) + yAdded;
+            end        
     end
     display('Collecting data, please wait.')
     % collect voltage data
