@@ -12,8 +12,7 @@ close all
 %  nisteer = normalized ni data
 %  vnsteer = normalized vectornav data
 
-
-load('bumptests/test1.mat')
+load('../otherdata/test1.mat')
 nisteer = nidata(:, 5)*76;
 vnsteer = -vndata(:, 8);
 
