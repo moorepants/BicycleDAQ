@@ -1936,12 +1936,12 @@ filename = 'runlist.txt';
 
 % get a list of the mat files in the directory
 dirinfo = what(directory);
-matfiles = dirinfo.mat;
+matfiles = sort(dirinfo.mat);
 
 % get the column names from the newest file
 try
     load([directory filesep matfiles{end}])
-    colnames = fieldnames(par);
+    colnames = sort(fieldnames(par));
     clear NIData VNavData VNavDataText par
 catch
     display(['There are no files in the directory.' ...
@@ -1951,10 +1951,16 @@ end
 % if the file exists
 if exist([pwd filesep directory filesep filename], 'file')
     display('Runlist.txt exists so just append.')
+    % find the column number for RunID
+    fid = fopen([pwd filesep directory filesep filename], 'r');
+    firstline = fgetl(fid);
+    fclose(fid);
+    firstlinesplit = regexp(firstline, ';', 'split');
+    [tf, index] = ismember('RunID', firstlinesplit);
     % determine the run number of the last line in the file
     lastline = get_last_line([directory filesep filename]);
     splitline = regexp(lastline, ';', 'split');
-    lastlineid = str2num(splitline{7});
+    lastlineid = str2num(splitline{index});
     % get the last mat file in the directory
     lastmatfile = str2num(matfiles{end}(1:end-4));
     % make a list of files to append
@@ -2000,6 +2006,7 @@ else
     fprintf(fid, '%s\n', header);
     % write the data to the file
     for i=1:length(matfiles)
+        display(sprintf('Adding %s', matfiles{i}))
         % load the mat file
         load([directory filesep matfiles{i}])
         % for each column get the data and add to the line
