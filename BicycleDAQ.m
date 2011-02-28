@@ -1420,7 +1420,7 @@ if handles.par.ADOT == 14
 elseif handles.par.ADOT == 253
     handles.VNavCols = handles.UnfilteredRawLegends.VnavMomentButton;
 else
-    handles.VNavCols = 'eeeeeeeeeeeh';
+    handles.VNavCols = 'eeeeeeeeeeeh, you have no ADOT';
 end
 
 save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
@@ -1934,13 +1934,9 @@ function build_run_list()
 directory = 'data';
 filename = 'runlist.txt';
 
-% get a list of files in the directory
-dirinfo = dir(directory);
-filenames = dirinfo.name;
-
 % get a list of the mat files in the directory
-dirinfo2 = what(directory);
-matfiles = dirinfo2.mat;
+dirinfo = what(directory);
+matfiles = dirinfo.mat;
 
 % get the column names from the newest file
 try
@@ -1948,7 +1944,7 @@ try
     colnames = fieldnames(par);
     clear NIData VNavData VNavDataText par
 catch
-    dispaly(['There are no files in the directory.' ...
+    display(['There are no files in the directory.' ...
              'Save at least one run, then close'])
 end
 
@@ -1958,7 +1954,7 @@ if exist([pwd filesep directory filesep filename], 'file')
     % determine the run number of the last line in the file
     lastline = get_last_line([directory filesep filename]);
     splitline = regexp(lastline, ';', 'split');
-    lastlineid = str2num(splitline{6});
+    lastlineid = str2num(splitline{7});
     % get the last mat file in the directory
     lastmatfile = str2num(matfiles{end}(1:end-4));
     % make a list of files to append
@@ -1966,6 +1962,7 @@ if exist([pwd filesep directory filesep filename], 'file')
     % append the data to the file
     fid = fopen([directory filesep filename], 'a');
     for i=1:length(filestoappend)
+        display(sprintf('Adding %s', matfiles{filestoappend(i)+1}))
         % load the mat file
         load([directory filesep matfiles{filestoappend(i)+1}])
         % for each column get the data and add to the line
