@@ -30,3 +30,6 @@ TODO
 - Display the data realtime
 - Scaled data graphs
 - If the trigger doesn't get pushed then have it break out of record mode
+- Needs a cancel record function/button
+- If you press connect, then record, then disconnect and try to close the gui, matlab crashes
+- The handles.par parameters saved in the ConnectCallback are not being saved to file.

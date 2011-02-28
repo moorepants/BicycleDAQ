@@ -955,8 +955,7 @@ handles.par.AccelerometerGain = ...
 display_hr()
 display('The accelerometer gain is:')
 display(handles.par.AccelerometerGain)
-display_hr()
-handles.par
+
 % initialize the VectorNav data
 if handles.par.ADOT == 14
     legends = 'RawLegends';
@@ -1578,7 +1577,13 @@ function handles = store_current_parameters(handles)
 %   handles to gui objects and user data
 
 % initialize the parameter structure
-par = struct();
+if isfield(handles, 'par')
+    display('found it')
+    par = handles.par;
+else
+    display('did not find it')
+    par = struct();
+end
 
 % a list of the gui menus and what type of data they are
 menus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
