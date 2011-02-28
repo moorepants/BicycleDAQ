@@ -33,3 +33,5 @@ TODO
 - Needs a cancel record function/button
 - If you press connect, then record, then disconnect and try to close the gui, matlab crashes
 - The handles.par parameters saved in the ConnectCallback are not being saved to file.
+- save the time stamp to the runlist.txt in a better way
+- When you load a data run, edit it and save, the runlist.txt doesn't get updated.

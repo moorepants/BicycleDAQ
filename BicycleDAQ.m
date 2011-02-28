@@ -711,7 +711,7 @@ function trigger_callback(obj, events, handles)
 %   contains the gui handles and user data
 
 % mark a time stamp
-handles.par.DateTime = fix(clock);
+handles.par.DateTime = datestr(clock);
 
 display('Trigger called')
 
@@ -1415,8 +1415,17 @@ function save_data(handles)
 % get the run id number and make a string padded with zeros
 RunIDString = pad_with_zeros(num2str(handles.par.RunID), 5);
 
+if handles.par.ADOT == 14
+    handles.VNavCols = handles.RawLegends.VnavMomentButton;
+elseif handles.par.ADOT == 253
+    handles.VNavCols = handles.UnfilteredRawLegends.VnavMomentButton;
+else
+    handles.VNavCols = 'eeeeeeeeeeeh';
+end
+
 save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
-     'par', 'VNavData', 'VNavDataText', 'NIData')
+     'par', 'VNavData', 'VNavDataText', 'NIData', 'InputPairs', ...
+     'VNavCols')
 
 
 function [handles, success] = set_vnav_sample_rate(handles)
