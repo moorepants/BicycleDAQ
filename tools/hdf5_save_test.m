@@ -1,7 +1,7 @@
 function hdf5_save_test(runid)
 addpath('hdf5matlab')
 
-todata = ['..' filesep 'data']
+todata = ['..' filesep 'data'];
 
 load([todata filesep runid '.mat'])
 

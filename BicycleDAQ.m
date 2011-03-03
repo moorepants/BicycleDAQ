@@ -443,7 +443,7 @@ switch get(hObject, 'Value')
         handles.par.HardwareRevision = send_command(handles.s, 'VNRRG,02');
         handles.par.SerialNumber = send_command(handles.s, 'VNRRG,03');
         handles.par.FirmwareVersion = send_command(handles.s, 'VNRRG,04');
-        
+
         display_hr()
         display('Details of the VN-100')
         display(handles.par.ModelNumber)
@@ -451,12 +451,12 @@ switch get(hObject, 'Value')
         display(handles.par.SerialNumber)
         display(handles.par.FirmwareVersion)
         display_hr()
-        
+
         % rotate the reference frame from the VectorNav to the body fixed
         % frame used in our models
         handles.par.ReferenceFrameRotation = ...
             send_command(handles.s, 'VNWRG,26,1,0,0,0,0,1,0,-1,0');
-        
+
         % rotate the reference frame from the VectorNav to the body fixed
         % frame that aligns with the benchmark bicycle in the upright
         % configuration
@@ -490,14 +490,14 @@ switch get(hObject, 'Value')
         handles.chan = addchannel(handles.ai, ...
                                   0:length(channelnames)-1, ...
                                   channelnames);
-        
+
         % set all the input ranges
         set(handles.chan, 'InputRange', [-5 5])
         % set the wheel speed, pull force, and steer torque
         set(handles.chan(7), 'InputRange', [-10 10])
         set(handles.chan(11), 'InputRange', [-10 10])
         set(handles.chan(22), 'InputRange', [-10 10])
-        
+
         % display the daq's attributes
         get(handles.ai)
 
