@@ -27,7 +27,7 @@ set(ai, 'SamplesPerTrigger', duration*ActualRate);
 set(ai, 'InputType', 'SingleEnded');
 
 % save parameters
-directory = 'CalibData';
+directory = ['..' filesep 'data' filesep 'CalibData'];
 timestamp = fix(clock);
 
 switch choice
@@ -75,7 +75,7 @@ for i = 1:length(y)
                 y(i) = yAdded;
             else
                 y(i) = y(i-1) + yAdded;
-            end        
+            end
     end
     display('Collecting data, please wait.')
     % collect voltage data
@@ -125,7 +125,7 @@ data = struct('calibration', choices{choice}, ...
 if choice ~= 3
     data.v = v;
 end
-save([directory filesep calibID], 'data')                           
+save([directory filesep calibID], 'data')
 delete(chan)
 clear chan
 delete(ai)
