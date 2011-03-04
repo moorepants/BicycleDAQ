@@ -388,6 +388,22 @@ save('AppendedParameters.mat', ...
 
 build_run_list()
 
+directory = 'data'
+dirinfo = what(directory)
+matfiles = dirinfo.mat
+for i=1:length(matfiles)
+    path = [directory filesep matfiles{i}]
+    handles = populate_gui(handles, [directory filesep matfiles{i}]);
+    if isa(handles.par.DateTime, 'double')
+        try
+            handles.par.DateTime = datestr(handles.par.DateTime)
+        catch
+            display('no timestamp')
+        end
+    end
+    save_data(handles)
+end
+
 % delete the gui
 delete(hObject);
 
@@ -1739,7 +1755,7 @@ for i = 1:length(Popupmenus)
 end
 
 function handles = populate_gui(handles, filename)
-% Populate the gui with either data from a file.
+% Populate the gui with data from a file.
 %
 % Parameters
 % ----------
