@@ -386,8 +386,6 @@ save('AppendedParameters.mat', ...
     'Rider', 'Speed', 'Bicycle', 'Maneuver', 'Environment', ...
     '-append')
 
-build_run_list()
-
 directory = 'data'
 dirinfo = what(directory)
 matfiles = dirinfo.mat
@@ -401,11 +399,13 @@ for i=1:length(matfiles)
     catch
         display('no timestamp')
     end
-    if i > 102 && i < 110
+    if i > 103 && i < 111
         handles.par.ReferenceFrameRotation = '$VNWRG,26,+1.000000E+00,+0.000000E+00,+0.000000E+00,+0.000000E+00,+0.000000E+00,+1.000000E+00,+0.000000E+00,-1.000000E+00,+0.000000E+00*02'
     end
     save_data(handles)
 end
+
+build_run_list()
 
 % delete the gui
 delete(hObject);
