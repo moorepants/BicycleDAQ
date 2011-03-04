@@ -33,3 +33,4 @@ TODO
 - Needs a cancel record function/button
 - If you press connect, then record, then disconnect and try to close the gui, matlab crashes
 - When you load a data run, edit it and save, the runlist.txt doesn't get updated.
+- do you want to add or append the note after the run popup dialog box
