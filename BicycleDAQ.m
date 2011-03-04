@@ -401,6 +401,9 @@ for i=1:length(matfiles)
     catch
         display('no timestamp')
     end
+    if i > 102 && i < 110
+        handles.par.ReferenceFrameRotation = '$VNWRG,26,+1.000000E+00,+0.000000E+00,+0.000000E+00,+0.000000E+00,+0.000000E+00,+1.000000E+00,+0.000000E+00,-1.000000E+00,+0.000000E+00*02'
+    end
     save_data(handles)
 end
 
