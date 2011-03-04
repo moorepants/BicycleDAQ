@@ -394,12 +394,12 @@ matfiles = dirinfo.mat
 for i=1:length(matfiles)
     path = [directory filesep matfiles{i}]
     handles = populate_gui(handles, [directory filesep matfiles{i}]);
-    if isa(handles.par.DateTime, 'double')
-        try
+    try
+        if isa(handles.par.DateTime, 'double')
             handles.par.DateTime = datestr(handles.par.DateTime)
-        catch
-            display('no timestamp')
         end
+    catch
+        display('no timestamp')
     end
     save_data(handles)
 end

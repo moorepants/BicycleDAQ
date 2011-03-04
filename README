@@ -33,5 +33,3 @@ TODO
 - Needs a cancel record function/button
 - If you press connect, then record, then disconnect and try to close the gui, matlab crashes
 - When you load a data run, edit it and save, the runlist.txt doesn't get updated.
-- update the time stamp to string for all previous runs and for runlist.txt
-- remove i, m, n from runs 25 and below
