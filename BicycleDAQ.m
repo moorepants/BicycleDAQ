@@ -1739,7 +1739,7 @@ for i = 1:length(Popupmenus)
 end
 
 function handles = populate_gui(handles, filename)
-% Populate the gui with either data from a file.
+% Populate the gui with data from a file.
 %
 % Parameters
 % ----------
