@@ -134,7 +134,6 @@ addpath('hdf5matlab')
 
 % Load matfile
 % load(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' filesep '00170.mat'])
-calibdata = calibdata(1);
 % Save to h5 format
 todata = ['..' filesep '..' filesep 'BicycleDAQ' filesep 'data'];
 hdf5save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
