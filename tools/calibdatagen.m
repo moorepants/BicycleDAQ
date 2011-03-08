@@ -31,7 +31,7 @@ clear data;
 %% Pull force
 % filename = '00002.mat';
 % load([path filename]);
-% 
+%
 % N = 3;
 % calibdata(N).filename = filename;
 % calibdata(N).name  = data.calibration;
@@ -138,7 +138,7 @@ addpath('hdf5matlab')
 todata = ['..' filesep '..' filesep 'BicycleDAQ' filesep 'data'];
 hdf5save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
      filesep 'calibdata.h5'],'calibdata','calibdata');
-    
+
 
 % save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
 %     filesep 'calibdata.mat'],'calibdata');
