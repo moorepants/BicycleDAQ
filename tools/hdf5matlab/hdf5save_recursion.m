@@ -12,6 +12,9 @@
 % Copyright: Gael Varoquaux
 % License: BSD-like
 
+% Modified Mon March 7, 2011 by Jason Moore <moorepants@gmail.com> to make it
+% work with arrays of structures.
+
 function hdf5save_recursion(filename,prefix,new,varcell)
 
 if ~strcmp(class(filename),'char') ;
@@ -41,23 +44,34 @@ for i=[1:nvars]
     %disp(['variable name in workspace : ',str]);
     %disp(['variable name to put : ',name]);
     switch type
-    case 'struct'
-	names=fieldnames(var);
-	for j=1:size(names,1) ;
-	    if (j~=1 || i~=1)
-		new=0 ;
-	    end
-	    varname=strcat(name,'.',names{j});
-	    hdf5save_recursion(filename,strcat(name,'/'),new,{names{j},varname});
-	end
-    otherwise
-	location=strcat('/',prefix,name);
-	if new==1 && i==1 ;
-	    hdf5write(filename,location,var);
-	else
-	    %disp(['location : ',location]);
-	    hdf5write(filename,location,var,'WriteMode', 'append');
-	end
+        case 'struct'
+            m = size(var, 2);
+            for k = 1:m
+                if m == 1
+                    strk = '';
+                else
+                    strk = num2str(k);
+                end
+                names=fieldnames(var);
+                for j=1:size(names,1)
+                    if (j~=1 || i~=1)
+                        new=0 ;
+                    end
+                    varname=strcat(name,'(', strk, ').', names{j});
+                    hdf5save_recursion(filename, ...
+                                       strcat(name, '/'), ...
+                                       new, ...
+                                       {[names{j} strk], varname});
+                end
+            end
+        otherwise
+            location=strcat('/',prefix,name);
+            if new==1 && i==1
+                hdf5write(filename, location, var);
+            else
+                %disp(['location : ',location]);
+                hdf5write(filename, location, var, 'WriteMode', 'append');
+            end
     end
 end
 
