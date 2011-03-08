@@ -3,7 +3,6 @@ clear all; close all; clc;
 % Path to calibration files
 path = '../data/CalibData/';
 
-
 %% Roll Angle sensor
 filename = '00001.mat';
 load([path filename]);
@@ -29,16 +28,16 @@ calibdata(N).timestamp = data.timestamp;
 clear data;
 
 %% Pull force
-% filename = '00002.mat';
-% load([path filename]);
-%
-% N = 3;
-% calibdata(N).filename = filename;
-% calibdata(N).name  = data.calibration;
-% calibdata(N).slope = data.slope;
-% calibdata(N).offset = data.offset;
-% calibdata(N).timestamp = [];
-% clear data;
+filename = '00002.mat';
+load([path filename]);
+
+N = 3;
+calibdata(N).filename = filename;
+calibdata(N).name  = data.calibration;
+calibdata(N).slope = data.slope;
+calibdata(N).offset = data.offset;
+calibdata(N).timestamp = [];
+clear data;
 
 %% Torque sensor calibration
 
@@ -132,15 +131,6 @@ calibdata(N).timestamp =  clock;
 %% Saving the calibdata structure
 addpath('hdf5matlab')
 
-% Load matfile
-% load(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' filesep '00170.mat'])
 % Save to h5 format
-todata = ['..' filesep '..' filesep 'BicycleDAQ' filesep 'data'];
 hdf5save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
-     filesep 'calibdata.h5'],'calibdata','calibdata');
-
-
-% save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
-%     filesep 'calibdata.mat'],'calibdata');
-% hdf5write(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
-%     filesep 'calibdata.h5'],'/calibdata',calibdata)
+     filesep 'CalibData' filesep 'calibdata.h5'],'calibdata','calibdata');
