@@ -1,7 +1,7 @@
 clear all; close all; clc;
 
 % Path to calibration files
-path = '../../BicycleDAQ/data/CalibData/';
+path = '../data/CalibData/';
 
 
 %% Roll Angle sensor
@@ -29,16 +29,16 @@ calibdata(N).timestamp = data.timestamp;
 clear data;
 
 %% Pull force
-filename = '00002.mat';
-load([path filename]);
-
-N = 3;
-calibdata(N).filename = filename;
-calibdata(N).name  = data.calibration;
-calibdata(N).slope = data.slope;
-calibdata(N).offset = data.offset;
-calibdata(N).timestamp = [];
-clear data;
+% filename = '00002.mat';
+% load([path filename]);
+% 
+% N = 3;
+% calibdata(N).filename = filename;
+% calibdata(N).name  = data.calibration;
+% calibdata(N).slope = data.slope;
+% calibdata(N).offset = data.offset;
+% calibdata(N).timestamp = [];
+% clear data;
 
 %% Torque sensor calibration
 
@@ -118,7 +118,7 @@ calibdata(N).timestamp =  clock;
 r_cont = 13.000*0.0254; % Contact point radius
 r_rear = 13.329*0.0254; % Rear wheel radius
 r_disc = 2.2696/2*0.0254; % Disc radius
-slope = 12*60*r_disc/(5200*2*pi)*r_cont/r_rear;
+slope = r_rear/r_cont*r_disc*5200/12*2*pi/60;%12*60*r_disc/(5200*2*pi)*r_cont/r_rear;
 offset = 0;
 
 % Substituting calibdata:
