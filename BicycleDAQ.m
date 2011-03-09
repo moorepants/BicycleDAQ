@@ -418,7 +418,7 @@ switch get(hObject, 'Value')
         handles.s = serial(handles.par.VNavComPort);
         display_hr()
         display('Serial port created, here are the initial properties:')
-        set(handles.s, 'InputBufferSize', 512*6)
+        set(handles.s, 'InputBufferSize', 512*10)
         get(handles.s) % display the attributes of the port
         display_hr()
 
