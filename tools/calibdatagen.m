@@ -76,6 +76,9 @@ sst     = sum((y-mean(y)).^2);
 sse     = sum((y-f).^2);
 rsq     = 1-sse/sst;
 
+% positive torque for the benchmark bike equals positive voltage so:
+coef = -coef
+
 plot(x,y,'.'); hold on;
 plot(x,f);
 
