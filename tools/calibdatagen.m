@@ -9,10 +9,11 @@ load([path filename]);
 
 N = 1;
 calibdata(N).filename = filename;
-calibdata(N).name  = data.calibration;
+calibdata(N).name  = 'RollAngle';
+calibdata(N).signal = 'RollPotentiometer';
 calibdata(N).slope = data.slope;
 calibdata(N).offset = data.offset;
-calibdata(N).timestamp = data.timestamp;
+calibdata(N).timestamp = datestr(data.timestamp);
 clear data;
 
 %% Steer angle
@@ -21,10 +22,11 @@ load([path filename]);
 
 N = 2;
 calibdata(N).filename = filename;
-calibdata(N).name  = data.calibration;
+calibdata(N).name  = 'SteerAngle';
+calibdata(N).signal = 'SteerPotentiometer';
 calibdata(N).slope = data.slope;
 calibdata(N).offset = data.offset;
-calibdata(N).timestamp = data.timestamp;
+calibdata(N).timestamp = datestr(data.timestamp);
 clear data;
 
 %% Pull force
@@ -33,10 +35,11 @@ load([path filename]);
 
 N = 3;
 calibdata(N).filename = filename;
-calibdata(N).name  = data.calibration;
+calibdata(N).name  = 'PullForce';
+calibdata(N).signal = 'PullForceBridge';
 calibdata(N).slope = data.slope;
 calibdata(N).offset = data.offset;
-calibdata(N).timestamp = [];
+calibdata(N).timestamp = '';
 clear data;
 
 %% Torque sensor calibration
@@ -78,7 +81,7 @@ plot(x,f);
 
 data = struct('calibration', 'Steertorque sensor', ...
               'calibID', 'Steertorque', ...
-              'timestamp', [2010,9,8,00,00,00;], ...
+              'timestamp', datestr([2010,9,8,00,00,00;]), ...
               'accuracy', [], ...
               'y', y, ...
               'x', x, ...
@@ -88,10 +91,11 @@ data = struct('calibration', 'Steertorque sensor', ...
 
 % Substituting calibdata:
 N = 4;
-calibdata(N).name  = 'Steertorque Sensor';
+calibdata(N).name  = 'SteerTorque';
+calibdata(N).signal = 'SteerTorqueSensor';
 calibdata(N).slope = coef(1);
 calibdata(N).offset = coef(2);
-calibdata(N).timestamp =  [2010,9,8,00,00,00;];
+calibdata(N).timestamp =  datestr([2010,9,8,00,00,00;]);
 
 
 %% Steerrate gyro
@@ -106,11 +110,12 @@ Vin = 5;
 slope = 573/1000; %[V/{rad/s)]
 
 N = 5;
-calibdata(N).name  = 'Steerrate Gyro';
+calibdata(N).name = 'SteerRate';
+calibdata(N).name = 'SteerRateGyro';
 calibdata(N).Vin = 5;
 calibdata(N).slope = slope; % [V/{rad/s)]
 calibdata(N).offset = -Vin/2*slope;
-calibdata(N).timestamp =  clock;
+calibdata(N).timestamp =  datestr(clock);
 
 %% Forward velocity
 
@@ -122,11 +127,12 @@ offset = 0;
 
 % Substituting calibdata:
 N = 6;
-calibdata(N).name  = 'Forward Velocity';
+calibdata(N).name  = 'RearWheelRate';
+calibdata(N).signal = 'WheelSpeedMotor';
 calibdata(N).Vin = [];
 calibdata(N).slope = slope; % [V/{m/s)]
 calibdata(N).offset = offset; % [V/{m/s)]
-calibdata(N).timestamp =  clock;
+calibdata(N).timestamp =  datestr(clock);
 
 %% Saving the calibdata structure
 addpath('hdf5matlab')
