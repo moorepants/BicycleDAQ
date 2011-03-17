@@ -9,18 +9,18 @@ function fill_h5(directory, all)
 
 % find out what files are in h5 directory
 h5info = dir([directory filesep 'h5']);
-lasth5 = str2num(h5info(end).name(1:end-3));
+lasth5 = str2num(h5info(end).name(1:end-3))
 
 dirinfo = what(directory);
 matfiles = dirinfo.mat;
 lastmat = matfiles{end};
-lastmat = str2num(lastmat(1:end-4));
+lastmat = str2num(lastmat(1:end-4))
 
 if all == 0
     % the +2 is because of the . and .. in h5info.names
-    matfiles = matfiles(lasth5+2:lastmat);
+    matfiles = matfiles(lasth5+2:lastmat+1);
 end
-    
+matfiles    
 for i=1:length(matfiles)
     filename = matfiles{i};
     display(sprintf('Saving: %s', matfiles{i}))
