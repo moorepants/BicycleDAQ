@@ -114,7 +114,7 @@ slope = 573/1000; %[V/{rad/s)]
 
 N = 5;
 calibdata(N).name = 'SteerRate';
-calibdata(N).name = 'SteerRateGyro';
+calibdata(N).signal = 'SteerRateGyro';
 calibdata(N).Vin = 5;
 calibdata(N).slope = slope; % [V/{rad/s)]
 calibdata(N).offset = -Vin/2*slope;
