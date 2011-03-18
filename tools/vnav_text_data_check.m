@@ -1,21 +1,27 @@
 function vnav_text_data_check(runid)
+% Loads a run mat file and figures out the bad data in VNavDataText.
 path = ['..' filesep 'data' filesep runid '.mat']
 load(path)
 bad = parse_vnav_text_data(par, VNavData, VNavDataText);
 size(bad)
 
 function bad = parse_vnav_text_data(par, VNavData, VNavDataText)
-% Converts the ASCII string data from the VectorNav to Matlab arrays.
+% Trys to convert the ASCII string data from the VectorNav to a Matlab array,
+% but if it can't it stores the value in bad and displays it.
 %
 % Parameters
 % ----------
-% handles : structure
-%   Handles to gui objects and user data.
+% par : structure
+%   The parameters from a run.
+% VNavData : matrix
+%   Contains the original parsing of the VNavDataText.
+% VNavDataText : cell array
+%   Contains the strings ouput by the VectorNav in async mode.
 %
 % Returns
 % -------
-% handles : structure
-%   Handles to gui objects and user data.
+% bad : cell array
+%   The contains the indices and strings for the bad strings in VNavDataText.
 
 % create parse string
 ps = '%*6c';
