@@ -143,6 +143,9 @@ if choice ~= 3
     data.v = v;
 end
 save([directory filesep calibID], 'data')
+addpath('hdf5matlab')
+hdf5save([directory filesep 'h5' filesep calibID '.h5'], ...
+         'data', 'data')
 delete(chan)
 clear chan
 delete(ai)
