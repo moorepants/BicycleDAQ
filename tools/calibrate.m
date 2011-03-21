@@ -7,7 +7,7 @@ daqreset
 % clear up everything else
 close all; clear all; clc;
 
-choices = {'Steer Angle Potentiometer'
+choices = {'SteerAngle Potentiometer'
            'Roll Angle Potentiometer'
            'Pull Force'
            'Seat Post'
@@ -17,6 +17,20 @@ for i=1:length(choices)
     question = [question num2str(i) ': ' choices{i} '\n'];
 end
 choice = str2num(input(question, 's'));
+
+signal = {'SteerPotentiometer'
+          'RollPotentiometer'
+          'PullForceBridge'
+          'SeatPostBridges'
+          'FootPegBridges'};
+      
+output = {'SteerAngle'
+          'RollAngle'
+          'PullForce'
+          'SeatPostForces'
+          'FootPegForces'}; 
+
+notes = input('Type notes if needed:\n', 's');
 
 % connect to the daq box
 ai = analoginput('nidaq','Dev1');
@@ -114,6 +128,9 @@ plot(avgX, y, '.', avgX, f)
 xlabel('Volts')
 calibID = calibration_id(directory);
 data = struct('calibration', choices{choice}, ...
+              'signal', signal{choice}, ...
+              'output', output{choice}, ...
+              'notes', notes, ...
               'calibID', calibID, ...
               'timestamp', timestamp, ...
               'accuracy', accuracy, ...
@@ -135,7 +152,7 @@ function calibID = calibration_id(directory)
 % directory.
 
 dirinfo = what(directory);
-MatFiles = dirinfo.mat
+MatFiles = dirinfo.mat;
 
 if isempty(MatFiles) % if there are no mat files
     calibID = '00000';
