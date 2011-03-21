@@ -7,16 +7,17 @@ daqreset
 % clear up everything else
 close all; clear all; clc;
 
-choices = {'SteerAngle Potentiometer'
-           'Roll Angle Potentiometer'
+choices = {'Steer Angle'
+           'Roll Angle'
            'Pull Force'
-           'Seat Post'
-           'Foot Pegs'};
+           'Seat Post Forces'
+           'Foot Peg Forces'};
+       
 question = 'What would you like to calibrate?\n';
 for i=1:length(choices)
     question = [question num2str(i) ': ' choices{i} '\n'];
 end
-choice = str2num(input(question, 's'));
+choice = str2double(input(question, 's'));
 
 signal = {'SteerPotentiometer'
           'RollPotentiometer'
@@ -24,12 +25,6 @@ signal = {'SteerPotentiometer'
           'SeatPostBridges'
           'FootPegBridges'};
       
-output = {'SteerAngle'
-          'RollAngle'
-          'PullForce'
-          'SeatPostForces'
-          'FootPegForces'}; 
-
 notes = input('Type notes if needed:\n', 's');
 
 % connect to the daq box
@@ -42,7 +37,7 @@ set(ai, 'InputType', 'SingleEnded');
 
 % save parameters
 directory = ['..' filesep 'data' filesep 'CalibData'];
-timestamp = fix(clock);
+timestamp = datestr(clock);
 
 switch choice
     case 1
@@ -62,7 +57,7 @@ chan = addchannel(ai, channels);
 accuracy = ...
     input('What is the accuracy of your manual reading?\n', 's');
 % how many trials will you do?
-numTrials = str2num(input('How many trials?\n', 's'));
+numTrials = str2double(input('How many trials?\n', 's'));
 % initialize x and y vectors
 x = zeros(duration*ActualRate, numTrials); % voltage measurement
 y = zeros(numTrials, 1); % manual reading
@@ -72,29 +67,29 @@ for i = 1:length(y)
     switch choice
         case 1
             y(i) = ...
-                str2num(input('What is the protractor reading?\n', 's'));
+                str2double(input('What is the protractor reading?\n', 's'));
         case 2
             reading = ...
-                str2num(input('What is the digital level reading?\n', 's'));
+                str2double(input('What is the digital level reading?\n', 's'));
             if sign(reading) == -1
-                y(i) = -(90+reading);
+                y(i) = -(90 + reading);
             else
-                y(i) = 90-reading;
+                y(i) = 90 - reading;
             end
         case 3
             % ask the user to enter the number of pounds added
             yAdded = ...
-                str2num(input('How many pounds have you added?\n', 's'));
+                str2double(input('How many pounds have you added?\n', 's'));
             if i == 1
                 y(i) = yAdded;
             else
-                y(i) = y(i-1) + yAdded;
+                y(i) = y(i - 1) + yAdded;
             end
     end
     display('Collecting data, please wait.')
     % collect voltage data
     start(ai)
-    wait(ai, duration+1)
+    wait(ai, duration + 1)
     % output is MxN where M is number of samples and N is number of
     % channels
     output = getdata(ai);
@@ -127,9 +122,12 @@ rsq = 1-sse/sst;
 plot(avgX, y, '.', avgX, f)
 xlabel('Volts')
 calibID = calibration_id(directory);
-data = struct('calibration', choices{choice}, ...
+
+% remove whitespace from the choice
+tmp = choices{choice};
+tmp(tmp==' ') = ''; 
+data = struct('calibration', tmp, ...
               'signal', signal{choice}, ...
-              'output', output{choice}, ...
               'notes', notes, ...
               'calibID', calibID, ...
               'timestamp', timestamp, ...
@@ -139,6 +137,7 @@ data = struct('calibration', choices{choice}, ...
               'slope', coef(1), ...
               'offset', coef(2), ...
               'rsq', rsq);
+
 if choice ~= 3
     data.v = v;
 end
@@ -150,6 +149,7 @@ delete(chan)
 clear chan
 delete(ai)
 clear ai
+
 function calibID = calibration_id(directory)
 % Returns the calibration id to a number that isn't already in the data
 % directory.
