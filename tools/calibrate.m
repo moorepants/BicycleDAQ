@@ -93,7 +93,7 @@ for i = 1:length(y)
     % output is MxN where M is number of samples and N is number of
     % channels
     output = getdata(ai);
-   switch choice
+    switch choice
         case 1
             x(:, i) = output(:, 1);
             v(:, i) = output(:, 2);
