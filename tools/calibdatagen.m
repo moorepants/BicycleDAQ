@@ -9,10 +9,10 @@ load([path filename]);
 
 N = 1;
 calibdata(N).filename = filename;
-calibdata(N).name  = 'RollAngle';
+calibdata(N).name = 'RollAngle';
 calibdata(N).signal = 'RollPotentiometer';
-calibdata(N).slope = data.slope;
-calibdata(N).offset = data.offset;
+calibdata(N).slope = data.slope/180*pi;
+calibdata(N).offset = data.offset/180*pi;
 calibdata(N).timestamp = datestr(data.timestamp);
 clear data;
 
@@ -24,8 +24,8 @@ N = 2;
 calibdata(N).filename = filename;
 calibdata(N).name  = 'SteerAngle';
 calibdata(N).signal = 'SteerPotentiometer';
-calibdata(N).slope = data.slope;
-calibdata(N).offset = data.offset;
+calibdata(N).slope = data.slope/180*pi;
+calibdata(N).offset = data.offset/180*pi;
 calibdata(N).timestamp = datestr(data.timestamp);
 clear data;
 
@@ -110,14 +110,14 @@ calibdata(N).timestamp =  datestr([2010,9,8,00,00,00;]);
 % Substituting calibdata
 
 Vin = 5;
-slope = 573/1000; %[V/{rad/s)]
+slope = 1000/573; %[{rad/s)/V]
 
 N = 5;
 calibdata(N).name = 'SteerRate';
 calibdata(N).signal = 'SteerRateGyro';
 calibdata(N).Vin = 5;
 calibdata(N).slope = slope; % [V/{rad/s)]
-calibdata(N).offset = -Vin/2*slope;
+calibdata(N).offset = -Vin/2*calibdata(N).slope;
 calibdata(N).timestamp =  datestr(clock);
 
 %% Forward velocity
@@ -140,6 +140,7 @@ calibdata(N).timestamp =  datestr(clock);
 %% Saving the calibdata structure
 addpath('hdf5matlab')
 
+save ../data/Calibdata/calibdata.mat calibdata;
 % Save to h5 format
 hdf5save(['..' filesep '..' filesep 'BicycleDAQ' filesep 'data' ...
      filesep 'CalibData' filesep 'calibdata.h5'],'calibdata','calibdata');
