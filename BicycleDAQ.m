@@ -1113,7 +1113,7 @@ axes(handles.Graph)
 
 % see what graphs buttons are pressed
 ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
-  
+
 % grab the legend titles for this button and legend type
 legendlist = handles.(legtype).(ButtonName);
 

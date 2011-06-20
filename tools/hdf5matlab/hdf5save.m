@@ -3,8 +3,8 @@
 % hdf5save('filename','name in workspace','name in hdf5 file',...)
 %
 % Save the given variables in an hdf5 file. Syntax Similar to the native
-% matlab save command. Can save strings, arrays, and structs. 
-% 
+% matlab save command. Can save strings, arrays, and structs.
+%
 
 % Author: Gael Varoquaux <gael.varoquaux@normalesup.org>
 % Copyright: Gael Varoquaux
@@ -22,7 +22,7 @@ if nvars~=floor(nvars) ;
 end
 
 %  Assign variables to save in workspace so as to be able to get them back
-%  with recursive fonctions.
+%  with recursive functions.
 for i=[1:nvars]
     str=varargin{2*i};
     var=evalin('caller',str);
@@ -30,4 +30,3 @@ for i=[1:nvars]
 end
 
 hdf5save_recursion(filename,'',1,varargin)
-
