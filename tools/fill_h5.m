@@ -1,10 +1,11 @@
 function fill_h5(directories, all)
+% function fill_h5(directories, all)
 % Saves all mat files in the data and CalibData directories as hdf5 files.
 %
 % Parameters
 % ----------
 % directories : cell array
-%   Should contain '../data', '/data/CalibData' or both.
+%   Should contain '../data', '../data/CalibData' or both.
 % all : 0 or 1
 %   0 if you only want the lastest mat files to be converted, and 1 if you
 %   want all the mat files to be converted.
@@ -17,7 +18,11 @@ for j = 1:length(directories)
     display(sprintf('Checking %s', pathToH5))
 
     % get the number of the last file in the h5 directory
-    lasth5 = str2num(h5info(end).name(1:end - 3))
+    lasth5 = str2num(h5info(end).name(1:end - 3));
+    if isempty(lasth5)
+        lasth5 = -1;
+    end
+    display(sprintf('The last h5 file is %d', lasth5)) 
 
     % find out which mat files are in the directory
     display(sprintf('Checking %s', directories{j}))
@@ -35,7 +40,7 @@ for j = 1:length(directories)
 
     for i = 1:length(matfiles)
         filename = matfiles{i};
-        display(sprintf('Saving: %s', matfiles{i}))
+        display(sprintf('Saving: %s', [directories{j} filesep matfiles{i}]))
         hdf5_save(directories{j}, filename(1:end - 4));
         if j == 1
             clear global InputPairs NIData VNavCols VNavData VNavDataText par
@@ -50,7 +55,7 @@ addpath('hdf5matlab')
 
 load([directory filesep runid '.mat'])
 
-if strcmp(directory, '../data')
+if strcmp(directory, ['..' filesep 'data'])
     hdf5save([directory filesep 'h5' filesep runid '.h5'], ...
              'InputPairs', 'InputPairs', ...
              'NIData', 'NIData', ...
@@ -58,7 +63,7 @@ if strcmp(directory, '../data')
              'VNavData', 'VNavData', ...
              'VNavDataText', 'VNavDataText', ...
              'par', 'par')
-elseif strcmp(directory, '../data/CalibData')
+elseif strcmp(directory, ['..' filesep 'data' filesep 'CalibData'])
     hdf5save([directory filesep 'h5' filesep runid '.h5'], ...
              'data', 'data')
 end
