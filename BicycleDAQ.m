@@ -86,9 +86,9 @@ handles.InputPairs = struct('PushButton',          0, ...
                             'TwistPotentiometer',  4, ...
                             'SteerRateGyro',       5, ...
                             'WheelSpeedMotor',     6, ...
-                            'FrameAccelX',         7, ...
+                            'FrameAccelZ',         7, ...
                             'FrameAccelY',         8, ...
-                            'FrameAccelZ',         9, ...
+                            'FrameAccelX',         9, ...
                             'SteerTorqueSensor',  10, ...
                             'SeatpostBridge1',    11, ...
                             'SeatpostBridge2',    12, ...
@@ -906,7 +906,7 @@ set_baudrate(handles.s, handles.par.BaudRate)
 
 % get the filter tuning parameters
 handles.par.FilterTuningParameters = send_command(handles.s, 'VNRRG,22');
-             
+
 % set the filter tuning parameters
 % tune out magnetometers
 handles.par.FilterTuningParameters = ...
@@ -1489,7 +1489,7 @@ function handles = set_ni_samples_per_trigger(handles)
 % ----------
 % handles : structure
 %   handles to gui objects and user data
-% 
+%
 % Returns
 % -------
 % handles : structure
@@ -1911,7 +1911,7 @@ function num = pad_with_zeros(num, digits)
 %   A string representation of a number (i.e. '25')
 % digits : integer
 %   The total number of digits desired.
-% 
+%
 % If digits = 4 and num = '25' then the function returns '0025'.
 
 for i = 1:digits-length(num)
@@ -2030,7 +2030,7 @@ else
     end
     fclose(fid);
 end
-    
+
 function lastLine = get_last_line(pathtofile)
 % Returns the last line of a text file. Taken from
 % http://stackoverflow.com/questions/2659375/matlab-command-to-access-the-last-line-of-each-file
