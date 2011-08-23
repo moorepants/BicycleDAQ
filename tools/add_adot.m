@@ -23,7 +23,7 @@ function num = pad_with_zeros(num, digits)
 %   A string representation of a number (i.e. '25')
 % digits : integer
 %   The total number of digits desired.
-% 
+%
 % If digits = 4 and num = '25' then the function returns '0025'.
 
 for i = 1:digits-length(num)

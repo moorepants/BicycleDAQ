@@ -181,7 +181,7 @@ function BytesAvailCallback(obj, event)
     display('=========================================')
 
 function OutputEmptyCallback(obj, event)
-    display('=========================================')    
+    display('=========================================')
     display('Output is empty')
     display('=========================================')
 
@@ -190,13 +190,13 @@ function ErrorCallback(obj, event)
     display('Error occured')
     event.Data.Message
     display('=========================================')
-    
+
 function TimerCallback(obj, event)
     display('=========================================')
     display('Timer')
     event.Data.AbsTime
     display('=========================================')
-    
+
 function BreakInterruptCallback(obj, event)
     display('=========================================')
     display('BreakInterrupt')

@@ -28,4 +28,3 @@ for i=1:length(matfiles)
         save(pathnfile, 'NIData', 'VNavData', 'VNavDataText', 'par')
     end
 end
-        

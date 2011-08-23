@@ -12,7 +12,7 @@ choices = {'Steer Angle'
            'Pull Force'
            'Seat Post Forces'
            'Foot Peg Forces'};
-       
+
 question = 'What would you like to calibrate?\n';
 for i=1:length(choices)
     question = [question num2str(i) ': ' choices{i} '\n'];
@@ -24,7 +24,7 @@ signal = {'SteerPotentiometer'
           'PullForceBridge'
           'SeatPostBridges'
           'FootPegBridges'};
-      
+
 notes = input('Type notes if needed:\n', 's');
 
 % connect to the daq box
@@ -125,7 +125,7 @@ calibID = calibration_id(directory);
 
 % remove whitespace from the choice
 tmp = choices{choice};
-tmp(tmp==' ') = ''; 
+tmp(tmp==' ') = '';
 data = struct('calibration', tmp, ...
               'signal', signal{choice}, ...
               'notes', notes, ...
