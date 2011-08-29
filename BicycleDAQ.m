@@ -1587,10 +1587,10 @@ function handles = store_current_parameters(handles)
 
 % initialize the parameter structure
 if isfield(handles, 'par')
-    display('found it')
+    display('Found the parameters structure, will append.')
     par = handles.par;
 else
-    display('did not find it')
+    display('Did not find parameters structure, will create new.')
     par = struct();
 end
 
