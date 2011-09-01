@@ -36,3 +36,4 @@ TODO
 - do you want to add or append the note after the run popup dialog box
 - make the appendeddata.mat file update based on the contents of runlist.txt, that way non used terms get dropped
 - Have some kind of check for battery levels.
+- Maybe have the notes reset after every run, because many times the notes get added and stay on for several runs before the operator notices. The ability to easily add notes after the end of the run would be helpful too.
