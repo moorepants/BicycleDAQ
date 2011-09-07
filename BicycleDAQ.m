@@ -490,7 +490,7 @@ switch get(hObject, 'Value')
 
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
-        % important that this comes after set(InputType)
+        % important that this comes after set(ai, 'InputType', ...)
         handles.chan = addchannel(handles.ai, ...
                                   0:length(channelnames)-1, ...
                                   channelnames);
@@ -536,7 +536,8 @@ switch get(hObject, 'Value')
         response = send_command(handles.s, 'VNRFS');
         display('Reset to factory')
         display(sprintf(response))
-        display(sprintf('%d bytes in input buffer after reseting to factory', get(handles.s, 'BytesAvailable')))
+        display(sprintf('%d bytes in input buffer after reseting to factory', ...
+                        get(handles.s, 'BytesAvailable')))
         display_hr()
 
         % close the VectorNav connection
@@ -877,14 +878,17 @@ set(handles.RecordButton, 'Enable', 'On')
 
 set(hObject, 'String', 'Tare')
 
-
-% --- Executes on button press in RecordButton.
 function RecordButton_Callback(hObject, eventdata, handles)
-% hObject    handle to RecordButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of RecordButton
+% Executes on button press of RecordButton.
+%
+% Arguments
+% ---------
+% hObject : push button object
+%   handle to RecordButton (see GCBO)
+% eventdata : 
+%   reserved - to be defined in a future version of MATLAB
+% handles : structure
+%   structure with handles and user data (see GUIDATA)
 
 % give the user some feedback
 set(hObject, 'BackgroundColor', 'Yellow')
