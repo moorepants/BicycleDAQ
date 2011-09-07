@@ -895,10 +895,14 @@ set(hObject, 'BackgroundColor', 'Yellow')
 set(hObject, 'String', 'Initializing')
 
 % make sure you can't click things while the recording is happening
+
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.DisplayButton, 'Enable', 'Off')
 set(handles.TareButton, 'Enable', 'Off')
 set(handles.RecordButton, 'Enable', 'Off')
+
+toggle_enable_metadata(handles, 'Off')
+toggle_enable_daq_settings(handles, 'Off')
 
 % make sure the run id is set correctly
 set_run_id(handles);
@@ -1016,8 +1020,70 @@ set(handles.DisplayButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
 
+toggle_enable_metadata(handles, 'Off')
+toggle_enable_daq_settings(handles, 'Off')
+
 guidata(hObject, handles)
 
+function toggle_enable(handles, tags, onOrOff)
+% Toggles the ability to interact with the specified gui objects.
+%
+% Arugments
+% ---------
+% handles : structure
+%   Contains the gui data.
+% tags : cell array of characters
+%   A list of the tags that need to be enabled/disabled.
+% onOrOff : char
+%   Either 'On' for enable or 'Off' for disable.
+
+for i = 1:length(tags)
+    set(handles.(tags{i}), 'Enable', onOrOff)
+end
+
+function toggle_enable_metadata(handles, onOrOff)
+% Toggles the ability to interact with the menus and text boxes for the
+% metadata.
+%
+% Arguments
+% ---------
+% handles : structure
+%   Contains the gui data.
+% onOrOff : char
+%   Either 'On' or 'Off'.
+
+tags = {'RiderPopupmenu', ...
+        'SpeedPopupmenu', ...
+        'BicyclePopupmenu', ...
+        'ManeuverPopupmenu', ...
+        'EnviromentPopupmenu', ...
+        'NotesEditText', ...
+        'RiderEditText', ...
+        'SpeedEditText', ...
+        'BicycleEditText', ...
+        'ManeuverEditText', ...
+        'EnvironmentEditText'};
+
+toggle_enable(handles, tags, onOrOff)
+    
+function toggle_enable_daq_settings(handles, onOrOff)
+% Toggles the ability to interact with the menus and text boxes for the
+% metadata.
+%
+% Arguments
+% ---------
+% handles : structure
+%   Contains the gui data.
+% onOrOff : char
+%   Either 'On' or 'Off'.
+
+tags = {'WaitEditText', ...
+        'DurationEditText', ...
+        'VNavSampleRateEditText', ...
+        'NISampleRateEditText', ...
+        'BaudRateEditText'};
+
+toggle_enable(handles, tags, onOrOff)
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
