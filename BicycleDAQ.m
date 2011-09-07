@@ -64,9 +64,6 @@ end
 set(handles.GraphTypeButtonGroup, 'SelectionChangeFcn', ...
     @GraphTypeButtonGroup_SelectionChangeFcn);
 
-% load the VectorNav library
-addpath('C:\Documents and Settings\Administrator\My Documents\MATLAB\VectorNavLib')
-
 % create a data directory if one doesn't already exist
 if exist('data/', 'dir') ~= 7
     mkdir('data/')
@@ -778,7 +775,7 @@ function response = send_command(s, command)
 %   The full response from the VectorNav including the '$', '*' and checksum.
 
 % calculate the checksum and send the command
-fprintf(s, sprintf('$%s*%s\n', command, VNchecksum(command)))
+fprintf(s, sprintf('$%s*%s\n', command, checksum(command)))
 % wait a little for the response
 pause(0.1)
 % get the response
@@ -2009,4 +2006,31 @@ function TriggersEditText_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+function checksum = checksum(s)
+% checksum = checksum(s)
+%
+% Returns the checksum of a string. Used to check VectorNav serial strings.
+%
+% Arguments
+% ---------
+% s : char
+%   A string of characters.
+%
+% Returns
+% -------
+% checksum : char
+%   A two digit hex value.
+
+arg = uint8(0);
+
+for i=1:length(s)
+    arg = bitxor(arg, uint8(s(i)));
+end
+
+checksum = dec2hex(arg);
+
+if length(checksum) == 1
+    checksum = ['0' checksum];
 end
