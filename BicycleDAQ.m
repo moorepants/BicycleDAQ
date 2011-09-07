@@ -508,18 +508,13 @@ switch get(hObject, 'Value')
         set(hObject, 'Enable', 'On')
         set(hObject, 'String', sprintf('Disconnect'))
         set(hObject, 'BackgroundColor', 'Red')
-%         set(handles.DisplayButton, 'Enable', 'On')
         set(handles.RecordButton, 'Enable', 'On')
         set(handles.TareButton, 'Enable', 'On')
         enable_parameters(handles, 'On')
 
     case 0.0 % disconnect
-        % tells the graph loop to stop
-        handles.stopgraph = 1;
-
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
-        set(handles.DisplayButton, 'Enable', 'Off')
         set(handles.RecordButton, 'Enable', 'Off')
         set(handles.TareButton, 'Enable', 'Off')
 
@@ -730,7 +725,7 @@ set_async(handles.s, num2str(handles.par.ADOT))
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
         handles.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
-        fgets(handles.s);
+            fgets(handles.s);
     end
     display(sprintf('Data recorded for %d seconds', i))
 end
@@ -860,7 +855,6 @@ function TareButton_Callback(hObject, eventdata, handles)
 
 set(handles.LoadButton, 'Enable', 'Off')
 set(handles.RecordButton, 'Enable', 'Off')
-%set(handles.DisplayButton, 'Enable', 'Off')
 
 set(hObject, 'String', 'Taring')
 
@@ -874,7 +868,6 @@ end
 
 set(handles.LoadButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
-%set(handles.DisplayButton, 'Enable', 'On')
 
 set(hObject, 'String', 'Tare')
 
@@ -895,8 +888,7 @@ set(hObject, 'BackgroundColor', 'Yellow')
 set(hObject, 'String', 'Initializing')
 
 % make sure you can't click things while the recording is happening
-toggle_enable(handles, {'LoadButton', 'DisplayButton', 'TareButton', ...
-    'RecordButton'}, 'Off')
+toggle_enable(handles, {'LoadButton', 'TareButton', 'RecordButton'}, 'Off')
 
 toggle_enable_metadata(handles, 'Off')
 toggle_enable_daq_settings(handles, 'Off')
@@ -1013,7 +1005,6 @@ enable_graph_buttons(handles, 'On')
 set(hObject, 'String', 'Record')
 set(hObject, 'BackgroundColor', [0.831 0.816 0.784])
 set(handles.LoadButton, 'Enable', 'On')
-set(handles.DisplayButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
 
@@ -1864,75 +1855,6 @@ if handles.par.ADOT == 14
     set(handles.UnfilteredCheckbox, 'Value', 0)
 elseif handles.par.ADOT == 253
     set(handles.UnfilteredCheckbox, 'Value', 1)
-end
-
-
-% --- Executes on button press in DisplayButton.
-function DisplayButton_Callback(hObject, eventdata, handles)
-% hObject    handle to DisplayButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% displays the live data
-% start collecting data from the DAQ
-start(handles.ai)
-trigger(handles.ai)
-% find out what graph button is pressed
-ButtonName = get(get(handles.GraphTypeButtonGroup, 'SelectedObject'), 'Tag');
-% find out if the graph is raw or scaled data
-switch get(handles.ScaledRawButton, 'Value')
-    case 0.0
-        legtype = 'RawLegends';
-    case 1.0
-        legtype = 'ScaledLegends';
-end
-% create a vector with the analog input numbers for this graph
-datavals = zeros(1,length(eval(['handles.' legtype '.' ButtonName])));
-for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
-    input = char(eval(['handles.' legtype '.' ButtonName '(i)']));
-    datavals(i) = eval(['handles.InputPairs.' input]);
-end
-% set the plot axes to the graph
-axes(handles.Graph)
-% plot blank data
-data = zeros(50,length(eval(['handles.RawLegends.' ButtonName])));
-lines = plot(data); % plot the raw data
-ylim([-5 5])
-ylabel('Voltage')
-
-leg = legend(eval(['handles.' legtype '.' ButtonName]));
-%         labels = {'', '', '', '', ''};
-
-daqdata = zeros(50, length(fieldnames(handles.InputPairs)));
-vnavdata = zeros(50, 10);
-% update the plot while the data is being taken
-while handles.stopgraph == 0
-    display('another while')
-    for i = 1:50
-        tic
-        display('VNav')
-        vnavdata(i, :) = VNgetsamples(handles.s, 'RAW', 1);
-        toc
-        tic
-        display('DAQ')
-        daqdata(i, :) = peekdata(handles.ai, 1);
-        toc
-        %getsample(handles.ai);
-    end
-    % return the latest 100 samples
-%             data = peekdata(handles.ai, 50);
-    for i = 1:length(eval(['handles.' legtype '.' ButtonName]))
-        set(lines(i), 'YData', daqdata(:, datavals(i)+1))
-    end
-%             meanData = mean(data);
-%             labels{1} = sprintf('Steer Angle = %1.2f V', meanData(1));
-%             labels{2} = sprintf('Steer Rate = %1.2f V', meanData(2));
-%             labels{3} = sprintf('Steer Torque = %1.2f V', meanData(3));
-%             labels{4} = sprintf('Wheel Speed = %1.2f V', meanData(4));
-%             labels{5} = sprintf('Button = %1.2f V', meanData(5));
-%             set(leg, 'String', labels)
-    drawnow
-    handles = guidata(handles.BicycleDAQ);
 end
 
 % --- Executes on button press in LoadButton.
