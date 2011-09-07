@@ -987,8 +987,8 @@ toggle_enable_daq_settings(handles, 'Off')
 
 guidata(hObject, handles)
 
-function toggle_enable(handles, tags, onOrOff)
-% Toggles the ability to interact with the specified gui objects.
+function toggle_enable(handles, tags, state)
+% Toggles the user's ability to interact with the specified gui objects.
 %
 % Arugments
 % ---------
@@ -996,14 +996,14 @@ function toggle_enable(handles, tags, onOrOff)
 %   Contains the gui data.
 % tags : cell array of characters
 %   A list of the tags that need to be enabled/disabled.
-% onOrOff : char
+% state : char
 %   Either 'On' for enable or 'Off' for disable.
 
 for i = 1:length(tags)
-    set(handles.(tags{i}), 'Enable', onOrOff)
+    set(handles.(tags{i}), 'Enable', state)
 end
 
-function toggle_enable_metadata(handles, onOrOff)
+function toggle_enable_metadata(handles, state)
 % Toggles the ability to interact with the menus and text boxes for the
 % metadata.
 %
@@ -1026,7 +1026,7 @@ tags = {'RiderPopupmenu', ...
         'NewManeuverEditText', ...
         'NewEnvironmentEditText'};
 
-toggle_enable(handles, tags, onOrOff)
+toggle_enable(handles, tags, state)
     
 function toggle_enable_daq_settings(handles, onOrOff)
 % Toggles the ability to interact with the menus and text boxes for the
@@ -1417,9 +1417,7 @@ end
 function enable_graph_buttons(handles, state)
 
 buttons = fieldnames(handles.RawLegends);
-for i = 1:length(buttons)
-    set(handles.(buttons{i}), 'Enable', state)
-end
+toggle_enable(handles, buttons, state)
 
 function save_data(handles)
 % Save the data to file.
@@ -1547,6 +1545,8 @@ set(handles.ai, 'TriggerCondition', 'Rising')
 set(handles.ai, 'TriggerConditionValue', 4.9)
 set(handles.ai, 'TriggerDelay', 0.00)
 set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
+set(handles.ai, 'TriggerRepeat', ...
+    str2double(get(handles.TriggerEditText, 'String')))
 
 function set_baudrate(s, baudrate, handles)
 % set the baudrate on the VNav and the laptop
@@ -1742,7 +1742,7 @@ else
 end
 
 EditTexts = {'RunID' 'Notes' 'Duration' 'NISampleRate' ...
-             'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait'};
+             'VNavSampleRate' 'VNavComPort' 'BaudRate' 'Wait', 'Triggers'};
 
 Popupmenus = {'Rider' 'Speed' 'Bicycle' 'Maneuver' 'Environment'};
 
@@ -1996,6 +1996,8 @@ function TriggersEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to TriggersEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+set_trigger(handles)
 
 % --- Executes during object creation, after setting all properties.
 function TriggersEditText_CreateFcn(hObject, eventdata, handles)
