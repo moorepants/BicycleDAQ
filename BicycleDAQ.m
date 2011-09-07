@@ -22,7 +22,7 @@ function varargout = BicycleDAQ(varargin)
 
 % Edit the above text to modify the response to help BicycleDAQ
 
-% Last Modified by GUIDE v2.5 22-Feb-2011 13:55:20
+% Last Modified by GUIDE v2.5 07-Sep-2011 15:36:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -208,7 +208,6 @@ function varargout = BicycleDAQ_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
 function NotesEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NotesEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -220,7 +219,6 @@ function NotesEditText_Callback(hObject, eventdata, handles)
 handles.par.Notes = get(hObject, 'String');
 
 guidata(hObject, handles)
-
 
 function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewSpeedEditText (see GCBO)
@@ -274,7 +272,6 @@ switch get(hObject, 'Value')
         set(handles.VoltageMagneticButton, 'String', 'Magnetic')
 end
 
-
 function NewRiderEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewRiderEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -300,7 +297,6 @@ handles.par.Rider = get(hObject, 'String');
 
 guidata(hObject, handles)
 
-
 % --- Executes during object creation, after setting all properties.
 function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NewRiderEditText (see GCBO)
@@ -312,7 +308,6 @@ function NewRiderEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function NewBicycleEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewBicycleEditText (see GCBO)
@@ -352,7 +347,6 @@ handles = guidata(hObject);
 % update the graph
 plot_data(handles)
 
-
 % --- Executes on key release with focus on BicycleDAQ and none of its controls.
 function BicycleDAQ_KeyReleaseFcn(hObject, eventdata, handles)
 % hObject    handle to BicycleDAQ (see GCBO)
@@ -361,7 +355,6 @@ function BicycleDAQ_KeyReleaseFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was released
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) released
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes when user attempts to close BicycleDAQ.
 function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
@@ -390,7 +383,6 @@ build_run_list()
 
 % delete the gui
 delete(hObject);
-
 
 % --- Executes on button press in ConnectButton.
 function ConnectButton_Callback(hObject, eventdata, handles)
@@ -548,7 +540,6 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-
 % --- Executes on selection change in RiderPopupmenu.
 function RiderPopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to RiderPopupmenu (see GCBO)
@@ -577,7 +568,6 @@ handles.par.Speed = str2double(contents{get(hObject,'Value')});
 
 guidata(hObject, handles)
 
-
 % --- Executes on selection change in BicyclePopupmenu.
 function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to BicyclePopupmenu (see GCBO)
@@ -591,7 +581,6 @@ contents = get(hObject,'String');
 handles.par.Bicycle = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
-
 
 function NewManeuverEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewManeuverEditText (see GCBO)
@@ -618,7 +607,6 @@ handles.par.Maneuver = get(hObject, 'String');
 
 guidata(hObject, handles)
 
-
 % --- Executes on selection change in ManeuverPopupmenu.
 function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to ManeuverPopupmenu (see GCBO)
@@ -633,15 +621,10 @@ handles.par.Maneuver = contents{get(hObject,'Value')};
 
 guidata(hObject, handles)
 
-
 function RunIDEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to RunIDEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of RunIDEditText as text
-%        str2double(get(hObject,'String')) returns contents of RunIDEditText as a double
-
 
 function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to VNavSampleRateEditText (see GCBO)
@@ -657,7 +640,6 @@ handles = store_current_parameters(handles);
 
 guidata(hObject, handles)
 
-
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NISampleRateEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -670,7 +652,6 @@ handles = store_current_parameters(handles);
 handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
-
 
 function DurationEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to DurationEditText (see GCBO)
@@ -685,7 +666,6 @@ handles = set_ni_samples_per_trigger(handles);
 
 guidata(hObject, handles)
 
-
 function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to VNavComPortEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -697,7 +677,6 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 handles.par.VNavComPort = get(hObject, 'String');
 
 guidata(hObject, handles)
-
 
 function trigger_callback(obj, events, handles)
 % Records data from the VectorNav when the NI DAQ is triggered.
@@ -737,7 +716,6 @@ set_async(handles.s, '0')
 % ai object
 obj.UserData = handles;
 display('VN data done')
-
 
 function baudrate = determine_vnav_baud_rate(s)
 % Returns the baudrate that the VectorNav is set to or NaN if it can't be
@@ -781,7 +759,6 @@ end
 % set the Timeout back to default
 set(s, 'Timeout', DefaultTimeout)
 
-
 function response = send_command(s, command)
 % Returns the latest response from the input buffer after the issued
 % command. Response will not necessarily deliver the correct response when
@@ -809,7 +786,6 @@ pause(0.1)
 response = fgetl(s); % fgetl removes the \n
 response = sscanf(response, '%s\r');
 
-
 function flush_buffer(s)
 % Flushes the serial port input buffer.
 %
@@ -821,7 +797,6 @@ while get(s, 'BytesAvailable') > 0
     flushinput(s)
     display('Flushed the input buffer')
 end
-
 
 function close_port(comport)
 % Checks to see if comport is already open, if so it closes it.
@@ -845,7 +820,6 @@ else
         end
     end
 end
-
 
 % --- Executes on button press in TareButton.
 function TareButton_Callback(hObject, eventdata, handles)
@@ -1085,7 +1059,6 @@ handles.par.Wait = str2double(get(hObject,'String'));
 
 guidata(hObject, handles)
 
-
 function WaitEditText_CreateFcn(hObject, eventdata, handles)
 % Executes during object creation, after setting all properties.
 %
@@ -1130,7 +1103,6 @@ for i=1:handles.par.VNavNumSamples
     end
 end
 
-
 function enable_parameters(handles, state)
 % Enables (on or off) parameters that should be set only when the VNav and NI
 % DAQ are disconnected.
@@ -1147,7 +1119,6 @@ set(handles.NISampleRateEditText, 'Enable', state)
 set(handles.VNavSampleRateEditText, 'Enable', state)
 set(handles.WaitEditText, 'Enable', state)
 set(handles.BaudRateEditText, 'Enable', state)
-
 
 function plot_data(handles)
 % Plots the data that is currently stored in handles.VNavData and
@@ -1204,7 +1175,6 @@ end
 xlabel('Time [s]')
 legend(legendlist)
 
-
 function set_run_id(handles)
 % Sets the run id to a number that isn't already in the data directory.
 % handles : structure with handles and user data
@@ -1226,7 +1196,6 @@ else % make new sequential run id
     set(handles.RunIDEditText, 'String', newnum)
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function NotesEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NotesEditText (see GCBO)
@@ -1238,7 +1207,6 @@ function NotesEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function DurationEditText_CreateFcn(hObject, eventdata, handles)
@@ -1252,7 +1220,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to VNavComPortEditText (see GCBO)
@@ -1264,7 +1231,6 @@ function VNavComPortEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function VNavSampleRateEditText_CreateFcn(hObject, eventdata, handles)
@@ -1278,7 +1244,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function NISampleRateEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NISampleRateEditText (see GCBO)
@@ -1290,7 +1255,6 @@ function NISampleRateEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function NewSpeedEditText_CreateFcn(hObject, eventdata, handles)
@@ -1304,7 +1268,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NewBicycleEditText (see GCBO)
@@ -1316,7 +1279,6 @@ function NewBicycleEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function NewManeuverEditText_CreateFcn(hObject, eventdata, handles)
@@ -1330,7 +1292,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function RunIDEditText_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to RunIDEditText (see GCBO)
@@ -1342,7 +1303,6 @@ function RunIDEditText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function RiderPopupmenu_CreateFcn(hObject, eventdata, handles)
@@ -1356,7 +1316,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function SpeedPopupmenu_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to SpeedPopupmenu (see GCBO)
@@ -1368,7 +1327,6 @@ function SpeedPopupmenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function BicyclePopupmenu_CreateFcn(hObject, eventdata, handles)
@@ -1382,7 +1340,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes during object creation, after setting all properties.
 function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ManeuverPopupmenu (see GCBO)
@@ -1394,7 +1351,6 @@ function ManeuverPopupmenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on selection change in EnvironmentPopupmenu.
 function EnvironmentPopupmenu_Callback(hObject, eventdata, handles)
@@ -1420,7 +1376,6 @@ function EnvironmentPopupmenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 function NewEnvironmentEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewEnvironmentEditText (see GCBO)
@@ -1488,7 +1443,6 @@ end
 save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
      'par', 'VNavData', 'VNavDataText', 'NIData', 'InputPairs', ...
      'VNavCols')
-
 
 function [handles, success] = set_vnav_sample_rate(handles)
 % Set the VectorNav sample rate
@@ -1874,7 +1828,6 @@ else
 end
 set(hObject, 'Enable', 'On')
 
-
 % --- Executes on button press in SaveButton.
 function SaveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveButton (see GCBO)
@@ -1910,7 +1863,6 @@ function num = pad_with_zeros(num, digits)
 for i = 1:digits-length(num)
     num = ['0' num];
 end
-
 
 % --- Executes on button press in UnfilteredCheckbox.
 function UnfilteredCheckbox_Callback(hObject, eventdata, handles)
@@ -2039,3 +1991,20 @@ while (~strcmp(newChar,char(10))) || (offset == 1)
   newChar = fread(fid,1,'*char');  %# Read one character
 end
 fclose(fid);  %# Close the file
+
+function TriggersEditText_Callback(hObject, eventdata, handles)
+% hObject    handle to TriggersEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% --- Executes during object creation, after setting all properties.
+function TriggersEditText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TriggersEditText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
