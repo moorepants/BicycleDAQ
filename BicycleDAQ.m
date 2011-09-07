@@ -453,7 +453,11 @@ switch get(hObject, 'Value')
         display_hr()
 
         % rotate the reference frame from the VectorNav to the body fixed
-        % frame used in our models
+        % frame used in our models (positive z is aligned with the steer
+        % axis tube and pointing down, positive x is normal to the steer
+        % axis, pointing forward and in the plane of symmetry of the
+        % bicycle, positive y follows and is normal to x and y pointing to
+        % the right sideo the bicycle
         handles.par.ReferenceFrameRotation = ...
             send_command(handles.s, 'VNWRG,26,1,0,0,0,0,1,0,-1,0');
 
