@@ -344,15 +344,6 @@ handles = guidata(hObject);
 % update the graph
 plot_data(handles)
 
-% --- Executes on key release with focus on BicycleDAQ and none of its controls.
-function BicycleDAQ_KeyReleaseFcn(hObject, eventdata, handles)
-% hObject    handle to BicycleDAQ (see GCBO)
-% eventdata  structure with the following fields (see FIGURE)
-%	Key: name of the key that was released, in lower case
-%	Character: character interpretation of the key(s) that was released
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) released
-% handles    structure with handles and user data (see GUIDATA)
-
 % --- Executes when user attempts to close BicycleDAQ.
 function BicycleDAQ_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to BicycleDAQ (see GCBO)
@@ -686,8 +677,13 @@ function trigger_callback(obj, events, handles)
 % handles : structure
 %   contains the gui handles and user data
 
-% mark a time stamp
-handles.par.DateTime = datestr(clock);
+% mark a time stamp and append it to the list of timestamps for the
+% triggers, if appropriate
+if isfield(obj.UserData, 'DateTime')
+    obj.UserData.DateTime = [obj.UserData.DateTime datestr(clock)];
+else
+    obj.UserData.DateTime = datestr(clock);
+end
 
 display('Trigger called')
 
@@ -698,12 +694,19 @@ set(handles.RecordButton, 'BackgroundColor', 'Red')
 set_async(handles.s, num2str(handles.par.ADOT))
 
 % record data
+VNavDataText = handles.VNavDataText;
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
-        handles.VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
+        VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
             fgets(handles.s);
     end
     display(sprintf('Data recorded for %d seconds', i))
+end
+
+if isfield(obj.UserData, 'VNavDataText')
+    obj.UserData.VNavDataText = [obj.UserData.VNavDataText VNavDataText];
+else
+    obj.UserData.VNavDataText = VNavDataText;
 end
 
 % turn the async off on the VectorNav
@@ -711,7 +714,6 @@ set_async(handles.s, '0')
 
 % the trigger is anonymous so it can't return anything so store the data in the
 % ai object
-obj.UserData = handles;
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
@@ -928,6 +930,8 @@ display_hr()
 display('The accelerometer gain is:')
 display(handles.par.AccelerometerGain)
 
+numTriggers = num2double(get(handles.TriggersEditText, 'String'));
+
 % initialize the VectorNav data
 if handles.par.ADOT == 14
     legends = 'RawLegends';
@@ -953,22 +957,29 @@ set(hObject, 'BackgroundColor', 'Green')
 % give the person some time to hit the button
 wait(handles.ai, handles.par.Wait)
 
+stop(handles.ai)
+
 set(hObject, 'String', 'Processing')
 set(hObject, 'BackgroundColor', 'Yellow')
 
-% get the data from both devices
-handles = get(handles.ai, 'UserData');
-handles.NIData = getdata(handles.ai);
+% get the extra data stored in the daq object from all the trigger calls
+dataFromAllTriggers = get(handles.ai, 'UserData');
 
-stop(handles.ai)
+% for each trigger pull out the data and save it
+for i = 1:numTriggers
+    set_run_id(handles)
+    startNum = (i - 1) * handles.par.VNavNumSamples + 1;
+    endNum = startNum = handles.par.VNavNumSamples;
+    handles.VNavDataText = dataFromAllTriggers(startNum:endNum);
+    % parse the text data and return numerical values
+    handles = parse_vnav_text_data(handles);
+    handles.NIData = getdata(handles.ai);
+    % save the data just taken to file
+    save_data(handles)
+end
 
-% parse the text data and return numerical values
-handles = parse_vnav_text_data(handles);
-
-% save the data just taken to file
-save_data(handles)
-
-% plot the data just taken
+% plot the data just taken, in the case of multiple triggers, the latest
+% one
 plot_data(handles)
 
 enable_graph_buttons(handles, 'On')
@@ -979,8 +990,8 @@ set(handles.LoadButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
 
-toggle_enable_metadata(handles, 'Off')
-toggle_enable_daq_settings(handles, 'Off')
+toggle_enable_metadata(handles, 'On')
+toggle_enable_daq_settings(handles, 'On')
 
 guidata(hObject, handles)
 
@@ -1543,7 +1554,7 @@ set(handles.ai, 'TriggerConditionValue', 4.9)
 set(handles.ai, 'TriggerDelay', 0.00)
 set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
 set(handles.ai, 'TriggerRepeat', ...
-    str2double(get(handles.TriggerEditText, 'String')))
+    str2double(get(handles.TriggerEditText, 'String')) - 1)
 
 function set_baudrate(s, baudrate, handles)
 % set the baudrate on the VNav and the laptop
