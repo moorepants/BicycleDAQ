@@ -495,12 +495,14 @@ switch get(hObject, 'Value')
         set(hObject, 'BackgroundColor', 'Red')
         set(handles.RecordButton, 'Enable', 'On')
         set(handles.TareButton, 'Enable', 'On')
-        enable_parameters(handles, 'On')
+        toggle_enable_daq_settings(handles, 'On')
 
     case 0.0 % disconnect
         set(hObject, 'String', 'Connect')
         set(hObject, 'BackgroundColor', 'Green')
         set(handles.RecordButton, 'Enable', 'Off')
+        set(handles.RecordButton, 'String', 'Record')
+        set(handles.RecordButton, 'BackgroundColor', [0.831 0.816 0.784])
         set(handles.TareButton, 'Enable', 'Off')
 
         if strcmp(get(handles.ai, 'Running'), 'On')
@@ -526,7 +528,7 @@ switch get(hObject, 'Value')
         display('Serial port is closed')
         display_hr()
 
-        enable_parameters(handles, 'Off')
+        toggle_enable_daq_settings(handles, 'Off')
         set(handles.VNavComPortEditText, 'Enable', 'On')
 end
 
@@ -630,8 +632,8 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 
 % force the duration to be a positive integer and no less than 2
 duration = abs(int8(str2double(get(hObject, 'String'))));
-if duration <= 1
-    duration = 2;
+if duration < 1
+    duration = 1;
 end
 set(hObject, 'String', num2str(duration))
 handles = store_current_parameters(handles);
@@ -658,12 +660,14 @@ function trigger_callback(obj, events, handles)
 % handles : structure
 %   contains the gui handles and user data
 
+UserData = obj.UserData;
+
 % mark a time stamp and append it to the list of timestamps for the
 % triggers, if appropriate
 if isfield(obj.UserData, 'DateTime')
-    obj.UserData.DateTime = [obj.UserData.DateTime datestr(clock)];
+    DateTime = [UserData.DateTime datestr(clock)];
 else
-    obj.UserData.DateTime = datestr(clock);
+    DateTime = {datestr(clock)};
 end
 
 display('Trigger called')
@@ -679,23 +683,25 @@ VNavDataText = handles.VNavDataText; % empty cell array
 % requires Duration to be a positive integer greater than 1
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
-        VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
+        VNavDataText{(i-1) * handles.par.VNavSampleRate + j} = ...
             fgets(handles.s);
     end
     display(sprintf('Data recorded for %d seconds', i))
 end
 
 if isfield(obj.UserData, 'VNavDataText')
-    obj.UserData.VNavDataText = [obj.UserData.VNavDataText VNavDataText];
-else
-    obj.UserData.VNavDataText = VNavDataText;
+    VNavDataText = [UserData.VNavDataText VNavDataText];
 end
 
 % turn the async off on the VectorNav
 set_async(handles.s, '0')
 
-% the trigger is anonymous so it can't return anything so store the data in the
-% ai object
+UserData.VNavDataText = VNavDataText;
+UserData.DateTime = DateTime;
+set(obj, 'UserData', UserData)
+
+set(handles.RecordButton, 'String', 'Waiting for trigger...')
+set(handles.RecordButton, 'BackgroundColor', 'Green')
 display('VN data done')
 
 function baudrate = determine_vnav_baud_rate(s)
@@ -867,7 +873,7 @@ handles.par.FilterTuningParameters = send_command(handles.s, 'VNRRG,22');
 % tune out magnetometers
 handles.par.FilterTuningParameters = ...
     send_command(handles.s, ...
-                 'VNWRG,22,1E-8,1E-8,1E-8,1E-8,1E-1,1E-1,1E1,1E-5,1E-5,1E-5');
+        'VNWRG,22,1E-8,1E-8,1E-8,1E-8,1E-1,1E-1,1E1,1E-5,1E-5,1E-5');
 display_hr()
 display('The filter tuning parameters are set to:')
 display(handles.par.FilterTuningParameters)
@@ -912,7 +918,7 @@ display_hr()
 display('The accelerometer gain is:')
 display(handles.par.AccelerometerGain)
 
-numTriggers = num2double(get(handles.TriggersEditText, 'String'));
+numTriggers = str2double(get(handles.TriggersEditText, 'String'));
 
 % initialize the VectorNav data
 if handles.par.ADOT == 14
@@ -946,16 +952,21 @@ set(hObject, 'BackgroundColor', 'Yellow')
 
 % get the extra data stored in the daq object from all the trigger calls
 dataFromAllTriggers = get(handles.ai, 'UserData');
+VNavDataText = dataFromAllTriggers.VNavDataText;
+DateTime = dataFromAllTriggers.DateTime;
 
 % for each trigger pull out the data and save it
 for i = 1:numTriggers
     set_run_id(handles)
+    handles = store_current_parameters(handles);
     startNum = (i - 1) * handles.par.VNavNumSamples + 1;
-    endNum = startNum + handles.par.VNavNumSamples;
-    handles.VNavDataText = dataFromAllTriggers(startNum:endNum);
+    endNum = i * handles.par.VNavNumSamples;
+    handles.VNavDataText = VNavDataText(startNum:endNum);
     % parse the text data and return numerical values
     handles = parse_vnav_text_data(handles);
     handles.NIData = getdata(handles.ai);
+    % set the date and time
+    handles.par.DateTime = DateTime{i};
     % save the data just taken to file
     save_data(handles)
 end
@@ -1018,7 +1029,7 @@ tags = {'RiderPopupmenu', ...
 
 toggle_enable(handles, tags, state)
     
-function toggle_enable_daq_settings(handles, onOrOff)
+function toggle_enable_daq_settings(handles, state)
 % Toggles the ability to interact with the menus and text boxes for the
 % metadata.
 %
@@ -1026,16 +1037,17 @@ function toggle_enable_daq_settings(handles, onOrOff)
 % ---------
 % handles : structure
 %   Contains the gui data.
-% onOrOff : char
+% state : char
 %   Either 'On' or 'Off'.
 
 tags = {'WaitEditText', ...
         'DurationEditText', ...
         'VNavSampleRateEditText', ...
         'NISampleRateEditText', ...
-        'BaudRateEditText'};
+        'BaudRateEditText', ...
+        'TriggersEditText'};
 
-toggle_enable(handles, tags, onOrOff)
+toggle_enable(handles, tags, state)
 
 function WaitEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to WaitEditText (see GCBO)
@@ -1185,6 +1197,8 @@ else % make new sequential run id
     end
     set(handles.RunIDEditText, 'String', newnum)
 end
+
+display(sprintf('Run ID set to: %s', newnum))
 
 % --- Executes during object creation, after setting all properties.
 function NotesEditText_CreateFcn(hObject, eventdata, handles)
@@ -1536,7 +1550,7 @@ set(handles.ai, 'TriggerConditionValue', 4.9)
 set(handles.ai, 'TriggerDelay', 0.00)
 set(handles.ai, 'TriggerFcn', {@trigger_callback, handles})
 set(handles.ai, 'TriggerRepeat', ...
-    str2double(get(handles.TriggerEditText, 'String')) - 1)
+    str2double(get(handles.TriggersEditText, 'String')) - 1)
 
 function set_baudrate(s, baudrate, handles)
 % set the baudrate on the VNav and the laptop
@@ -1568,13 +1582,19 @@ end
 function set_async(s, value)
 % turn the async off on the VectorNav
 % value : string e.g. '0' for off
-send_command(s, ['VNWRG,06,' value]);
-pause(0.1)
-flush_buffer(s)
-display_hr()
-display('The VectorNav async mode is off')
-display(sprintf('%d bytes in input buffer after turning async off and flushing', ...
+if strcmp(value, '0')
+    send_command(s, ['VNWRG,06,' value]);
+    display_hr()
+    display('The VectorNav async mode is off')
+    pause(0.1)
+    flush_buffer(s)
+    display(sprintf('%d bytes in input buffer after turning async off and flushing', ...
                 get(s, 'BytesAvailable')))
+else
+    send_command(s, ['VNWRG,06,' value]);
+    display_hr()
+    display(sprintf('The VN-100 async mode is on: %s', value))
+end
 display_hr()
 
 function handles = store_current_parameters(handles)
@@ -1987,6 +2007,11 @@ function TriggersEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+triggers = int8(abs(str2double(get(hObject, 'String'))));
+if triggers < 1
+    triggers = 1;
+end
+set(hObject, 'String', num2str(triggers))
 set_trigger(handles)
 
 % --- Executes during object creation, after setting all properties.
