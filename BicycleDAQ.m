@@ -751,7 +751,7 @@ set(s, 'Timeout', DefaultTimeout)
 function response = send_command(s, command)
 % Returns the latest response from the input buffer after the issued
 % command. Response will not necessarily deliver the correct response when
-% async is off.
+% async is on.
 %
 % Parameters
 % ----------
@@ -771,7 +771,7 @@ fprintf(s, sprintf('$%s*%s\n', command, checksum(command)))
 % wait a little for the response
 pause(0.1)
 % get the response
-% the response from the VectorNav always ends in \r\n
+% the response from the VectorNav always ends in \r\n: Windows blah!
 response = fgetl(s); % fgetl removes the \n
 response = sscanf(response, '%s\r');
 
@@ -959,8 +959,9 @@ DateTime = dataFromAllTriggers.DateTime;
 
 % for each trigger pull out the data and save it
 for i = 1:numTriggers
-    set_run_id(handles)
-    handles = store_current_parameters(handles);
+    set_run_id(handles) % set the run id to the next increment in the gui
+    handles = store_current_parameters(handles); % grab all inputs
+    % snatch out the VN-100 data
     startNum = (i - 1) * handles.par.VNavNumSamples + 1;
     endNum = i * handles.par.VNavNumSamples;
     handles.VNavDataText = VNavDataText(startNum:endNum);
@@ -1432,6 +1433,7 @@ function save_data(handles)
 %   handles to gui objects and user data
 
 % get the run id number and make a string padded with zeros
+
 RunIDString = pad_with_zeros(num2str(handles.par.RunID), 5);
 
 if handles.par.ADOT == 14
@@ -1445,6 +1447,7 @@ end
 save(['data\' RunIDString '.mat'], '-struct', 'handles', ...
      'par', 'VNavData', 'VNavDataText', 'NIData', 'InputPairs', ...
      'VNavCols')
+display(sprintf('Saved run #%s', RunIDString'))
 
 function [handles, success] = set_vnav_sample_rate(handles)
 % Set the VectorNav sample rate
@@ -1474,7 +1477,8 @@ if find(PossibleRates==rate)
     display_hr()
     display('VNav sample rate is now set to:')
     display(sprintf(response))
-    display(sprintf('%d bytes in input buffer after setting the sample rate', get(handles.s, 'BytesAvailable')))
+    display(sprintf('%d bytes in input buffer after setting the sample rate', ...
+        get(handles.s, 'BytesAvailable')))
     display_hr()
     success = 1;
 else
