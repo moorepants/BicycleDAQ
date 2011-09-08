@@ -390,7 +390,8 @@ switch get(hObject, 'Value')
         set(hObject, 'String', 'Connecting...')
         set(hObject, 'BackgroundColor', 'Yellow')
         set(handles.VNavComPortEditText, 'Enable', 'Off')
-
+        toggle_enable(handles, {'SaveButton', 'LoadButton'}, 'Off')
+        
         % grab the current parameters and store them
         handles = store_current_parameters(handles);
 
@@ -504,6 +505,7 @@ switch get(hObject, 'Value')
         set(handles.RecordButton, 'String', 'Record')
         set(handles.RecordButton, 'BackgroundColor', [0.831 0.816 0.784])
         set(handles.TareButton, 'Enable', 'Off')
+        toggle_enable(handles, {'SaveButton', 'LoadButton'}, 'On')
 
         if strcmp(get(handles.ai, 'Running'), 'On')
             stop(handles.ai)
@@ -1828,6 +1830,8 @@ function LoadButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 set(hObject, 'Enable', 'Off')
+set(handles.TriggersEditText, 'String', '1')
+
 [filename, path] = uigetfile('*.mat', 'Select a run', 'data/');
 if filename==0
 else
@@ -1836,6 +1840,8 @@ else
     enable_graph_buttons(handles, 'On')
     guidata(hObject, handles)
 end
+
+toggle_enable_metadata(handles, 'On')
 set(hObject, 'Enable', 'On')
 
 % --- Executes on button press in SaveButton.
