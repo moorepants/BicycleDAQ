@@ -628,6 +628,12 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% force the duration to be a positive integer and no less than 2
+duration = abs(int8(str2double(get(hObject, 'String'))));
+if duration <= 1
+    duration = 2;
+end
+set(hObject, 'String', num2str(duration))
 handles = store_current_parameters(handles);
 handles = set_ni_samples_per_trigger(handles);
 guidata(hObject, handles)
@@ -945,7 +951,7 @@ dataFromAllTriggers = get(handles.ai, 'UserData');
 for i = 1:numTriggers
     set_run_id(handles)
     startNum = (i - 1) * handles.par.VNavNumSamples + 1;
-    endNum = startNum = handles.par.VNavNumSamples;
+    endNum = startNum + handles.par.VNavNumSamples;
     handles.VNavDataText = dataFromAllTriggers(startNum:endNum);
     % parse the text data and return numerical values
     handles = parse_vnav_text_data(handles);
