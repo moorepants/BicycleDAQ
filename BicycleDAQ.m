@@ -206,12 +206,16 @@ function varargout = BicycleDAQ_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 function NotesEditText_Callback(hObject, eventdata, handles)
-% hObject    handle to NotesEditText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NotesEditText as text
-%        str2double(get(hObject,'String')) returns contents of NotesEditText as a double
+% NotesEditText_Callback(hObject, eventdata, handles)
+%
+% Arguments
+% ---------
+% hObject : gui object
+%   handle to NotesEditText (see GCBO)
+% eventdata
+%   reserved - to be defined in a future version of MATLAB
+% handles : structure
+%   structure with handles and user data (see GUIDATA)
 
 handles.par.Notes = get(hObject, 'String');
 
@@ -221,9 +225,6 @@ function NewSpeedEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewSpeedEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NewSpeedEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewSpeedEditText as a double
 
 % get the name of the new menu item
 newitem = get(hObject, 'String');
@@ -333,9 +334,11 @@ guidata(hObject, handles)
 
 function GraphTypeButtonGroup_SelectionChangeFcn(hObject, eventdata)
 % Plots the data of the current graph button that is pressed.
+%
 % Parameters
 % ----------
-% hObject : handle to the GraphTypeButton
+% hObject : handle
+%   handle to the GraphTypeButton object
 % eventdata : handle to the button press event
 
 % get the latest handles since it wasn't passed in
@@ -398,7 +401,9 @@ switch get(hObject, 'Value')
         handles.s = serial(handles.par.VNavComPort);
         display_hr()
         display('Serial port created, here are the initial properties:')
-        set(handles.s, 'InputBufferSize', 512*10)
+        % 512 * 10 was a minimum needed so that there was no corrupted data
+        % from the vn-100
+        set(handles.s, 'InputBufferSize', 512 * 10)
         get(handles.s) % display the attributes of the port
         display_hr()
 
@@ -470,7 +475,7 @@ switch get(hObject, 'Value')
 
         % NI channels
         channelnames = fieldnames(handles.InputPairs);
-        % important that this comes after set(ai, 'InputType', ...)
+        % important that addchannel comes after set(ai, 'InputType', ...)
         handles.chan = addchannel(handles.ai, ...
                                   0:length(channelnames)-1, ...
                                   channelnames);
@@ -534,9 +539,6 @@ function RiderPopupmenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns RiderPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from RiderPopupmenu
-
 contents = get(hObject,'String');
 handles.par.Rider = contents{get(hObject,'Value')};
 
@@ -547,9 +549,6 @@ function SpeedPopupmenu_Callback(hObject, eventdata, handles)
 % hObject    handle to SpeedPopupmenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = get(hObject,'String') returns SpeedPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from SpeedPopupmenu
 
 contents = get(hObject,'String');
 handles.par.Speed = str2double(contents{get(hObject,'Value')});
@@ -562,9 +561,6 @@ function BicyclePopupmenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns BicyclePopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from BicyclePopupmenu
-
 contents = get(hObject,'String');
 handles.par.Bicycle = contents{get(hObject,'Value')};
 
@@ -574,9 +570,6 @@ function NewManeuverEditText_Callback(hObject, eventdata, handles)
 % hObject    handle to NewManeuverEditText (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NewManeuverEditText as text
-%        str2double(get(hObject,'String')) returns contents of NewManeuverEditText as a double
 
 % get the name of the new menu item
 newitem = get(hObject, 'String');
@@ -601,9 +594,6 @@ function ManeuverPopupmenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = get(hObject,'String') returns ManeuverPopupmenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ManeuverPopupmenu
-
 contents = get(hObject,'String');
 handles.par.Maneuver = contents{get(hObject,'Value')};
 
@@ -619,13 +609,9 @@ function VNavSampleRateEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of VNavSampleRateEditText as text
-%        str2double(get(hObject,'String')) returns contents of VNavSampleRateEditText as a double
-
 handles = store_current_parameters(handles);
 [handles, success] = set_vnav_sample_rate(handles);
 handles = store_current_parameters(handles);
-
 guidata(hObject, handles)
 
 function NISampleRateEditText_Callback(hObject, eventdata, handles)
@@ -633,12 +619,8 @@ function NISampleRateEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NISampleRateEditText as text
-%        str2double(get(hObject,'String')) returns contents of NISampleRateEditText as a double
-
 handles = store_current_parameters(handles);
 handles = set_ni_samples_per_trigger(handles);
-
 guidata(hObject, handles)
 
 function DurationEditText_Callback(hObject, eventdata, handles)
@@ -646,12 +628,8 @@ function DurationEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of DurationEditText as text
-%        str2double(get(hObject,'String')) returns contents of DurationEditText as a double
-
 handles = store_current_parameters(handles);
 handles = set_ni_samples_per_trigger(handles);
-
 guidata(hObject, handles)
 
 function VNavComPortEditText_Callback(hObject, eventdata, handles)
@@ -659,11 +637,7 @@ function VNavComPortEditText_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of VNavComPortEditText as text
-%        str2double(get(hObject,'String')) returns contents of VNavComPortEditText as a double
-
 handles.par.VNavComPort = get(hObject, 'String');
-
 guidata(hObject, handles)
 
 function trigger_callback(obj, events, handles)
@@ -671,7 +645,8 @@ function trigger_callback(obj, events, handles)
 %
 % Parameters
 % ----------
-% obj : the analog input object
+% obj : handle to analoginput
+%   The analog input object for the NI USB-6008
 % events : structure
 %   trigger event details
 % handles : structure
@@ -694,7 +669,8 @@ set(handles.RecordButton, 'BackgroundColor', 'Red')
 set_async(handles.s, num2str(handles.par.ADOT))
 
 % record data
-VNavDataText = handles.VNavDataText;
+VNavDataText = handles.VNavDataText; % empty cell array
+% requires Duration to be a positive integer greater than 1
 for i = 1:handles.par.Duration
     for j = 1:handles.par.VNavSampleRate
         VNavDataText{(i-1)*handles.par.VNavSampleRate+j} = ...
