@@ -981,10 +981,8 @@ enable_graph_buttons(handles, 'On')
 
 set(hObject, 'String', 'Record')
 set(hObject, 'BackgroundColor', [0.831 0.816 0.784])
-set(handles.LoadButton, 'Enable', 'On')
 set(handles.TareButton, 'Enable', 'On')
 set(handles.RecordButton, 'Enable', 'On')
-
 toggle_enable_metadata(handles, 'On')
 toggle_enable_daq_settings(handles, 'On')
 
