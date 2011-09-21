@@ -107,7 +107,7 @@ for i = 1:length(y)
                                   '[deg]\n'], 's'));
         case 2
             % The Johnson Digital Level (40-6060)should be mounted on the
-            % right side of the bicycle on a surface that is parallel to
+            % left side of the bicycle on a surface that is parallel to
             % the mid-plane of the bicycle. The bottom of the level should
             % contact the surface and the power button on the level should
             % be below the screen. See photo P1070464.jpg. Positive
