@@ -11,23 +11,32 @@ function fill_h5(directories, all)
 %   want all the mat files to be converted.
 
 for j = 1:length(directories)
-    % find out what files are in the sub h5 directory
     pathToH5 = [directories{j} filesep 'h5'];
-    h5info = dir(pathToH5);
-
     display(sprintf('Checking %s', pathToH5))
+
+    % get the details of the h5 directory
+    h5info = dir(pathToH5);
 
     % get the number of the last file in the h5 directory
     lasth5 = str2num(h5info(end).name(1:end - 3));
+    numH5Files = length(h5info) - 2;
+
+    % if all of the sequential files are not there then convert all files
+    if lasth5 ~= numH5Files - 1
+        display('You are missing some h5 files, computing all of them.')
+        all = 1
+    end
+
+    % if there are no files in the h5 directory
     if isempty(lasth5)
         lasth5 = -1;
     end
-    display(sprintf('The last h5 file is %d', lasth5)) 
+    display(sprintf('The last h5 file is %d', lasth5))
 
     % find out which mat files are in the directory
     display(sprintf('Checking %s', directories{j}))
     dirinfo = what(directories{j});
-    matfiles = dirinfo.mat;
+    matfiles = sort(dirinfo.mat);
     lastmat = matfiles{end};
     lastmat = str2num(lastmat(1:end - 4))
 

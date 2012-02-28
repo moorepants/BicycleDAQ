@@ -1381,7 +1381,7 @@ add_to_popupmenu(newitem, menu, handles)
 % put the old text back in the edit box
 set(hObject, 'String', ['Add a new ' lower(menu)])
 
-handles.par.Enviroment = get(hObject, 'String');
+handles.par.Environment = get(hObject, 'String');
 
 guidata(hObject, handles)
 
