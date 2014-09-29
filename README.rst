@@ -12,8 +12,9 @@ and the Matlab Serial interface. It is intended to run on a netbook computer.
 License
 =======
 
-`BSD 2-Clause License<http://opensource.org/licenses/BSD-2-Clause>`_, see
-``LICENSE.txt``.
+`BSD 2-Clause License`_, see ``LICENSE.txt``.
+
+.. _BSD 2-Clause License: http://opensource.org/licenses/BSD-2-Clause
 
 Dependencies
 ============
@@ -139,8 +140,8 @@ collected by the NI USB-6218 DAQ box. N is the number of samples and M is the
 number of signals. The columns correspond to the values in ``InputPairs`` plus
 1 (for Matlab 1 indexing).
 
-par, structure
-~~~~~~~~~~~~~~
+``par``, structure
+~~~~~~~~~~~~~~~~~~
 
 A structure which contains key value pairs of the primary meta data for the
 trial.
@@ -300,7 +301,7 @@ Calibration
 -----------
 
 After a calibration is collected via the ``tools/calibrate.m`` script, the
-resulting ``.mat`` file is stored in the `data/CalibData` directory with a
+resulting ``.mat`` file is stored in the ``data/CalibData`` directory with a
 filename ``XXXXX.mat`` where ``XXXXX`` is a unique sequential 5 digit number
 for that calibration. Each ``.mat`` file contains several variables described
 in the following sections.
