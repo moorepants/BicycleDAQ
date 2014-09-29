@@ -7,6 +7,8 @@ USB-6218 and a VectorNav VN-100 development board through USB connections in a
 laptop PC. It makes use of the Matlab Data Acquisition Toolbox, NIDAQmx driver,
 and the Matlab Serial interface. It is intended to run on a netbook computer.
 
+.. image:: bicycle-daq-gui.png
+
 .. _Davis Instrumented Bicycle: http://moorepants.github.io/dissertation/davisbicycle.html
 
 License
