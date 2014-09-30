@@ -40,7 +40,6 @@ Software
 
 - Windows XP Pro
 - Matlab (7.8.0 R2009a) + Data Acquisition Toolbox
-- VectorNav Matlab Library
 
 Usage
 =====
