@@ -5,7 +5,7 @@ This a simple graphical user interface used to collect data on the `Davis
 Instrumented Bicycle`_. The software connects to both a National Instruments
 USB-6218 and a VectorNav VN-100 development board through USB connections in a
 laptop PC. It makes use of the Matlab Data Acquisition Toolbox, NIDAQmx driver,
-and the Matlab Serial interface. It is intended to run on a netbook computer.
+and the Matlab Serial interface. It is also intended to run on a netbook computer.
 
 .. image:: bicycle-daq-gui.png
 
@@ -58,7 +58,7 @@ input cells. To initialize the system and connect to the two hardware devices,
 press the "Connect" button. Once the system is connected, the "Tare" button
 will tare the VN-100. When ready to start a trial press the "Record" button and
 the system will wait for the handlebar button trigger to be pressed. Once the
-trigger is pressed, data will be collected for the specified duration and
+trigger is pressed, data will be collected for the specified duration and be
 automatically saved to disk in a local ``data/`` directory. After the
 recording, the time series traces can be inspected in the graph window by
 selecting the different graph type buttons. Once recording of all the trials in
@@ -246,7 +246,7 @@ trial.
 ``Wait``, 1 x 1 double
     This is the time in seconds that the software waits for the rider to press
     the collect data trigger. If the rider doesn't push the button before this
-    time, the software crashes (due to a bug).
+    time, the program crashes due to software limitations.
 
 ``VNavCols``, 10 or 12 x 1 cell array
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
