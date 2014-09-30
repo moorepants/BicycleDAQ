@@ -5,7 +5,7 @@ This a simple graphical user interface used to collect data on the `Davis
 Instrumented Bicycle`_. The software connects to both a National Instruments
 USB-6218 and a VectorNav VN-100 development board through USB connections in a
 laptop PC. It makes use of the Matlab Data Acquisition Toolbox, NIDAQmx driver,
-and the Matlab Serial interface. It is also intended to run on a netbook computer.
+and the Matlab Serial interface. It is intended to run on a netbook computer.
 
 .. image:: bicycle-daq-gui.png
 
