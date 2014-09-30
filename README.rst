@@ -92,6 +92,13 @@ directory.
 Data
 ====
 
+Sample data collected with this software for a set of experiments can be
+downloaded from Figshare.
+
+Trial Data: http://dx.doi.org/10.6084/m9.figshare.1164632
+
+Calibration Data: http://dx.doi.org/10.6084/m9.figshare.1164630
+
 Trials
 ------
 
