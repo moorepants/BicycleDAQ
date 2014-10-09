@@ -18,6 +18,12 @@ License
 
 .. _BSD 2-Clause License: http://opensource.org/licenses/BSD-2-Clause
 
+Citation
+========
+
+If you make use of this data we kindly request that you cite our work, either
+[Moore2012]_, the data DOI, and/or other relevant references.
+
 Dependencies
 ============
 
@@ -361,3 +367,17 @@ following variables:
    e.g. ``'na'`` or ``'FiveVolts'``.
 ``sensorType``, char
    The type of sensor, either ``'LoadCell'`` or ``'potentiometer'``.
+
+Grant Information
+=================
+
+This material is partially based upon work supported by the National Science
+Foundation under Grant No. 0928339. Any opinions, findings, and conclusions or
+recommendations expressed in this material are those of the authors and do not
+necessarily reflect the views of the National Science Foundation.
+
+References
+==========
+
+.. [Moore2012] Moore, J. K. Human Control of a Bicycle. University of
+   California, Davis. 2012.
